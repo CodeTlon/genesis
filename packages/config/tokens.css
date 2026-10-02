@@ -1,0 +1,24 @@
+/* Tokens de marca Genesis — único archivo de diseño (ver docs/marca.md). Contraste AA verificado. */
+@theme {
+  --color-violeta: #a259e0;          /* acento / decorativo (no texto chico) */
+  --color-violeta-oscuro: #7b3fb8;   /* botones y fondos con texto blanco (6.47:1) */
+  --color-lila: #c9a7eb;
+  --color-malva: #ac9bb0;            /* usar texto tinta encima (6.69:1) */
+  --color-tinta: #1a1a1a;
+  --color-marmol: #f4f3f5;
+
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-label: var(--font-roboto-condensed), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+  --radius-control: 0.875rem;
+  --shadow-soft: 0 8px 30px -12px rgb(123 63 184 / 0.25);
+  --spacing-touch: 3rem;             /* botones >= 48px */
+}
+
+:root { --background: var(--color-marmol); --foreground: var(--color-tinta); }
+
+html { font-size: 112.5%; }          /* base 18px (requisito de accesibilidad) */
+body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
+:focus-visible { outline: 3px solid var(--color-violeta-oscuro); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

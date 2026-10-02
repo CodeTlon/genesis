@@ -1,8 +1,8 @@
 # Tasks — Genesis (Fase 0)
 ## Setup
 - [x] Repo GitHub privado CodeTlon/genesis + ramas main y dev (push verificado)
-- [ ] Turborepo + Next 15.5.25 (apps/web, apps/panel)
-- [ ] Tokens de marca + fuentes
+- [x] Turborepo + Next 15.5.25 (build+typecheck+lint verdes)
+- [x] Tokens de marca + fuentes (next/font)
 - [ ] docker-compose Postgres + migración inicial + seed faker es-AR
 ## Sitio público
 - [ ] Inicio, Servicios (19), Nosotros, Galería, Contacto, Pedir turno, Privacidad
