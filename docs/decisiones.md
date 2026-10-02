@@ -49,3 +49,8 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 1. VPS/Dokku: ¿subdominio temporal para la demo? (ej. `genesis-demo.<dominio>`; usuario SSH a confirmar).
 2. Contraseña de acceso de la demo (la defino yo en `.env`, vos se la pasás a Inés).
 3. Nombre del repo: ¿`genesis` o `genesis-estetica`?
+
+## ADR-007 Hosting de la demo: Vercel (preferido por Mateo) + Postgres administrado
+- Demo (datos ficticios): `apps/web` y `apps/panel` en Vercel como dos proyectos; Postgres administrado externo (Vercel no aloja Postgres propio; p. ej. Neon/Supabase solo como base de datos, sin su auth). El deploy y la creación de cuentas/DB los hace Mateo (Regla de Oro #7).
+- Producción con datos reales (Fase 1): **reevaluar**. Datos de salud (ley 25.326, transferencia internacional ⚖️) → VPS propio con Dokku + Postgres cifrado es la opción por defecto; Vercel solo para el sitio público.
+- Las apps no deben depender de APIs exclusivas de Vercel, para poder migrar a Dokku sin reescribir.
