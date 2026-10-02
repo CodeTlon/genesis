@@ -5,8 +5,8 @@
 - [x] Tokens de marca + fuentes (next/font)
 - [ ] docker-compose Postgres + migración inicial + seed faker es-AR
 ## Sitio público
-- [ ] Inicio, Servicios (19), Nosotros, Galería, Contacto, Pedir turno, Privacidad
-- [ ] JSON-LD, sitemap, robots
+- [x] Inicio, Servicios (19 servicios en 5 páginas por grupo), Nosotros, Galería, Contacto, Pedir turno, Privacidad (sin botón de WhatsApp)
+- [x] JSON-LD, sitemap, robots (demo noindex)
 ## Panel
 - [ ] Pacientes ficticios, ficha + plantillas A/B/C, mapa de pies, agenda, Hoy, WhatsApp simulado
 ## Cierre
