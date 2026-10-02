@@ -4,6 +4,10 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;
 CREATE EXTENSION IF NOT EXISTS unaccent;      -- búsqueda tolerante a tildes
 CREATE EXTENSION IF NOT EXISTS pg_trgm;       -- tolerancia a errores ("Gonzalez" = "González")
 
+-- unaccent() es STABLE; para usarla en una columna generada hace falta un wrapper IMMUTABLE.
+CREATE FUNCTION immutable_unaccent(text) RETURNS text
+  LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT AS $$ SELECT public.unaccent('public.unaccent', $1) $$;
+
 CREATE TABLE tenants (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL);
 
 CREATE TABLE areas (               -- Podología / Estética (multi-área)
@@ -25,7 +29,7 @@ CREATE TABLE patients (
   guardian_name text,              -- obligatorio si es menor de 18 (validar en app)
   alerts text[] NOT NULL DEFAULT '{}',   -- iconos de precaución: alergia, anticoagulante, diabetes…
   search_text text GENERATED ALWAYS AS
-    (lower(unaccent(first_name || ' ' || last_name || ' ' || coalesce(dni,'') || ' ' || coalesce(phone,'')))) STORED,
+    (lower(immutable_unaccent(first_name || ' ' || last_name || ' ' || coalesce(dni,'') || ' ' || coalesce(phone,'')))) STORED,
   created_at timestamptz NOT NULL DEFAULT now());
 CREATE INDEX patients_search_trgm ON patients USING gin (search_text gin_trgm_ops);
 

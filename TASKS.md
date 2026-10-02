@@ -3,7 +3,7 @@
 - [x] Repo GitHub privado CodeTlon/genesis + ramas main y dev (push verificado)
 - [x] Turborepo + Next 15.5.25 (build+typecheck+lint verdes)
 - [x] Tokens de marca + fuentes (next/font)
-- [~] docker-compose + migración 0001 escritos, sin probar (Docker no disponible); panel usa datos en memoria (ADR-008)
+- [x] docker-compose + migración 0001 verificada en Postgres 16 real (npm run db:verify: 14 garantías)
 ## Sitio público
 - [x] Inicio, Servicios (19 servicios en 5 páginas por grupo), Nosotros, Galería, Contacto, Pedir turno, Privacidad (sin botón de WhatsApp)
 - [x] JSON-LD, sitemap, robots (demo noindex)
