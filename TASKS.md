@@ -3,11 +3,12 @@
 - [x] Repo GitHub privado CodeTlon/genesis + ramas main y dev (push verificado)
 - [x] Turborepo + Next 15.5.25 (build+typecheck+lint verdes)
 - [x] Tokens de marca + fuentes (next/font)
-- [ ] docker-compose Postgres + migración inicial + seed faker es-AR
+- [~] docker-compose + migración 0001 escritos, sin probar (Docker no disponible); panel usa datos en memoria (ADR-008)
 ## Sitio público
 - [x] Inicio, Servicios (19 servicios en 5 páginas por grupo), Nosotros, Galería, Contacto, Pedir turno, Privacidad (sin botón de WhatsApp)
 - [x] JSON-LD, sitemap, robots (demo noindex)
 ## Panel
-- [ ] Pacientes ficticios, ficha + plantillas A/B/C, mapa de pies, agenda, Hoy, WhatsApp simulado
+- [x] Pacientes ficticios, ficha + plantillas A/B/C, mapa de pies, agenda drag&drop, Hoy, WhatsApp simulado, onboarding, plantillas
 ## Cierre
-- [ ] Lighthouse/axe, docs/guion-demo.md, deploy demo
+- [x] Lighthouse móvil (perf 96-98, a11y 100) + axe + 14 E2E verdes + docs/guion-demo.md
+- [ ] Deploy demo (manual de Mateo: Vercel + DEMO_PASSWORD)

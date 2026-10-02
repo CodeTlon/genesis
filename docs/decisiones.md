@@ -54,3 +54,8 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - Demo (datos ficticios): `apps/web` y `apps/panel` en Vercel como dos proyectos; Postgres administrado externo (Vercel no aloja Postgres propio; p. ej. Neon/Supabase solo como base de datos, sin su auth). El deploy y la creación de cuentas/DB los hace Mateo (Regla de Oro #7).
 - Producción con datos reales (Fase 1): **reevaluar**. Datos de salud (ley 25.326, transferencia internacional ⚖️) → VPS propio con Dokku + Postgres cifrado es la opción por defecto; Vercel solo para el sitio público.
 - Las apps no deben depender de APIs exclusivas de Vercel, para poder migrar a Dokku sin reescribir.
+
+## ADR-008 Panel de la demo con datos en memoria (cambia ADR-002)
+- Docker/Postgres no estaban disponibles en la máquina de desarrollo, así que el panel de la demo usa datos ficticios en memoria del servidor (`apps/panel/src/lib/store.ts`), con la misma interfaz que luego tendrá la capa Postgres. Se reinician al reiniciar el servidor (en Vercel, también entre instancias): aceptable para una demo.
+- Se mantienen `docker-compose.yml`, `packages/db/migrations/0001_init.sql` y el runner de migraciones para Fase 1. La exclusión anti doble reserva y el trigger de inmutabilidad **ya están escritos en SQL pero sin probar contra una base**; en la demo los reproduce `store.ts`. Pendiente de validar con `docker compose up`.
+- Sin datos clínicos en `localStorage` ni cachés del navegador; el estado vive en el servidor.

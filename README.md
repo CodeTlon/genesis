@@ -14,6 +14,7 @@ Next.js 15, TypeScript, Tailwind, PostgreSQL 16 (Drizzle), Turborepo. Ver `docs/
 | Versión | Cambio |
 |---|---|
 | v0.1.0 | setup del repo y documentación de Checkpoints 1–2 |
+| v0.2.0 | sitio público (5 grupos de servicios) y panel de la demo: Hoy, agenda, pacientes, fichas A/B/C, mapa de pies, WhatsApp simulado |
 
 ## Licencia
 Propietaria, todos los derechos reservados. Ver [LICENSE](LICENSE).
