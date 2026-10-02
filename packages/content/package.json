@@ -1,2 +1,10 @@
-{ "name": "@genesis/content", "version": "0.1.0", "private": true, "license": "UNLICENSED",
-  "exports": { "./servicios.json": "./servicios.json" } }
+{
+  "name": "@genesis/content",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "exports": {
+    "./servicios.json": "./servicios.json",
+    "./defaults": "./src/defaults.ts"
+  }
+}

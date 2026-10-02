@@ -1,4 +1,24 @@
-{ "name": "@genesis/db", "version": "0.1.0", "private": true, "license": "UNLICENSED", "type": "module",
-  "scripts": { "migrate": "tsx src/migrate.ts", "seed": "tsx src/seed.ts", "verify": "tsx src/verify.ts" },
-  "dependencies": { "pg": "^8.13.0" },
-  "devDependencies": { "tsx": "^4.19.0", "@types/pg": "^8.11.0" } }
+{
+  "name": "@genesis/db",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "migrate": "tsx src/migrate.ts",
+    "seed": "tsx src/seed.ts",
+    "verify": "tsx src/verify.ts"
+  },
+  "dependencies": {
+    "pg": "^8.13.0",
+    "@genesis/content": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "@types/pg": "^8.11.0"
+  },
+  "exports": {
+    "./client": "./src/client.ts",
+    "./content": "./src/content.ts"
+  }
+}

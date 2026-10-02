@@ -29,6 +29,13 @@ Para mostrarle a Inés. Todo es **ficticio**: pacientes, DNI y teléfonos son in
 - Recordatorio con opciones, menú con números, **audio** → "Inés te contesta en breve" y alerta en el panel. Una consulta clínica **no** la responde: la deriva.
 - Mostrá el gasto estimado de mensajería.
 
+## 5 bis. Editar el sitio (1 min) — "y todo esto lo cambiás vos"
+- Panel → **Sitio web** → **Inicio**: cambiá el título y guardá. Abrí el sitio: ya cambió.
+- **Avisos y buscadores**: activá "Cerrado por feriado el lunes" y mostrá la franja en el sitio.
+- **Servicios**: abrí un grupo, editá un tratamiento (texto, sesiones, precio) o ocultalo.
+- **Galería**: subí una foto; sin confirmar el consentimiento no se deja publicar.
+- **Solicitudes de turno**: mandá un pedido desde el sitio y mostrá cómo llega a la bandeja.
+
 ## 6. Cierre (15 s)
 - **Plantillas**: "estas fichas son propuestas; la idea es que me muestres cómo es la tuya en papel y la ajustamos." Ayuda: recorrido de 5 pasos.
 

@@ -1,11 +1,10 @@
 'use client'
 import { useActionState } from 'react'
 import { pedirTurno, type TurnoState } from './actions'
-import { GRUPOS } from '@/lib/site'
 
 const field = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/40 bg-white px-4'
 
-export function TurnoForm({ servicio }: { servicio?: string }) {
+export function TurnoForm({ servicio, grupos }: { servicio?: string; grupos: { slug: string; name: string }[] }) {
   const [state, action, pending] = useActionState<TurnoState, FormData>(pedirTurno, null)
 
   if (state?.ok) {
@@ -29,7 +28,7 @@ export function TurnoForm({ servicio }: { servicio?: string }) {
         <label htmlFor="servicio" className="font-semibold">¿Qué te interesa? (opcional)</label>
         <select id="servicio" name="servicio" defaultValue={servicio ?? ''} className={field}>
           <option value="">Todavía no lo sé</option>
-          {GRUPOS.map((g) => <option key={g.slug} value={g.slug}>{g.nombre}</option>)}
+          {grupos.map((g) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
         </select>
       </div>
       <div>
@@ -45,6 +44,7 @@ export function TurnoForm({ servicio }: { servicio?: string }) {
         </label>
         {err.acepto && <p className="mt-1 text-sm text-red-800">{err.acepto}</p>}
       </div>
+      {err.form && <p role="alert" className="text-red-800">{err.form}</p>}
       <button type="submit" disabled={pending} className="inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-8 text-white disabled:opacity-60">
         {pending ? 'Enviando…' : 'Pedir turno'}
       </button>

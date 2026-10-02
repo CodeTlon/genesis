@@ -1,5 +1,6 @@
 'use server'
 import { z } from 'zod'
+import { createRequest } from '@genesis/db/content'
 
 const schema = z.object({
   nombre: z.string().trim().min(2, 'Escribí tu nombre.').max(80),
@@ -19,6 +20,10 @@ export async function pedirTurno(_prev: unknown, formData: FormData): Promise<Tu
     for (const i of parsed.error.issues) errors[String(i.path[0])] ??= i.message
     return { ok: false, errors }
   }
-  // Demo: no se guarda ni se envía nada. Fase 1: insertar en appointment_requests y avisar al panel.
+  try {
+    await createRequest({ name: parsed.data.nombre, phone: parsed.data.telefono, service_slug: parsed.data.servicio, note: parsed.data.mensaje })
+  } catch {
+    return { ok: false, errors: { form: 'No pudimos enviar tu pedido. Probá de nuevo en un rato.' } }
+  }
   return { ok: true, message: 'Recibimos tu pedido. Te vamos a contactar para confirmar el turno.' }
 }

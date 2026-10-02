@@ -16,7 +16,8 @@
     "@genesis/config": "*",
     "@genesis/ui": "*",
     "@genesis/content": "*",
-    "zod": "^3.23.0"
+    "zod": "^3.23.0",
+    "@genesis/db": "*"
   },
   "devDependencies": {
     "typescript": "^5",

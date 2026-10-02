@@ -1,16 +1,21 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { countNewRequests } from '@genesis/db/content'
+
+export const dynamic = 'force-dynamic'
 
 const NAV = [
   { href: '/hoy', label: 'Hoy', icon: '☀' },
   { href: '/agenda', label: 'Agenda', icon: '▦' },
   { href: '/pacientes', label: 'Pacientes', icon: '☺' },
   { href: '/whatsapp', label: 'WhatsApp', icon: '✉' },
+  { href: '/sitio', label: 'Sitio web', icon: '✎' },
   { href: '/plantillas', label: 'Plantillas', icon: '☰' },
   { href: '/ayuda', label: 'Ayuda', icon: '?' },
 ]
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const nuevas = await countNewRequests()
   return (
     <div className="min-h-screen md:flex">
       <aside className="print:hidden border-b border-lila/50 bg-white md:min-h-screen md:w-60 md:border-b-0 md:border-r">
@@ -23,6 +28,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link key={n.href} href={n.href} className="flex min-h-touch shrink-0 items-center gap-3 rounded-control px-4 hover:bg-lila/40">
               <span aria-hidden className="w-5 text-center text-violeta-oscuro">{n.icon}</span>
               {n.label}
+              {n.href === '/sitio' && nuevas > 0 && <span className="ml-auto rounded-full bg-amber-200 px-2 text-sm text-amber-950" aria-label={`${nuevas} solicitudes nuevas`}>{nuevas}</span>}
             </Link>
           ))}
         </nav>

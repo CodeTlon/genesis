@@ -11,4 +11,5 @@
 - [x] Pacientes ficticios, ficha + plantillas A/B/C, mapa de pies, agenda drag&drop, Hoy, WhatsApp simulado, onboarding, plantillas
 ## Cierre
 - [x] Lighthouse móvil (perf 96-98, a11y 100) + axe + 14 E2E verdes + docs/guion-demo.md
-- [ ] Deploy demo (manual de Mateo: Vercel + DEMO_PASSWORD)
+- [x] Sitio editable desde el panel (CMS sobre Postgres): 7 E2E + axe verdes
+- [ ] Deploy demo (manual de Mateo: Vercel x2 + Postgres administrado + variables de .env.example)

@@ -1,32 +1,42 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
+import { getContent } from '@genesis/db/content'
+
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Nosotros',
-  description: 'Conocé a Genesis Estética Integral: podología y estética en un mismo lugar, en Colorado 5827, Córdoba.',
+  description: 'Conocé a Genesis Estética Integral: podología y estética en un mismo lugar, en Córdoba.',
 }
 
-export default function Nosotros() {
+export default async function Nosotros() {
+  const [about, team] = await Promise.all([getContent('about'), getContent('team')])
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="text-3xl font-light uppercase tracking-[0.15em]">Nosotros</h1>
-      <p className="mt-6 text-lg">Genesis nació para cuidar la salud y el bienestar de las personas desde los pies hasta el rostro, en un ambiente cálido y tranquilo.</p>
-      <p className="mt-4">Inés atiende podología. En el piso de arriba funciona el área de estética, con el mismo nombre y el mismo cuidado: tratamientos faciales y corporales, depilación, cejas, pestañas y uñas.</p>
+      <h1 className="text-3xl font-light uppercase tracking-[0.15em]">{about.title}</h1>
+      <p className="mt-6 text-lg">{about.lead}</p>
+      <p className="mt-4">{about.body}</p>
 
-      <h2 className="mt-12 text-xl font-light uppercase tracking-[0.12em]">Equipo</h2>
-      <ul className="mt-4 space-y-3">
-        <li className="rounded-card bg-white p-5 shadow-soft">
-          <p className="font-semibold">Inés</p>
-          <p>Podología · Matrícula profesional: <span className="italic">a completar</span></p>
-        </li>
-        <li className="rounded-card bg-white p-5 shadow-soft">
-          <p className="font-semibold">Equipo de estética</p>
-          <p>Integrantes y matrículas: <span className="italic">a completar</span></p>
-        </li>
-      </ul>
+      {team.length > 0 && (
+        <>
+          <h2 className="mt-12 text-xl font-light uppercase tracking-[0.12em]">Equipo</h2>
+          <ul className="mt-4 space-y-3">
+            {team.map((m, i) => (
+              <li key={i} className="flex items-center gap-4 rounded-card bg-white p-5 shadow-soft">
+                {m.photo && <Image src={m.photo} alt={`Foto de ${m.name}`} width={72} height={72} className="size-[72px] rounded-full object-cover" />}
+                <div>
+                  <p className="font-semibold">{m.name}</p>
+                  <p>{m.role}{m.license ? ` · Matrícula ${m.license}` : ''}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
-      <h2 className="mt-12 text-xl font-light uppercase tracking-[0.12em]">Cómo trabajamos</h2>
-      <p className="mt-4">En la primera consulta conversamos sobre lo que necesitás y revisamos tus antecedentes para cuidarte. Después te proponemos un plan, sin apuros.</p>
+      <h2 className="mt-12 text-xl font-light uppercase tracking-[0.12em]">{about.howTitle}</h2>
+      <p className="mt-4">{about.how}</p>
       <Link href="/pedir-turno" className="mt-8 inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-6 text-white">Pedir turno</Link>
     </main>
   )
