@@ -8,6 +8,7 @@
   --color-marmol: #f4f3f5;
 
   --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-cormorant), Georgia, 'Times New Roman', serif;
   --font-label: var(--font-roboto-condensed), ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 1.25rem;
@@ -55,3 +56,21 @@ dialog.g-modal::backdrop { background: rgb(40 25 55 / .45); backdrop-filter: blu
 @keyframes g-blur { from { filter: blur(10px); transform: translateY(6px); } to { filter: none; transform: none; } }
 .g-blur-in { animation: g-blur .9s cubic-bezier(.2,.7,.2,1) both; }
 .g-blur-in-2 { animation: g-blur .9s .15s cubic-bezier(.2,.7,.2,1) both; }
+
+/* Portada: elementos flotantes y carrusel de testimonios (se frenan con prefers-reduced-motion) */
+@keyframes g-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.g-float { animation: g-float 6s ease-in-out infinite; }
+.g-float-2 { animation: g-float 7.5s ease-in-out -2s infinite; }
+@keyframes g-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.g-marquee-track { display: flex; width: max-content; animation: g-marquee 60s linear infinite; }
+.g-marquee:hover .g-marquee-track, .g-marquee:focus-within .g-marquee-track { animation-play-state: paused; }
+
+/* Fondo dinámico del hero: tres manchas de color que derivan lentamente. Solo decoración (aria-hidden); se frena con prefers-reduced-motion. */
+.g-aurora { overflow: hidden; pointer-events: none; }
+.g-blob { position: absolute; border-radius: 9999px; filter: blur(70px); will-change: transform; }
+.g-blob-1 { width: 34rem; height: 34rem; left: -9rem; top: -8rem; background: #dcc6f3; opacity: .7; animation: g-drift-a 18s ease-in-out infinite; }
+.g-blob-2 { width: 30rem; height: 30rem; right: -7rem; top: 1rem; background: #cdbfd2; opacity: .55; animation: g-drift-b 23s ease-in-out infinite; }
+.g-blob-3 { width: 28rem; height: 28rem; left: 38%; bottom: -12rem; background: #e9d9f8; opacity: .8; animation: g-drift-c 27s ease-in-out infinite; }
+@keyframes g-drift-a { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(7rem, 4rem) scale(1.15); } }
+@keyframes g-drift-b { 0%, 100% { transform: translate(0, 0) scale(1.1); } 50% { transform: translate(-6rem, 5rem) scale(.9); } }
+@keyframes g-drift-c { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-8rem, -4rem) scale(1.2); } }
