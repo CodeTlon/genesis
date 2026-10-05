@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
 const WEB = 'http://localhost:3000'
+
+test.beforeEach(async ({ page }) => { await page.addInitScript(() => sessionStorage.setItem('genesis-site-tour', 'off')) }) // sin la guía flotante encima
 const VIEWPORTS = [{ w: 375, h: 800 }, { w: 768, h: 1000 }, { w: 1280, h: 800 }]
 const PAGES = ['/', '/servicios', '/servicios/podologia', '/servicios/corporal', '/nosotros', '/galeria', '/contacto', '/pedir-turno', '/privacidad']
 
