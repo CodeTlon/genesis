@@ -76,3 +76,11 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **Hosting:** el sitio va en Vercel **sin base** (usa `@genesis/content/defaults`; el formulario de turno simula el envío). El panel va en **un solo proceso** (`Dockerfile.panel`, Railway/Fly con 1 instancia) porque su estado vive en memoria y en serverless se perdería entre requests. Sin `DATABASE_URL` en producción no se intenta conectar a localhost, y `/sitio` no guarda cambios.
 - **Datos:** la semilla es relativa a "hoy" y se regenera si cambia el día, así que la agenda nunca queda vacía. El estado es compartido entre visitantes (no por sesión): suficiente para una demo con pocas personas; "Reiniciar demo" lo restaura.
 - **Seguridad:** se eliminó el secreto por defecto de `/api/revalidate`: en producción, sin `REVALIDATE_SECRET` el endpoint queda cerrado.
+
+## ADR-011 Un solo proyecto en Vercel con dos servicios
+- **Qué:** `vercel.json` en la raíz define dos servicios: `web` (`apps/web`, en `/`) y `panel` (`apps/panel`, en `/panel`). Un solo proyecto, un solo dominio. Las reglas de `rewrites` van de lo más específico a lo más general (`/panel` y `/panel/(.*)` antes del `/(.*)` del sitio).
+- **basePath del panel:** `next.config.mjs` usa `basePath: '/panel'` solo cuando `VERCEL` está definida. En local (`:3001`) y en Docker queda en la raíz, así que los e2e y el `Dockerfile.panel` no cambian.
+- **Links entre apps:** el sitio resuelve el enlace al panel en `/api/panel-url` en cada visita: `PANEL_URL` si existe, `<dominio>/panel` en Vercel, `localhost:3001` en local. El panel enlaza al sitio con ruta relativa en Vercel (`WEB_URL` vacío).
+- **Datos del panel:** siguen en memoria. En Vercel pueden volver al estado inicial si la función se reinicia o cambia de instancia; para la demo se acepta y existe "Reiniciar demo".
+- **Sin variables obligatorias:** no hace falta `DATABASE_URL` ni `PANEL_URL`. Sin base, el sitio usa los textos por defecto y "Sitio web" del panel no guarda cambios.
+- **Pendiente de verificar en Vercel:** el enrutado entre servicios no se puede probar en local. Si algo falla, el plan B es importar el repo dos veces (Root Directory `apps/web` y `apps/panel`) y definir `PANEL_URL`.

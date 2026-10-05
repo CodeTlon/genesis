@@ -40,7 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           Modo capacitación · Demo con datos 100 % ficticios · Podés practicar sin miedo
         </p>
         <div className="mx-auto max-w-6xl px-4 py-8 pb-56 md:pb-40">{children}</div>
-        <Tour webUrl={WEB_URL} />
+        <Tour webUrl={WEB_URL || '/'} />
       </div>
     </div>
     </MotionRoot>

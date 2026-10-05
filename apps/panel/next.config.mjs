@@ -2,6 +2,8 @@ import path from 'node:path'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // En Vercel el panel vive bajo /panel del mismo dominio que el sitio (ver vercel.json). En local y en Docker queda en la raíz.
+  basePath: process.env.VERCEL ? '/panel' : '',
   // Despliegue en un solo proceso (Docker): STANDALONE=1 genera .next/standalone con lo mínimo para correr.
   ...(process.env.STANDALONE === '1' ? { output: 'standalone', outputFileTracingRoot: path.join(import.meta.dirname, '../..') } : {}),
   transpilePackages: ['@genesis/config', '@genesis/ui', '@genesis/db', '@genesis/content'],

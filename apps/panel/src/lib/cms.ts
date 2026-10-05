@@ -1,7 +1,9 @@
 import sharp from 'sharp'
 import { deleteMediaByUrl, saveMedia } from '@genesis/db/content'
 
-export const WEB_URL = process.env.WEB_URL ?? 'http://localhost:3000'
+// En Vercel el sitio y el panel comparten dominio: el sitio está en la raíz, así que alcanza con una ruta relativa.
+export const WEB_URL = process.env.WEB_URL ?? (process.env.VERCEL ? '' : 'http://localhost:3000')
+const BASE_PATH = process.env.VERCEL ? '/panel' : ''
 
 /** Avisa al sitio público que cambió el contenido para que se actualice al instante (si falla, se actualiza solo en ≤ 60 s). */
 export async function publishSite(): Promise<void> {
@@ -15,7 +17,7 @@ export async function publishSite(): Promise<void> {
 }
 
 /** Las rutas estáticas del sitio (/img/...) se ven desde el panel a través del sitio. */
-export const previewUrl = (src: string) => (src.startsWith('/img/') ? `${WEB_URL}${src}` : src)
+export const previewUrl = (src: string) => (src.startsWith('/img/') ? `${WEB_URL}${src}` : src.startsWith('/media/') ? `${BASE_PATH}${src}` : src)
 
 const MAX_BYTES = 4 * 1024 * 1024 // Vercel corta el cuerpo en ~4,5 MB
 const OK_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
