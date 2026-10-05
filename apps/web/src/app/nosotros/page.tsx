@@ -9,7 +9,7 @@ export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Nosotros',
-  description: 'Conocé a Genesis Estética Integral: podología y estética en un mismo lugar, en Córdoba.',
+  description: 'Conocé a GENESIS: podología y estética en un mismo lugar, en Córdoba.',
 }
 
 export default async function Nosotros() {

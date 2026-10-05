@@ -7,7 +7,7 @@ export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Contacto',
-  description: 'Dirección, horarios y formas de contacto de Genesis Estética Integral en Córdoba.',
+  description: 'Dirección, horarios y formas de contacto de GENESIS en Córdoba.',
 }
 
 export default async function Contacto() {

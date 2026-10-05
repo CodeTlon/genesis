@@ -7,7 +7,7 @@ export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Preguntas frecuentes',
-  description: 'Respuestas a las dudas más comunes sobre turnos, tratamientos, medios de pago y cuidados en Genesis Estética Integral.',
+  description: 'Respuestas a las dudas más comunes sobre turnos, tratamientos, medios de pago y cuidados en GENESIS.',
 }
 
 export default async function Preguntas() {

@@ -34,8 +34,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-lila/40 bg-marmol/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="flex items-center gap-3" aria-label="Genesis Estética Integral, inicio">
-          <Wordmark size="md" tagline />
+        <Link href="/" className="flex items-center gap-3" aria-label="GENESIS, inicio">
+          <Wordmark size="md" />
         </Link>
         <nav aria-label="Principal" className="hidden items-center gap-6 lg:flex">
           {LINKS.map((l) => <Link key={l.href} href={l.href} aria-current={isActive(l.href) ? 'page' : undefined} className={`py-3 hover:text-violeta-oscuro ${linkClass(l.href)}`}>{l.label}</Link>)}

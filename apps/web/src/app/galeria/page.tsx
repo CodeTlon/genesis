@@ -6,7 +6,7 @@ export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Galería',
-  description: 'Conocé nuestro equipamiento y los productos que usamos en Genesis Estética Integral.',
+  description: 'Conocé nuestro equipamiento y los productos que usamos en GENESIS.',
 }
 
 export default async function Galeria() {

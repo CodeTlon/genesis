@@ -16,12 +16,12 @@ export function TurnoForm({ servicio, grupos }: { servicio?: string; grupos: { s
     <form action={action} noValidate className="space-y-6">
       <div>
         <label htmlFor="nombre" className="font-semibold">Nombre y apellido</label>
-        <input id="nombre" name="nombre" autoComplete="name" required aria-invalid={!!err.nombre} aria-describedby={err.nombre ? 'e-nombre' : undefined} className={field} />
+        <input id="nombre" name="nombre" placeholder="Ej: María Pérez" autoComplete="name" required aria-invalid={!!err.nombre} aria-describedby={err.nombre ? 'e-nombre' : undefined} className={field} />
         {err.nombre && <p id="e-nombre" className="mt-1 text-red-800">{err.nombre}</p>}
       </div>
       <div>
         <label htmlFor="telefono" className="font-semibold">Teléfono</label>
-        <input id="telefono" name="telefono" type="tel" inputMode="tel" autoComplete="tel" required aria-invalid={!!err.telefono} aria-describedby={err.telefono ? 'e-tel' : undefined} className={field} />
+        <input id="telefono" name="telefono" placeholder="Ej: 351 123-4567" type="tel" inputMode="tel" autoComplete="tel" required aria-invalid={!!err.telefono} aria-describedby={err.telefono ? 'e-tel' : undefined} className={field} />
         {err.telefono && <p id="e-tel" className="mt-1 text-red-800">{err.telefono}</p>}
       </div>
       <div>
@@ -33,7 +33,7 @@ export function TurnoForm({ servicio, grupos }: { servicio?: string; grupos: { s
       </div>
       <div>
         <label htmlFor="mensaje" className="font-semibold">Mensaje (opcional)</label>
-        <textarea id="mensaje" name="mensaje" rows={3} className={`${field} py-3`} />
+        <textarea id="mensaje" name="mensaje" rows={3} placeholder="Contanos qué tratamiento te interesa y en qué días o horarios te queda mejor" className={`${field} py-3`} />
         <p className="mt-1 text-base">Por favor no escribas datos de salud acá: los conversamos en la consulta.</p>
       </div>
       <input name="web" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" />

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getContent, getGroups } from '@genesis/db/content'
 import { SITE } from '@/lib/site'
 import { BackToTop } from './back-to-top'
+import { PanelLink } from './panel-link'
 import { IconCard, IconClock, IconInstagram, IconMail, IconPhone, IconPin } from './icons'
 
 const head = 'font-label text-base uppercase tracking-widest text-lila'
@@ -14,7 +15,7 @@ export async function Footer() {
     <footer className="mt-24 bg-tinta text-marmol">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <Wordmark font="sans" tone="light" size="lg" tagline />
+          <Wordmark font="sans" tone="light" size="lg" />
           <p className="mt-4 text-base">Podología y estética en un mismo lugar. Atención personalizada, en un ambiente tranquilo.</p>
           <a href={contact.instagram} rel="noopener noreferrer" className="mt-4 inline-flex min-h-touch items-center gap-2 hover:underline"><IconInstagram className="size-6" />{contact.instagramHandle}</a>
         </div>
@@ -45,7 +46,7 @@ export async function Footer() {
             <li><Link href="/consejos" className={link}>Consejos</Link></li>
             <li><Link href="/galeria" className={link}>Galería</Link></li>
             <li><Link href="/privacidad" className={link}>Privacidad y aviso legal</Link></li>
-            {SITE.panelUrl && <li><a href={`${SITE.panelUrl}/login?tour=1`} className={`${link} font-semibold text-lila`}>Ver demo guiada del panel</a></li>}
+            <li><PanelLink className={`${link} font-semibold text-lila`} /></li>
           </ul>
         </nav>
       </div>

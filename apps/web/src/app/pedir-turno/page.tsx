@@ -4,7 +4,7 @@ import { TurnoForm } from './turno-form'
 
 export const metadata: Metadata = {
   title: 'Pedir turno',
-  description: 'Pedí tu turno en Genesis Estética Integral. Te contactamos para confirmarlo.',
+  description: 'Pedí tu turno en GENESIS. Te contactamos para confirmarlo.',
 }
 
 export default async function PedirTurno({ searchParams }: { searchParams: Promise<{ servicio?: string }> }) {
