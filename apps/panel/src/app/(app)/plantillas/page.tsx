@@ -3,7 +3,7 @@ import { PROXIMAS, TEMPLATES } from '@/lib/templates'
 export default function Plantillas() {
   return (
     <main>
-      <h1 className="text-3xl font-light uppercase tracking-[0.15em]">Plantillas de ficha</h1>
+      <h1 className="text-3xl font-normal uppercase tracking-[0.08em]">Plantillas de ficha</h1>
       <p className="mt-2 rounded-card bg-lila/50 p-3">Son <strong>propuestas</strong> para revisar juntas: Inés decide qué datos quiere en cada ficha. En la versión final se editan desde acá, sin tocar código, y cada ficha guarda con qué versión se completó.</p>
       <ul className="mt-6 grid gap-4 md:grid-cols-2">
         {Object.values(TEMPLATES).map((t) => (
@@ -16,7 +16,7 @@ export default function Plantillas() {
           </li>
         ))}
       </ul>
-      <h2 className="mt-10 text-xl font-light uppercase tracking-[0.12em]">Próximas plantillas propuestas</h2>
+      <h2 className="mt-10 text-xl font-normal uppercase tracking-[0.06em]">Próximas plantillas propuestas</h2>
       <ul className="mt-3 list-disc pl-5">{PROXIMAS.map((p) => <li key={p}>{p}</li>)}</ul>
     </main>
   )

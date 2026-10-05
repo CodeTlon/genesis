@@ -3,6 +3,9 @@ import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import HoldButton from '@genesis/ui/vendor/HoldButton'
 import { FootMap } from './foot-map'
+import { Term } from './term'
+import StatusMark from '@genesis/ui/vendor/StatusMark'
+import { useToast } from './toast'
 import { bookNext, saveAttention } from '@/lib/actions'
 import type { Field, Template } from '@/lib/templates'
 import type { EntryPayload, FootMarker } from '@/lib/types'
@@ -10,7 +13,7 @@ import type { EntryPayload, FootMarker } from '@/lib/types'
 type Values = Record<string, unknown>
 type NextInfo = { serviceId: string; professionalId: string; resource: string; time: string } | null
 
-const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/40 bg-white px-4'
+const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4'
 
 export function TemplateForm({ patientId, patientName, template, initial, prefilledFrom, next }: {
   patientId: string; patientName: string; template: Template; initial: EntryPayload; prefilledFrom?: string; next: NextInfo
@@ -23,6 +26,8 @@ export function TemplateForm({ patientId, patientName, template, initial, prefil
   const [signed, setSigned] = useState(false)
   const dirty = useRef(false)
   const idRef = useRef<string | undefined>(undefined)
+  // Cola de guardados: firmar espera al autoguardado en vuelo, así no se duplica la entrada.
+  const queue = useRef<Promise<unknown>>(Promise.resolve())
 
   const set = (id: string, v: unknown) => { dirty.current = true; setValues((p) => ({ ...p, [id]: v })) }
   const changed = (id: string) => prefilledFrom !== undefined && JSON.stringify(values[id]) !== JSON.stringify(initial[id])
@@ -30,15 +35,18 @@ export function TemplateForm({ patientId, patientName, template, initial, prefil
   // Autoguardado de borrador (solo después de que la profesional toca algo)
   useEffect(() => {
     if (!dirty.current || signed) return
-    const t = setTimeout(async () => {
-      const r = await saveAttention({ id: idRef.current, patientId, templateCode: template.code, payload: values as EntryPayload, sign: false })
-      if (r.ok) { idRef.current = r.entryId; setEntryId(r.entryId); setSavedAt(new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Cordoba' })); setError('') }
-      else setError('No pudimos guardar. Probá de nuevo; tu texto está a salvo en pantalla.')
+    const t = setTimeout(() => {
+      queue.current = queue.current.then(async () => {
+        const r = await saveAttention({ id: idRef.current, patientId, templateCode: template.code, payload: values as EntryPayload, sign: false })
+        if (r.ok) { idRef.current = r.entryId; setEntryId(r.entryId); setSavedAt(new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Cordoba' })); setError('') }
+        else setError('No pudimos guardar. Probá de nuevo; tu texto está a salvo en pantalla.')
+      })
     }, 1500)
     return () => clearTimeout(t)
   }, [values, signed, patientId, template.code])
 
   async function sign() {
+    await queue.current
     const r = await saveAttention({ id: idRef.current, patientId, templateCode: template.code, payload: values as EntryPayload, sign: true })
     if (r.ok) { setSigned(true); setEntryId(r.entryId); setError('') }
     else setError(r.message ?? 'No pudimos firmar. Probá de nuevo; tu texto está a salvo.')
@@ -71,7 +79,7 @@ export function TemplateForm({ patientId, patientName, template, initial, prefil
         <HoldButton size="lg" holdTime={700} backgroundColor="#7b3fb8" fillColor="#4a2578" textColor="#ffffff" fillTextColor="#ffffff" doneLabel="Firmada" onHold={sign}>
           Mantené apretado para firmar y cerrar
         </HoldButton>
-        <p className="mt-2 text-sm">Una atención firmada ya no se puede editar: se corrige con una adenda.</p>
+        <p className="mt-2 text-sm">Una atención firmada ya no se puede editar: se corrige con una <Term k="adenda">adenda</Term>.</p>
       </div>
     </form>
   )
@@ -81,21 +89,24 @@ function Signed({ patientId, patientName, template, next, entryId }: { patientId
   const [days, setDays] = useState(template.followupDays ?? 30)
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
+  const [booked, setBooked] = useState(false)
+  const { toast } = useToast()
   return (
     <div className="space-y-6">
-      <p role="status" className="rounded-card bg-emerald-100 p-5 text-lg text-emerald-950">Atención firmada y guardada en la historia clínica de {patientName}.</p>
+      <div role="status" className="g-enter flex items-center gap-4 rounded-card bg-emerald-100 p-5 text-lg text-emerald-950"><StatusMark status="done" size={44} color="#065f46" doneColor="#047857" /><p>Atención firmada y guardada en la historia clínica de {patientName}.</p></div>
       {next && (
         <section className="rounded-card bg-white p-5 shadow-soft" aria-labelledby="prox">
-          <h2 id="prox" className="text-xl font-light uppercase tracking-[0.12em]">Próximo turno</h2>
+          <h2 id="prox" className="text-xl font-normal uppercase tracking-[0.06em]">Próximo turno</h2>
           <label className="mt-3 block">Dentro de cuántos días
-            <input type="number" min={1} value={days} onChange={(e) => setDays(Number(e.target.value))} className={`${input} max-w-40`} />
+            <input type="number" min={1} value={days} onChange={(e) => setDays(Math.max(1, Math.round(Number(e.target.value)) || 1))} className={`${input} max-w-40`} />
           </label>
-          <button disabled={busy} onClick={async () => {
+          <button disabled={busy || booked} onClick={async () => {
             setBusy(true)
             const r = await bookNext(patientId, next.serviceId, next.professionalId, next.resource, days, next.time)
             setBusy(false)
+            if (r.ok) { setBooked(true); toast({ title: 'Próximo turno agendado', description: `${r.day.split('-').reverse().join('/')} a las ${r.time}` }) }
             setMsg(r.ok ? `Listo: turno pendiente el ${r.day.split('-').reverse().join('/')} a las ${r.time}.` : r.message)
-          }} className="mt-3 min-h-touch rounded-control bg-violeta-oscuro px-6 text-white">Agendar próximo turno</button>
+          }} className="mt-3 min-h-touch rounded-control bg-violeta-oscuro px-6 text-white">{booked ? 'Turno agendado' : 'Agendar próximo turno'}</button>
           {msg && <p role="status" className="mt-3">{msg}</p>}
         </section>
       )}

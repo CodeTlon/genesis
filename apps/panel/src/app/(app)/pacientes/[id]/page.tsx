@@ -24,7 +24,7 @@ export default async function Ficha({ params }: { params: Promise<{ id: string }
     <main>
       <Link href="/pacientes" className="inline-flex min-h-touch items-center underline">← Pacientes</Link>
       <header className="rounded-card bg-white p-6 shadow-soft">
-        <h1 className="text-3xl font-light">{p.firstName} {p.lastName}</h1>
+        <h1 className="text-3xl font-normal">{p.firstName} {p.lastName}</h1>
         <div className="mt-2"><AlertBadges alerts={p.alerts} /></div>
         <dl className="mt-4 grid gap-x-8 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
           <div><dt className="text-sm text-tinta/70">Edad</dt><dd>{a} años ({fmtDate(p.birthDate)})</dd></div>
@@ -51,7 +51,7 @@ export default async function Ficha({ params }: { params: Promise<{ id: string }
         ))}
       </div>
 
-      <h2 className="mt-10 text-xl font-light uppercase tracking-[0.12em]">Turnos</h2>
+      <h2 className="mt-10 text-xl font-normal uppercase tracking-[0.06em]">Turnos</h2>
       <ul className="mt-3 space-y-2">
         {appts.map((t) => (
           <li key={t.id} className="flex flex-wrap items-center gap-3 rounded-card bg-white p-3 shadow-soft">
@@ -63,7 +63,7 @@ export default async function Ficha({ params }: { params: Promise<{ id: string }
         {!appts.length && <li>Sin turnos.</li>}
       </ul>
 
-      <h2 className="mt-10 text-xl font-light uppercase tracking-[0.12em]">Línea de tiempo clínica</h2>
+      <h2 className="mt-10 text-xl font-normal uppercase tracking-[0.06em]">Línea de tiempo clínica</h2>
       <div className="mt-3 space-y-4">
         {entries.map((e) => <EntryView key={e.id} entry={e} />)}
         {!entries.length && <p>Todavía no hay atenciones registradas.</p>}

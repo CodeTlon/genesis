@@ -4,9 +4,10 @@ import AxeBuilder from '@axe-core/playwright'
 const PANEL = 'http://localhost:3001'
 
 async function login(page: Page) {
+  await page.addInitScript(() => sessionStorage.setItem('genesis-tour', 'off')) // sin la guía flotante encima
   await page.goto(PANEL + '/login')
   await page.getByLabel('Contraseña de la demo').fill('demo123')
-  await page.getByRole('button', { name: 'Entrar' }).click()
+  await page.getByRole('button', { name: /Entrar como Inés/ }).click()
   await expect(page).toHaveURL(/\/hoy/)
 }
 
@@ -14,7 +15,7 @@ test('acceso protegido: sin sesión redirige y la clave incorrecta avisa', async
   await page.goto(PANEL + '/pacientes')
   await expect(page).toHaveURL(/\/login/)
   await page.getByLabel('Contraseña de la demo').fill('mala')
-  await page.getByRole('button', { name: 'Entrar' }).click()
+  await page.getByRole('button', { name: /Entrar como Inés/ }).click()
   await expect(page.locator('p[role=alert]')).toContainText('no es correcta')
 })
 
@@ -81,7 +82,7 @@ test('agenda: no permite doble reserva', async ({ page }) => {
   const row = page.locator('li', { hasText: 'Roberto Sánchez' }).filter({ has: page.getByLabel('Hora') })
   await row.getByLabel('Hora').fill('09:00')
   await row.getByRole('button', { name: 'Mover' }).click()
-  await expect(page.locator('p[role=alert]')).toContainText('ya está ocupado')
+  await expect(page.getByText(/ya está ocupado/)).toBeVisible() // el aviso sale como toast propio
 })
 
 test('WhatsApp simulado: audio y consulta clínica derivan a una persona', async ({ page }) => {

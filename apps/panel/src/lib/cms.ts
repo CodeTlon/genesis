@@ -5,8 +5,10 @@ export const WEB_URL = process.env.WEB_URL ?? 'http://localhost:3000'
 
 /** Avisa al sitio público que cambió el contenido para que se actualice al instante (si falla, se actualiza solo en ≤ 60 s). */
 export async function publishSite(): Promise<void> {
+  const secret = process.env.REVALIDATE_SECRET ?? (process.env.NODE_ENV === 'production' ? undefined : 'dev-secret')
+  if (!secret) return
   try {
-    await fetch(`${WEB_URL}/api/revalidate`, { method: 'POST', headers: { 'x-revalidate-secret': process.env.REVALIDATE_SECRET ?? 'dev-secret' }, signal: AbortSignal.timeout(3000) })
+    await fetch(`${WEB_URL}/api/revalidate`, { method: 'POST', headers: { 'x-revalidate-secret': secret }, signal: AbortSignal.timeout(3000) })
   } catch {
     /* el sitio igual se refresca por tiempo */
   }
@@ -37,8 +39,14 @@ export async function uploadImage(file: File): Promise<string> {
 }
 
 /** Resuelve el valor final de un campo de imagen del formulario: archivo nuevo, quitar, o dejar la actual. */
+/** Solo rutas propias (/img/... del sitio o /media/... de la base): una URL externa rompe next/image en el sitio público. */
+export function safeImage(v: string): string {
+  const s = v.trim()
+  return s === '' || (/^\/(img|media)\/[\w./-]+$/.test(s) && !s.includes('..')) ? s : ''
+}
+
 export async function resolveImage(fd: FormData, name: string): Promise<string> {
-  const current = String(fd.get(name) ?? '')
+  const current = safeImage(String(fd.get(name) ?? ''))
   const file = fd.get(`${name}__file`)
   if (file instanceof File && file.size > 0) {
     const url = await uploadImage(file)

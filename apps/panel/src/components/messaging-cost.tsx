@@ -22,7 +22,7 @@ export function MessagingCost() {
         <label>Conversaciones de servicio<input type="number" min={0} value={service} onChange={(e) => setService(+e.target.value)} className={f} /></label>
         <label>Promociones<input type="number" min={0} value={marketing} onChange={(e) => setMarketing(+e.target.value)} className={f} /></label>
       </div>
-      <p className="mt-4 text-3xl font-light">≈ USD {total.toFixed(2)}</p>
+      <p className="mt-4 text-3xl font-normal">≈ USD {total.toFixed(2)}</p>
       <p className="mt-1 text-sm">Estimación orientativa: 1.000 mensajes de servicio gratis por mes; avisos ≈ USD 0,028 y promociones ≈ USD 0,066 cada uno. Hay que verificar la tarifa oficial de Meta.</p>
     </section>
   )

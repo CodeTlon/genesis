@@ -4,6 +4,7 @@ import { addendum } from '@/lib/actions'
 import { TEMPLATES } from '@/lib/templates'
 import { fmtDate } from '@/lib/dates'
 import type { Entry, FootMarker } from '@/lib/types'
+import { Term } from './term'
 
 function show(v: unknown): string {
   if (Array.isArray(v)) return v.length ? v.join(', ') : '—'
@@ -48,7 +49,7 @@ export function EntryView({ entry }: { entry: Entry }) {
       ))}
       {entry.status === 'signed' && (
         <div className="mt-3">
-          <p className="text-sm text-tinta/70">Entrada firmada: no se puede editar. Para corregirla, agregá una adenda.</p>
+          <p className="text-sm text-tinta/70">Entrada firmada: no se puede editar. Para corregirla, agregá una <Term k="adenda">adenda</Term>.</p>
           {!open ? (
             <button onClick={() => setOpen(true)} className="mt-2 min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro">Agregar adenda</button>
           ) : (

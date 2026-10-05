@@ -1,5 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import { whatsappRespond } from '@/lib/actions'
+import { useToast } from './toast'
 
 type Msg = { from: 'bot' | 'paciente' | 'sistema'; text: string }
 
@@ -7,18 +9,19 @@ const MENU = 'Hola 👋 Soy el asistente de Genesis. Respondé con un número:\n
 
 const REMINDER: Msg = {
   from: 'bot',
-  text: 'Recordatorio: mañana tenés turno en Genesis a las 10:00 (Colorado 5827). Respondé:\n1) Confirmar\n2) Reprogramar\n3) Cancelar',
+  text: 'Recordatorio: mañana tenés turno en Genesis a las 10:00 (Colorado 5827), Carlos. Respondé:\n1) Confirmar\n2) Reprogramar\n3) Cancelar',
 }
 
-function reply(text: string, state: { step: string }): { msgs: Msg[]; alert?: string; step: string } {
+function reply(text: string, state: { step: string }): { msgs: Msg[]; alert?: string; step: string; effect?: 'confirm' | 'cancel' } {
   const t = text.trim().toLowerCase()
   if (text.startsWith('🎤'))
     return { msgs: [{ from: 'bot', text: 'Recibimos tu audio. Inés te contesta en breve.' }], alert: 'Audio recibido: derivado a una persona', step: 'menu' }
+  if (['hola', 'menu', 'menú', 'buenas'].includes(t)) return { msgs: [{ from: 'bot', text: MENU }], step: 'menu' }
   if (state.step === 'turno') return { msgs: [{ from: 'bot', text: 'Anotamos tu pedido. Inés te confirma día y horario por acá. ¡Gracias!' }], alert: 'Pedido de turno nuevo para confirmar', step: 'menu' }
   if (state.step === 'confirm') {
-    if (t === '1') return { msgs: [{ from: 'bot', text: '¡Listo! Tu turno quedó confirmado. Te esperamos.' }, { from: 'sistema', text: 'Estado del turno actualizado: Confirmado' }], step: 'menu' }
+    if (t === '1') return { msgs: [{ from: 'bot', text: '¡Listo! Tu turno quedó confirmado. Te esperamos.' }, { from: 'sistema', text: 'Agenda actualizada: el turno de Carlos Ferreyra (mañana 10:00) quedó Confirmado.' }], step: 'menu', effect: 'confirm' }
     if (t === '2') return { msgs: [{ from: 'bot', text: 'Ok, te vamos a ofrecer otro horario. Inés te escribe en breve.' }], alert: 'Pidió reprogramar su turno', step: 'menu' }
-    if (t === '3') return { msgs: [{ from: 'bot', text: 'Turno cancelado. Cuando quieras, escribinos para pedir otro.' }, { from: 'sistema', text: 'Estado del turno actualizado: Cancelado' }], step: 'menu' }
+    if (t === '3') return { msgs: [{ from: 'bot', text: 'Turno cancelado. Cuando quieras, escribinos para pedir otro.' }, { from: 'sistema', text: 'Agenda actualizada: el turno de Carlos Ferreyra (mañana 10:00) quedó Cancelado.' }], step: 'menu', effect: 'cancel' }
   }
   if (t === '1') return { msgs: [{ from: 'bot', text: '¿Qué tratamiento te interesa? Escribilo con tus palabras (por ejemplo: "podología").' }], step: 'turno' }
   if (t === '2') return { msgs: [{ ...REMINDER }], step: 'confirm' }
@@ -30,6 +33,7 @@ function reply(text: string, state: { step: string }): { msgs: Msg[]; alert?: st
 }
 
 export function WhatsAppSim() {
+  const { toast } = useToast()
   const [msgs, setMsgs] = useState<Msg[]>([REMINDER])
   const [alerts, setAlerts] = useState<string[]>([])
   const [text, setText] = useState('')
@@ -37,9 +41,13 @@ export function WhatsAppSim() {
   const end = useRef<HTMLDivElement>(null)
   useEffect(() => { end.current?.scrollIntoView({ block: 'nearest' }) }, [msgs])
 
-  function send(raw: string) {
+  async function send(raw: string) {
     if (!raw.trim()) return
     const r = reply(raw, { step })
+    if (r.effect) {
+      await whatsappRespond(r.effect)
+      toast({ title: r.effect === 'confirm' ? 'Turno confirmado por WhatsApp' : 'Turno cancelado por WhatsApp', description: 'La agenda ya lo refleja: mirá “Hoy”.' })
+    }
     setMsgs((m) => [...m, { from: 'paciente', text: raw }, ...r.msgs])
     if (r.alert) setAlerts((a) => [r.alert!, ...a])
     setStep(r.step)
@@ -58,7 +66,7 @@ export function WhatsAppSim() {
         </div>
         <form className="flex gap-2 border-t border-lila/50 p-3" onSubmit={(e) => { e.preventDefault(); send(text) }}>
           <label className="sr-only" htmlFor="wa-text">Mensaje</label>
-          <input id="wa-text" value={text} onChange={(e) => setText(e.target.value)} placeholder="Escribí 1, 2, 3, 4 u “hola”" className="min-h-touch min-w-0 flex-1 rounded-control border border-tinta/40 px-3" />
+          <input id="wa-text" value={text} onChange={(e) => setText(e.target.value)} placeholder="Escribí 1, 2, 3, 4 u “hola”" className="min-h-touch min-w-0 flex-1 rounded-control border border-tinta/60 px-3" />
           <button className="min-h-touch rounded-control bg-violeta-oscuro px-4 text-white">Enviar</button>
         </form>
         <div className="flex flex-wrap gap-2 px-3 pb-3">

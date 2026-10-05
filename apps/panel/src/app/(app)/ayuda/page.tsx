@@ -3,7 +3,7 @@ import { Onboarding } from '@/components/onboarding'
 export default function Ayuda() {
   return (
     <main>
-      <h1 className="text-3xl font-light uppercase tracking-[0.15em]">Ayuda</h1>
+      <h1 className="text-3xl font-normal uppercase tracking-[0.08em]">Ayuda</h1>
       <p className="mt-2 mb-8">Un recorrido de 5 pasos para aprender a usar el sistema.</p>
       <Onboarding />
       <section className="mt-12 rounded-card bg-white p-6 shadow-soft">

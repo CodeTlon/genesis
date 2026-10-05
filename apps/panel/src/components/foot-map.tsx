@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { FOOT_FINDINGS } from '@/lib/templates'
 import type { FootMarker } from '@/lib/types'
 
@@ -67,13 +67,13 @@ export function FootMap({ markers, onChange }: { markers: FootMarker[]; onChange
 
   const Foot = ({ side }: { side: Side }) => (
     <figure className="text-center">
-      <svg viewBox="0 0 200 420" className="mx-auto h-72 w-auto touch-manipulation" role="group" aria-label={side === 'left' ? 'Pie izquierdo' : 'Pie derecho'}>
+      <svg viewBox="0 0 200 420" className="mx-auto h-60 w-auto sm:h-72 touch-manipulation" role="group" aria-label={side === 'left' ? 'Pie izquierdo' : 'Pie derecho'}>
         <g transform={side === 'left' ? 'translate(200 0) scale(-1 1)' : undefined}>
           {Object.entries(BODY[view]).map(([zone, d]) => (
-            <Zone key={zone} side={side} zone={zone}>{(fill) => <path d={d} fill={fill} stroke="#5b4a40" strokeWidth={2} />}</Zone>
+            <Fragment key={zone}>{Zone({ side, zone, children: (fill) => <path d={d} fill={fill} stroke="#5b4a40" strokeWidth={2} /> })}</Fragment>
           ))}
           {Object.entries(TOES).map(([zone, t]) => (
-            <Zone key={zone} side={side} zone={zone}>{(fill) => <circle cx={t.cx} cy={t.cy} r={t.r} fill={fill} stroke="#5b4a40" strokeWidth={2} />}</Zone>
+            <Fragment key={zone}>{Zone({ side, zone, children: (fill) => <circle cx={t.cx} cy={t.cy} r={t.r} fill={fill} stroke="#5b4a40" strokeWidth={2} /> })}</Fragment>
           ))}
         </g>
       </svg>
@@ -94,8 +94,8 @@ export function FootMap({ markers, onChange }: { markers: FootMarker[]; onChange
       </div>
       <p className="mb-2 text-sm">Tocá una zona para marcar un hallazgo. Desde el teclado: Tab para moverte y Enter para elegir.</p>
       <div className="grid grid-cols-2 gap-2">
-        <Foot side="left" />
-        <Foot side="right" />
+        {Foot({ side: 'left' })}
+        {Foot({ side: 'right' })}
       </div>
 
       <ul className="mt-2 flex flex-wrap gap-3 text-sm" aria-label="Referencias de gravedad">
@@ -106,7 +106,7 @@ export function FootMap({ markers, onChange }: { markers: FootMarker[]; onChange
         <div className="mt-4 space-y-3 rounded-card border border-violeta-oscuro/40 p-4" role="group" aria-label="Detalle de la zona">
           <p className="font-semibold">{sel.side === 'left' ? 'Pie izquierdo' : 'Pie derecho'} · {view === 'plantar' ? 'planta' : 'dorso'} · {sel.zone}</p>
           <label className="block">Hallazgo
-            <select value={finding} onChange={(e) => setFinding(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/40 bg-white px-3">
+            <select value={finding} onChange={(e) => setFinding(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-3">
               {FOOT_FINDINGS.map((f) => <option key={f}>{f}</option>)}
             </select>
           </label>
@@ -121,7 +121,7 @@ export function FootMap({ markers, onChange }: { markers: FootMarker[]; onChange
             </div>
           </fieldset>
           <label className="block">Nota (opcional)
-            <input value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/40 px-3" />
+            <input value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 px-3" />
           </label>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={save} className="min-h-touch rounded-control bg-violeta-oscuro px-5 text-white">Guardar marca</button>

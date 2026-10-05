@@ -14,7 +14,7 @@ export function PageHead({ title, intro, back, view }: { title: string; intro?: 
     <header className="mb-6">
       {back && <Link href={back.href} className="inline-flex min-h-touch items-center underline">← {back.label}</Link>}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-light uppercase tracking-[0.15em]">{title}</h1>
+        <h1 className="text-3xl font-normal uppercase tracking-[0.08em]">{title}</h1>
         {view !== undefined && (
           <a href={`${WEB_URL}${view}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro">Ver en el sitio ↗</a>
         )}

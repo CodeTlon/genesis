@@ -2,6 +2,7 @@
 import { useTransition } from 'react'
 import { changeStatus } from '@/lib/actions'
 import { STATUS_LABEL, type ApptStatus } from '@/lib/types'
+import { useToast } from './toast'
 
 const NEXT: Partial<Record<ApptStatus, { to: ApptStatus; label: string }[]>> = {
   pending: [{ to: 'confirmed', label: 'Confirmar' }, { to: 'cancelled', label: 'Cancelar' }],
@@ -19,13 +20,21 @@ export function StatusBadge({ status }: { status: ApptStatus }) {
 
 export function StatusActions({ id, status }: { id: string; status: ApptStatus }) {
   const [pending, start] = useTransition()
+  const { toast } = useToast()
   const acts = NEXT[status] ?? []
   if (!acts.length) return null
   return (
     <div className="flex flex-wrap gap-2">
       {acts.map((a) => (
-        <button key={a.to} disabled={pending} onClick={() => start(() => changeStatus(id, a.to))}
-          className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-60">
+        <button key={a.to} disabled={pending} onClick={() => start(async () => {
+            const ok = await changeStatus(id, a.to)
+            if (!ok) return toast({ title: 'No se pudo cambiar el estado', error: true })
+            toast({
+              title: `Turno: ${STATUS_LABEL[a.to].toLowerCase()}`,
+              ...(a.to !== 'done' ? { actionLabel: 'Deshacer', onAction: () => { void changeStatus(id, status) } } : {}),
+            })
+          })}
+          className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro hover:bg-lila/40 disabled:opacity-60">
           {a.label}
         </button>
       ))}

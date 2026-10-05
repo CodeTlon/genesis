@@ -26,10 +26,10 @@ const P = (id: string, firstName: string, lastName: string, n: number, birthDate
   alerts: [], consent: { ...ok }, ...extra,
 })
 
-const today = todayKey()
+function buildSeed(today: string) {
 const md = today.slice(5)
 
-export const PATIENTS_SEED: Patient[] = [
+const patientsSeed: Patient[] = [
   P('p1', 'Norma', 'Ledesma', 1, '1946-03-12', { alerts: ['anticoagulantes', 'diabetes'], usesInsoles: true, medication: 'Acenocumarol 2 mg/día (ficticio)', address: 'Calle Ficticia 100' }),
   P('p2', 'Roberto', 'Sánchez', 2, '1951-08-30', { alerts: ['diabetes'], usesInsoles: true, medication: 'Metformina 850 mg (ficticio)', insurance: 'Obra social demo' }),
   P('p3', 'María Eugenia', 'Gómez', 3, `1984-${md}`, { alerts: ['alergia'], medication: '—' }), // cumple hoy
@@ -46,7 +46,7 @@ const A = (id: string, patientId: string, serviceId: string, professionalId: str
   id, patientId, serviceId, professionalId, resource, start: localToIso(addDays(today, day), hhmm), durationMin, status,
 })
 
-export const APPTS_SEED: Appointment[] = [
+const apptsSeed: Appointment[] = [
   A('a1', 'p1', 's1', 'pr1', 'Camilla 1', 0, '09:00', 45, 'confirmed'),
   A('a2', 'p2', 's2', 'pr1', 'Camilla 1', 0, '10:00', 45, 'pending'),
   A('a3', 'p7', 's1', 'pr1', 'Camilla 1', 0, '11:00', 45, 'pending'),
@@ -66,7 +66,7 @@ const E = (id: string, patientId: string, templateCode: TemplateCode, daysAgo: n
   createdAt: localToIso(addDays(today, -daysAgo), '10:30'), signedAt: localToIso(addDays(today, -daysAgo), '10:50'), addenda: [],
 })
 
-export const ENTRIES_SEED: Entry[] = [
+const entriesSeed: Entry[] = [
   E('e1', 'p2', 'A', 120, { motivo: 'Dolor al caminar y durezas', antecedentes: ['Diabetes', 'Hipertensión'], alergias: [], medicacion: 'Metformina 850 mg (ficticio)', embarazo: 'No', marcapasos: false, plantillas: 'Sí' }),
   E('e2', 'p2', 'B', 75, {
     motivo: 'Control de durezas', hallazgos: ['Heloma', 'Hiperqueratosis'], procedimiento: 'Deslaminado de hiperqueratosis y enucleación de heloma.', indicaciones: 'Hidratación diaria. Revisar calzado.',
@@ -82,23 +82,27 @@ export const ENTRIES_SEED: Entry[] = [
   E('e5', 'p5', 'C', 30, { zona: 'Axilas', sesion: 3, fototipo: 'III', contra: [], longitud: '808 nm', energia: 18, pulso: 30, frecuencia: 2, reaccion: 'Leve eritema', indicaciones: 'Evitar sol directo 48 h.' }),
 ]
 
-type DB = { patients: Patient[]; appts: Appointment[]; entries: Entry[]; seq: number }
+return { patients: patientsSeed, appts: apptsSeed, entries: entriesSeed }
+}
+
+type DB = { patients: Patient[]; appts: Appointment[]; entries: Entry[]; seq: number; day: string }
 const g = globalThis as unknown as { __genesis?: DB }
-const db: DB = (g.__genesis ??= {
-  patients: structuredClone(PATIENTS_SEED), appts: structuredClone(APPTS_SEED), entries: structuredClone(ENTRIES_SEED), seq: 100,
-})
-const nextId = (p: string) => `${p}${++db.seq}`
+const fresh = (): DB => { const day = todayKey(); return { ...buildSeed(day), seq: 100, day } }
+/** La semilla es relativa a "hoy": si cambia el día, se regenera para que la agenda nunca quede vacía. */
+const cur = (): DB => (g.__genesis && g.__genesis.day === todayKey() ? g.__genesis : (g.__genesis = fresh()))
+export const resetDemo = () => { g.__genesis = fresh() }
+const nextId = (p: string) => `${p}${++cur().seq}`
 
 export const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-export const patients = () => db.patients
-export const patient = (id: string) => db.patients.find((p) => p.id === id)
+export const patients = () => cur().patients
+export const patient = (id: string) => cur().patients.find((p) => p.id === id)
 export const service = (id: string) => SERVICES.find((s) => s.id === id)
 export const professional = (id: string) => PROFESSIONALS.find((p) => p.id === id)
 
-export const apptsOn = (day: string) => db.appts.filter((a) => isoToLocal(a.start).day === day).sort((a, b) => a.start.localeCompare(b.start))
-export const appt = (id: string) => db.appts.find((a) => a.id === id)
-export const apptsOfPatient = (pid: string) => db.appts.filter((a) => a.patientId === pid)
+export const apptsOn = (day: string) => cur().appts.filter((a) => isoToLocal(a.start).day === day).sort((a, b) => a.start.localeCompare(b.start))
+export const appt = (id: string) => cur().appts.find((a) => a.id === id)
+export const apptsOfPatient = (pid: string) => cur().appts.filter((a) => a.patientId === pid)
 
 const overlaps = (a: Appointment, start: number, dur: number) => {
   const s = new Date(a.start).getTime()
@@ -110,7 +114,7 @@ export type Conflict = { ok: false; message: string } | { ok: true }
 /** Sin doble reserva por profesional ni por recurso (en Fase 1 lo garantiza la base con EXCLUDE). */
 export function checkConflict(id: string | null, professionalId: string, resource: string, startIso: string, dur: number): Conflict {
   const start = new Date(startIso).getTime()
-  for (const a of db.appts) {
+  for (const a of cur().appts) {
     if (a.id === id || a.status === 'cancelled' || a.status === 'no_show') continue
     if (!overlaps(a, start, dur)) continue
     if (a.professionalId === professionalId) return { ok: false, message: 'Ese horario ya está ocupado para esa profesional. Probá con otro.' }
@@ -122,6 +126,10 @@ export function checkConflict(id: string | null, professionalId: string, resourc
 export function moveAppt(id: string, startIso: string, professionalId: string): Conflict {
   const a = appt(id)
   if (!a) return { ok: false, message: 'No encontramos ese turno.' }
+  const pro = professional(professionalId)
+  if (!pro) return { ok: false, message: 'No encontramos a esa profesional.' }
+  if (pro.area !== service(a.serviceId)?.area) return { ok: false, message: `Ese turno es de ${service(a.serviceId)?.area}: solo se puede mover dentro de su área.` }
+  if (new Date(startIso).getTime() < Date.now() - 24 * 3_600_000) return { ok: false, message: 'No se pueden mover turnos a una fecha pasada.' }
   const c = checkConflict(id, professionalId, a.resource, startIso, a.durationMin)
   if (!c.ok) return c
   a.start = startIso
@@ -129,9 +137,21 @@ export function moveAppt(id: string, startIso: string, professionalId: string): 
   return { ok: true }
 }
 
-export function setApptStatus(id: string, status: ApptStatus) {
+const NEXT_STATUS: Record<ApptStatus, ApptStatus[]> = {
+  pending: ['confirmed', 'in_room', 'cancelled', 'no_show'],
+  confirmed: ['pending', 'in_room', 'cancelled', 'no_show'],
+  in_room: ['done', 'confirmed', 'cancelled'],
+  done: [],
+  no_show: ['pending'],
+  cancelled: ['pending'],
+}
+
+/** Solo transiciones lógicas: un turno atendido no vuelve a pendiente. */
+export function setApptStatus(id: string, status: ApptStatus): boolean {
   const a = appt(id)
-  if (a) a.status = status
+  if (!a || (a.status !== status && !NEXT_STATUS[a.status].includes(status))) return false
+  a.status = status
+  return true
 }
 
 /** Agenda el próximo turno: prueba el horario sugerido y avanza de a 15 min hasta encontrar hueco. */
@@ -142,15 +162,15 @@ export function scheduleNext(patientId: string, serviceId: string, professionalI
   for (let i = 0; i < 32; i++, start += 15 * 60_000) {
     if (checkConflict(null, professionalId, resource, new Date(start).toISOString(), s.durationMin).ok) {
       const a: Appointment = { id: nextId('a'), patientId, serviceId, professionalId, resource, start: new Date(start).toISOString(), durationMin: s.durationMin, status: 'pending' }
-      db.appts.push(a)
+      cur().appts.push(a)
       return a
     }
   }
   return null
 }
 
-export const entriesOf = (pid: string) => db.entries.filter((e) => e.patientId === pid).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-export const entry = (id: string) => db.entries.find((e) => e.id === id)
+export const entriesOf = (pid: string) => cur().entries.filter((e) => e.patientId === pid).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+export const entry = (id: string) => cur().entries.find((e) => e.id === id)
 export const lastSigned = (pid: string, code: TemplateCode) => entriesOf(pid).find((e) => e.templateCode === code && e.status === 'signed')
 
 export function saveEntry(input: { id?: string; patientId: string; templateCode: TemplateCode; payload: EntryPayload; sign: boolean; author: string }): { ok: true; entry: Entry } | { ok: false; message: string } {
@@ -168,7 +188,7 @@ export function saveEntry(input: { id?: string; patientId: string; templateCode:
     id: nextId('e'), patientId: input.patientId, templateCode: input.templateCode, templateVersion: 1, payload: input.payload,
     status: input.sign ? 'signed' : 'draft', author: input.author, createdAt: now, signedAt: input.sign ? now : undefined, addenda: [],
   }
-  db.entries.push(e)
+  cur().entries.push(e)
   return { ok: true, entry: e }
 }
 

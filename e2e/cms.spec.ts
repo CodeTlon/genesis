@@ -9,9 +9,10 @@ const PHOTO = path.join(__dirname, '..', 'apps', 'web', 'public', 'img', 'img-10
 test.describe.configure({ mode: 'serial' })
 
 async function login(page: Page) {
+  await page.addInitScript(() => sessionStorage.setItem('genesis-tour', 'off')) // sin la guía flotante encima
   await page.goto(PANEL + '/login')
   await page.getByLabel('Contraseña de la demo').fill('demo123')
-  await page.getByRole('button', { name: 'Entrar' }).click()
+  await page.getByRole('button', { name: /Entrar como Inés/ }).click()
   await expect(page).toHaveURL(/\/hoy/)
 }
 

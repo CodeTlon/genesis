@@ -34,7 +34,7 @@ export default async function Atencion({ params, searchParams }: {
   return (
     <main>
       <Link href={`/pacientes/${p.id}`} className="inline-flex min-h-touch items-center underline">← Ficha de {p.firstName}</Link>
-      <h1 className="mt-2 text-3xl font-light uppercase tracking-[0.12em]">{template.name}</h1>
+      <h1 className="mt-2 text-3xl font-normal uppercase tracking-[0.06em]">{template.name}</h1>
       <p className="mt-1 text-lg">{p.firstName} {p.lastName}</p>
       <div className="mt-2 mb-6"><AlertBadges alerts={p.alerts} /></div>
       <TemplateForm patientId={p.id} patientName={`${p.firstName} ${p.lastName}`} template={template} initial={initial} prefilledFrom={prefilledFrom} next={next} />

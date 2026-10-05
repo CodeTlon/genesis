@@ -26,8 +26,8 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
     <main>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-light uppercase tracking-[0.15em]">Agenda</h1>
-          <p className="mt-1 capitalize">{fmtDateLong(day)}{FERIADOS_DEMO[day] ? ` · ${FERIADOS_DEMO[day]}` : ''}</p>
+          <h1 className="text-3xl font-normal uppercase tracking-[0.08em]">Agenda</h1>
+          <p className="mt-1 first-letter:uppercase">{fmtDateLong(day)}{FERIADOS_DEMO[day] ? ` · ${FERIADOS_DEMO[day]}` : ''}</p>
         </div>
         <div className="flex flex-wrap gap-2 print:hidden">
           <Link href={`/agenda?dia=${addDays(day, -1)}`} className={nav}>← Anterior</Link>

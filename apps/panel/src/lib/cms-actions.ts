@@ -5,7 +5,7 @@ import {
   deleteGalleryItem, deleteGroup, deleteMediaByUrl, deleteService, move, saveGalleryItem, saveGroup, saveService, setContent, setRequestStatus,
   type Faq,
 } from '@genesis/db/content'
-import { publishSite, resolveImage, jsonList, str, UserError } from './cms'
+import { publishSite, resolveImage, safeImage, jsonList, str, UserError } from './cms'
 
 const back = (path: string, kind: 'ok' | 'error', msg = '1') => redirect(`${path}${path.includes('?') ? '&' : '?'}${kind}=${encodeURIComponent(msg)}`)
 
@@ -141,7 +141,7 @@ export async function addGalleryItem(fd: FormData) {
 
 export async function updateGalleryItem(fd: FormData) {
   await run('/sitio/galeria', async () => {
-    await saveGalleryItem({ id: str(fd, 'id'), image: str(fd, 'image'), alt: str(fd, 'alt'), consent_public: fd.get('consent') === 'on', published: fd.get('published') === 'on' })
+    await saveGalleryItem({ id: str(fd, 'id'), image: safeImage(str(fd, 'image')), alt: str(fd, 'alt'), consent_public: fd.get('consent') === 'on', published: fd.get('published') === 'on' })
   })
 }
 

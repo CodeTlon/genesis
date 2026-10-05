@@ -21,7 +21,7 @@ export default async function Grupo({ params, searchParams }: { params: Promise<
 
       <form action={updateGroup} className="space-y-6">
         <Hidden v={{ id: g.id }} />
-        <h2 className="text-xl font-light uppercase tracking-[0.12em]">Página del grupo</h2>
+        <h2 className="text-xl font-normal uppercase tracking-[0.06em]">Página del grupo</h2>
         <Text name="name" label="Nombre" defaultValue={g.name} />
         <Text name="slug" label="Dirección de la página" defaultValue={g.slug} hint="Es la parte final del link. Si la cambiás, el link anterior deja de funcionar." />
         <Text name="tagline" label="Frase corta" defaultValue={g.tagline} />
@@ -35,7 +35,7 @@ export default async function Grupo({ params, searchParams }: { params: Promise<
         <div className="flex flex-wrap gap-3"><Save>Guardar grupo</Save></div>
       </form>
 
-      <h2 className="mt-12 text-xl font-light uppercase tracking-[0.12em]">Tratamientos</h2>
+      <h2 className="mt-12 text-xl font-normal uppercase tracking-[0.06em]">Tratamientos</h2>
       <p className="mt-1 mb-4">Abrí un tratamiento para editarlo. Las sesiones y el precio son opcionales: si los dejás vacíos, no se muestran.</p>
       <ul className="space-y-3">
         {g.services.map((s, i) => (

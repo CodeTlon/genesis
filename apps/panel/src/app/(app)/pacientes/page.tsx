@@ -11,7 +11,7 @@ export default function Pacientes() {
   }))
   return (
     <main>
-      <h1 className="text-3xl font-light uppercase tracking-[0.15em]">Pacientes</h1>
+      <h1 className="text-3xl font-normal uppercase tracking-[0.08em]">Pacientes</h1>
       <p className="mt-2 mb-6">Pacientes ficticios para practicar. La búsqueda tolera tildes y errores de tipeo.</p>
       <PatientSearch rows={rows} />
     </main>
