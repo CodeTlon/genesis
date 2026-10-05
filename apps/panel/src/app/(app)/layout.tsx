@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <MotionRoot>
     <div className="min-h-screen md:flex">
-      <aside className="print:hidden border-b border-lila/50 bg-white md:min-h-screen md:w-60 md:border-b-0 md:border-r">
+      <aside className="print:hidden border-b border-lila/50 bg-white md:sticky md:top-0 md:h-screen md:w-60 md:shrink-0 md:self-start md:overflow-y-auto md:border-b-0 md:border-r">
         <div className="flex items-center gap-3 px-4 py-4">
           <Wordmark size="md" />
         </div>

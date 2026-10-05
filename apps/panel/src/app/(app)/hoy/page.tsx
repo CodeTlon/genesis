@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { AlertBadges } from '@/components/alert-badges'
-import { IconCake, IconWarning } from '@/components/icons'
+import { IconCake, IconPerson } from '@/components/icons'
 import { StatusActions, StatusBadge } from '@/components/status-actions'
 import { PrintButton } from '@/components/print-button'
 import CountUp from '@genesis/ui/vendor/CountUp'
 import { age, fmtDateLong, fmtTime, isBirthdayToday, todayKey } from '@/lib/dates'
+import { ALERT_LABEL, type Alert } from '@/lib/types'
 import { apptsOn, patient, patients, professional, PROFESSIONALS, service } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,7 @@ export default function Hoy() {
   const cumples = patients().filter((p) => isBirthdayToday(p.birthDate, day))
   const menores = appts.filter((a) => patient(a.patientId)?.guardian)
   const conAlertas = appts.filter((a) => patient(a.patientId)?.alerts.length)
+  const alertCounts = (Object.keys(ALERT_LABEL) as Alert[]).map((a) => [a, conAlertas.filter((x) => patient(x.patientId)?.alerts.includes(a)).length] as const).filter(([, n]) => n > 0).sort((x, y) => y[1] - x[1])
   const pct = appts.length ? Math.round((done / appts.length) * 100) : 0
   const th = 'px-4 py-3 text-left font-semibold'
 
@@ -52,8 +54,7 @@ export default function Hoy() {
         <div className="mt-2 h-3 rounded-full bg-lila/30" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Avance del día"><div className="h-3 rounded-full bg-violeta-oscuro transition-[width] duration-700" style={{ width: `${pct}%` }} /></div>
       </div>
 
-      <div className="mt-6 grid gap-6 2xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <section aria-labelledby="turnos" className="min-w-0">
+      <section aria-labelledby="turnos" className="mt-6 min-w-0">
           <h2 id="turnos" className="text-xl font-normal uppercase tracking-[0.06em]">Turnos del día</h2>
 
           {/* Escritorio: tabla */}
@@ -105,34 +106,56 @@ export default function Hoy() {
             })}
             {!appts.length && <li>No hay turnos para hoy.</li>}
           </ul>
-        </section>
+      </section>
 
-        <aside className="grid min-w-0 gap-4 md:grid-cols-2 2xl:block 2xl:space-y-4" aria-label="Avisos y carga del día">
-          <section className="rounded-card bg-white p-5 shadow-soft">
-            <h2 className="text-lg font-semibold">Avisos</h2>
-            <ul className="mt-3 space-y-3">
-              {cumples.map((p) => <li key={p.id} className="flex gap-3 rounded-control bg-lila/40 p-3"><IconCake className="mt-0.5 size-5 text-violeta-oscuro" /><span>Hoy cumple años <strong>{p.firstName} {p.lastName}</strong>.</span></li>)}
-              {menores.length > 0 && <li className="flex gap-3 rounded-control bg-amber-100 p-3 text-amber-950"><IconWarning className="mt-0.5 size-5" /><span>{menores.length === 1 ? '1 turno con un menor' : `${menores.length} turnos con menores`}: el consentimiento lo firma el responsable.</span></li>}
-              {conAlertas.length > 0 && <li className="flex gap-3 rounded-control bg-amber-100 p-3 text-amber-950"><IconWarning className="mt-0.5 size-5" /><span>{conAlertas.length} {conAlertas.length === 1 ? 'paciente con alerta clínica' : 'pacientes con alertas clínicas'} hoy. Mirá la columna Alertas.</span></li>}
-              {!cumples.length && !menores.length && !conAlertas.length && <li>Sin avisos para hoy.</li>}
-            </ul>
-          </section>
-          <section className="rounded-card bg-white p-5 shadow-soft">
-            <h2 className="text-lg font-semibold">Turnos por profesional</h2>
-            <ul className="mt-3 space-y-3">
-              {PROFESSIONALS.map((pr) => {
-                const n = appts.filter((a) => a.professionalId === pr.id).length
-                return (
-                  <li key={pr.id}>
-                    <div className="flex justify-between gap-3"><span className="flex items-center gap-2"><span aria-hidden className="size-3 rounded-sm" style={{ background: pr.color }} />{pr.area}</span><span className="font-semibold tabular-nums">{n}</span></div>
-                    <div className="mt-1 h-3 rounded-full bg-lila/30"><div className="h-3 rounded-full" style={{ width: `${appts.length ? (n / appts.length) * 100 : 0}%`, background: pr.color }} /></div>
-                  </li>
-                )
-              })}
-            </ul>
-          </section>
-        </aside>
-      </div>
+      <section aria-label="Avisos y carga del día" className="mt-8 grid gap-4 lg:grid-cols-3">
+        <div className="rounded-card bg-white p-5 shadow-soft">
+          <h2 className="text-lg font-semibold">Avisos del día</h2>
+          <ul className="mt-3 space-y-3">
+            {cumples.map((p) => (
+              <li key={p.id} className="flex items-start gap-3 rounded-control border-l-4 border-violeta-oscuro bg-lila/30 p-3">
+                <span className="grid size-9 flex-none place-items-center rounded-full bg-white text-violeta-oscuro"><IconCake className="size-5" /></span>
+                <span><strong className="block">Cumpleaños</strong>Hoy cumple años {p.firstName} {p.lastName}.</span>
+              </li>
+            ))}
+            {menores.length > 0 && (
+              <li className="flex items-start gap-3 rounded-control border-l-4 border-sky-700 bg-sky-50 p-3 text-sky-950">
+                <span className="grid size-9 flex-none place-items-center rounded-full bg-white text-sky-800"><IconPerson className="size-5" /></span>
+                <span><strong className="block">{menores.length === 1 ? 'Turno con un menor' : `${menores.length} turnos con menores`}</strong>El consentimiento lo firma el responsable.</span>
+              </li>
+            )}
+            {!cumples.length && !menores.length && <li className="rounded-control bg-lila/20 p-3">Sin avisos para hoy.</li>}
+          </ul>
+        </div>
+
+        <div className="rounded-card bg-white p-5 shadow-soft">
+          <h2 className="text-lg font-semibold">Alertas clínicas de hoy</h2>
+          <p className="text-sm">{conAlertas.length} {conAlertas.length === 1 ? 'paciente' : 'pacientes'} con precauciones.</p>
+          <ul className="mt-3 space-y-2">
+            {alertCounts.map(([a, n]) => (
+              <li key={a} className="flex items-center justify-between gap-3 rounded-control bg-lila/10 px-3 py-1.5"><AlertBadges alerts={[a]} /><span className="font-semibold tabular-nums">{n} {n === 1 ? 'turno' : 'turnos'}</span></li>
+            ))}
+            {!alertCounts.length && <li>Sin alertas para hoy.</li>}
+          </ul>
+        </div>
+
+        <div className="rounded-card bg-white p-5 shadow-soft">
+          <h2 className="text-lg font-semibold">Turnos por profesional</h2>
+          <ul className="mt-4 space-y-4">
+            {PROFESSIONALS.map((pr) => {
+              const mine = appts.filter((a) => a.professionalId === pr.id)
+              const hecho = mine.filter((a) => a.status === 'done').length
+              return (
+                <li key={pr.id}>
+                  <div className="flex items-baseline justify-between gap-3"><span className="flex items-center gap-2 font-semibold"><span aria-hidden className="size-3 rounded-sm" style={{ background: pr.color }} />{pr.area}</span><span><strong className="text-xl font-normal tabular-nums">{mine.length}</strong> {mine.length === 1 ? 'turno' : 'turnos'}</span></div>
+                  <div className="mt-2 h-3 rounded-full bg-lila/30"><div className="h-3 rounded-full transition-[width] duration-700" style={{ width: `${appts.length ? (mine.length / appts.length) * 100 : 0}%`, background: pr.color }} /></div>
+                  <p className="mt-1 text-sm">{hecho} de {mine.length} atendidos</p>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      </section>
     </main>
   )
 }

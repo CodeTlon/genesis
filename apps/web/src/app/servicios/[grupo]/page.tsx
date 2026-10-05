@@ -70,22 +70,21 @@ export default async function GrupoPage({ params }: Props) {
           </nav>
         )}
 
-        <ul className="g-stagger mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-6">
+        {/* Cada tarjeta ocupa 6 filas de la grilla (subgrid): rótulo, título, resumen, datos, aviso y botón quedan alineados entre tarjetas de una misma fila. */}
+        <ul className="g-stagger mt-6 grid gap-x-6 gap-y-0 md:grid-cols-2 lg:grid-cols-6">
           {g.services.map((s, i) => (
-            <li key={s.slug} id={s.slug} className={`scroll-mt-24 ${span(i)} ${lastAlone}`}>
-              <article className="flex h-full flex-col rounded-card bg-white p-6 shadow-soft transition-shadow hover:shadow-lg">
-                {s.hook && <p className="font-label text-sm uppercase tracking-widest text-violeta-oscuro">{s.hook}</p>}
-                <h2 className="mt-2 text-xl font-semibold">{s.name}</h2>
-                <p className="mt-3">{s.summary}</p>
-                {(s.sessions || s.price) && (
-                  <dl className="mt-5 space-y-3 border-t border-lila/50 pt-4">
-                    {s.sessions && <div><dt className="flex items-center gap-2 text-sm"><IconClock className="size-5 text-violeta-oscuro" />Sesiones</dt><dd className="ml-7 font-semibold">{s.sessions}</dd></div>}
-                    {s.price && <div><dt className="flex items-center gap-2 text-sm"><IconCard className="size-5 text-violeta-oscuro" />Valor orientativo</dt><dd className="ml-7 font-semibold">{s.price}</dd></div>}
-                  </dl>
-                )}
-                {s.notice && <p className="mt-4 flex gap-3 rounded-control bg-lila/40 p-3"><IconShield className="mt-0.5 size-5 text-violeta-oscuro" /><span>{s.notice}</span></p>}
-                <div className="mt-auto pt-5"><Link href={`/pedir-turno?servicio=${g.slug}`} className="inline-flex min-h-touch items-center justify-center gap-2 rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro transition-colors hover:bg-violeta-oscuro hover:text-white">Pedir turno<IconArrowRight className="size-5" /></Link></div>
-              </article>
+            <li key={s.slug} id={s.slug} className={`mb-6 grid scroll-mt-24 row-span-6 grid-rows-subgrid rounded-card bg-white p-6 shadow-soft transition-shadow hover:shadow-lg ${span(i)} ${lastAlone}`}>
+              <p className="font-label text-sm uppercase tracking-widest text-violeta-oscuro">{s.hook}</p>
+              <h2 className="mt-2 text-xl font-semibold">{s.name}</h2>
+              <p className="mt-3">{s.summary}</p>
+              {s.sessions || s.price ? (
+                <dl className="mt-5 space-y-3 border-t border-lila/50 pt-4">
+                  {s.sessions && <div><dt className="flex items-center gap-2 text-sm"><IconClock className="size-5 text-violeta-oscuro" />Sesiones</dt><dd className="ml-7 font-semibold">{s.sessions}</dd></div>}
+                  {s.price && <div><dt className="flex items-center gap-2 text-sm"><IconCard className="size-5 text-violeta-oscuro" />Valor orientativo</dt><dd className="ml-7 font-semibold">{s.price}</dd></div>}
+                </dl>
+              ) : <div />}
+              {s.notice ? <p className="mt-4 flex gap-3 rounded-control bg-lila/40 p-3"><IconShield className="mt-0.5 size-5 shrink-0 text-violeta-oscuro" /><span>{s.notice}</span></p> : <div />}
+              <div className="pt-6"><Link href={`/pedir-turno?servicio=${g.slug}`} className="inline-flex min-h-touch items-center justify-center gap-2 rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro transition-colors hover:bg-violeta-oscuro hover:text-white">Pedir turno<IconArrowRight className="size-5" /></Link></div>
             </li>
           ))}
         </ul>

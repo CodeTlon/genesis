@@ -40,12 +40,12 @@ export default function Pacientes() {
         {stat(minors, 'menores de edad')}
       </section>
 
-      <div className="mt-6 grid gap-6 2xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <PatientSearch rows={rows} />
-        <aside className="order-last h-fit min-w-0 rounded-card bg-white p-5 shadow-soft">
-          <BarList title="Alertas más frecuentes" unit="pacientes" columns={['Alerta', 'Tipo', 'Pacientes']} items={counts} series={[]} />
-        </aside>
-      </div>
+      <div className="mt-6 min-w-0"><PatientSearch rows={rows} /></div>
+
+      <section aria-labelledby="alertas-frecuentes" className="mt-6 rounded-card bg-white p-5 shadow-soft">
+        <h2 id="alertas-frecuentes" className="sr-only">Alertas más frecuentes</h2>
+        <BarList title="Alertas más frecuentes" unit="pacientes" columns={['Alerta', 'Tipo', 'Pacientes']} items={counts} series={[]} />
+      </section>
     </main>
   )
 }
