@@ -1,8 +1,8 @@
 # Guion de demo (5 minutos) — Genesis
 
-Para mostrarle a Inés. Todo es **ficticio**: pacientes, DNI y teléfonos son inventados. Contraseña del panel: la variable `DEMO_PASSWORD` (se la pasás vos).
+Para mostrarle a Inés. Todo es **ficticio**: pacientes, DNI y teléfonos son inventados. Al abrir el panel, elegí el perfil con el botón "Entrar como Inés" (sin contraseña, salvo que se defina `DEMO_PASSWORD`). Aparece solo una **guía paso a paso**; se relanza con el botón "? Guía".
 
-**Antes de empezar:** abrí el sitio y el panel en dos pestañas. Reiniciá el panel si querés los datos de partida (se reinician solos al reiniciar el servidor).
+**Antes de empezar:** abrí el sitio y el panel en dos pestañas. Si querés los datos de partida, usá **Reiniciar demo** en el menú (también se regeneran solos cada día).
 
 ## 1. El sitio (1 min) — "así te encuentra la gente en Google"
 - Inicio: logo, propuesta y los grupos de servicios. "Agrupamos los 19 tratamientos en 5 categorías para que sea fácil."

@@ -68,3 +68,11 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **Imágenes:** se procesan en el servidor con sharp (corrige orientación, achica a 1600 px, pasa a WebP y **elimina EXIF/GPS**), tope 4 MB (el cuerpo de las funciones de Vercel corta en ~4,5 MB) y se guardan en la tabla `media`, servidas por `/media/<id>`. Fase 1: object storage cifrado.
 - **Consentimiento en la galería:** una constraint de la base (`CHECK (NOT published OR consent_public)`) impide publicar una foto sin confirmar que no hay personas o que hay consentimiento de uso público (regla de imagen del prompt).
 - **Fuera de alcance por ahora:** roles (todo el que entra al panel edita; Fase 1), historial de versiones del contenido, editor de plantillas clínicas, vista previa sin publicar.
+
+## ADR-010 Demo pública compartible por link
+- **Qué:** una versión de la demo para mostrar por link, pensada para una persona no técnica (~40 años), que se recorre sola con una guía interactiva.
+- **Acceso:** el login es un botón "Entrar como Inés / Valentina" (perfiles ficticios, sin contraseña). Si se define `DEMO_PASSWORD`, se exige. Hay "Reiniciar demo" y "Salir" en el menú. El perfil elegido firma las atenciones.
+- **Tour guiado:** `apps/panel/src/components/tour.tsx`, 6 pasos que navegan a cada pantalla; el paso se guarda solo en `sessionStorage` (no hay datos clínicos). Se relanza con el botón "Guía".
+- **Hosting:** el sitio va en Vercel **sin base** (usa `@genesis/content/defaults`; el formulario de turno simula el envío). El panel va en **un solo proceso** (`Dockerfile.panel`, Railway/Fly con 1 instancia) porque su estado vive en memoria y en serverless se perdería entre requests. Sin `DATABASE_URL` en producción no se intenta conectar a localhost, y `/sitio` no guarda cambios.
+- **Datos:** la semilla es relativa a "hoy" y se regenera si cambia el día, así que la agenda nunca queda vacía. El estado es compartido entre visitantes (no por sesión): suficiente para una demo con pocas personas; "Reiniciar demo" lo restaura.
+- **Seguridad:** se eliminó el secreto por defecto de `/api/revalidate`: en producción, sin `REVALIDATE_SECRET` el endpoint queda cerrado.
