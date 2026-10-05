@@ -23,8 +23,8 @@ export function ListEditor({ name, initial, fields, addLabel, itemLabel }: { nam
               {fields.map((f) => (
                 <label key={f.key} className="block text-sm">{f.label}
                   {f.textarea
-                    ? <textarea value={it[f.key] ?? ''} onChange={(e) => set(i, f.key, e.target.value)} rows={3} className="mt-1 block w-full rounded-control border border-tinta/40 bg-white px-3 py-2 text-base" />
-                    : <input value={it[f.key] ?? ''} onChange={(e) => set(i, f.key, e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/40 bg-white px-3 text-base" />}
+                    ? <textarea value={it[f.key] ?? ''} placeholder={`Escribí ${f.label.toLowerCase()}…`} onChange={(e) => set(i, f.key, e.target.value)} rows={3} className="mt-1 block w-full rounded-control border border-tinta/40 bg-white px-3 py-2 text-base" />
+                    : <input value={it[f.key] ?? ''} placeholder={`Escribí ${f.label.toLowerCase()}…`} onChange={(e) => set(i, f.key, e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/40 bg-white px-3 text-base" />}
                 </label>
               ))}
             </div>

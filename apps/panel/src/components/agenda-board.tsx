@@ -56,6 +56,7 @@ export function AgendaBoard({ day, pros, appts }: { day: string; pros: AgendaPro
   const { toast } = useToast()
   const [, start] = useTransition()
   const [mobilePro, setMobilePro] = useState(pros[0]?.id)
+  const [view, setView] = useState<'grilla' | 'lista'>('grilla')
   const [detail, setDetail] = useState<AgendaAppt | null>(null)
   const dlg = useRef<HTMLDialogElement>(null)
   const lastDrag = useRef(0)
@@ -86,6 +87,52 @@ export function AgendaBoard({ day, pros, appts }: { day: string; pros: AgendaPro
 
   return (
     <div>
+      <section aria-label="Resumen del día" className="mb-5 grid gap-4 sm:grid-cols-2">
+        {pros.map((pr) => {
+          const mine = appts.filter((a) => a.professionalId === pr.id && a.status !== 'cancelled')
+          const booked = mine.reduce((n, a) => n + a.durationMin, 0)
+          const occ = Math.min(100, Math.round((booked / (END - START)) * 100))
+          return (
+            <div key={pr.id} className="rounded-card bg-white p-4 shadow-soft">
+              <div className="flex items-center justify-between gap-3">
+                <p className="flex items-center gap-2 font-semibold"><span aria-hidden className="size-3 rounded-sm" style={{ background: pr.color }} />{pr.name}</p>
+                <p><strong className="text-xl font-normal">{mine.length}</strong> {mine.length === 1 ? 'turno' : 'turnos'}</p>
+              </div>
+              <div className="mt-2 h-3 rounded-full bg-lila/30" role="progressbar" aria-valuenow={occ} aria-valuemin={0} aria-valuemax={100} aria-label={`Ocupación de ${pr.name}`}><div className="h-3 rounded-full transition-[width] duration-700" style={{ width: `${occ}%`, background: pr.color }} /></div>
+              <p className="mt-1 text-sm">{Math.round(booked / 60 * 10) / 10} h reservadas de {(END - START) / 60} h · {occ}% de ocupación</p>
+            </div>
+          )
+        })}
+      </section>
+
+      <div role="group" aria-label="Vista de la agenda" className="mb-4 inline-flex overflow-hidden rounded-control border border-violeta-oscuro print:hidden">
+        {(['grilla', 'lista'] as const).map((v) => <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)} className={`min-h-touch px-5 capitalize transition-colors ${view === v ? 'bg-violeta-oscuro text-white' : 'bg-white text-violeta-oscuro hover:bg-lila/40'}`}>{v}</button>)}
+      </div>
+
+      {view === 'lista' ? (
+        <div className="relative overflow-x-auto rounded-card bg-white shadow-soft">
+          <table className="w-full min-w-[34rem] text-left">
+            <caption className="sr-only">Turnos del día en lista</caption>
+            <thead className="border-b border-lila/60 bg-lila/20"><tr>{['Hora', 'Paciente', 'Tratamiento', 'Profesional', 'Estado'].map((h) => <th key={h} scope="col" className="px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
+            <tbody>
+              {[...appts].sort((x, y) => x.startMin - y.startMin).map((a) => {
+                const pr = pros.find((x) => x.id === a.professionalId)
+                return (
+                  <tr key={a.id} onClick={() => open(a)} className="cursor-pointer border-b border-lila/30 transition-colors last:border-0 hover:bg-lila/20">
+                    <td className="px-4 py-3 whitespace-nowrap">{hhmm(a.startMin)} a {hhmm(a.startMin + a.durationMin)}</td>
+                    <td className="px-4 py-3"><span className="flex items-center gap-2 font-semibold">{a.patient}<AlertBadges alerts={a.alerts} compact max={3} /></span></td>
+                    <td className="px-4 py-3">{a.service} · {a.resource}</td>
+                    <td className="px-4 py-3"><span className="flex items-center gap-2"><span aria-hidden className="size-2.5 rounded-sm" style={{ background: pr?.color }} />{pr?.name}</span></td>
+                    <td className="px-4 py-3">{STATUS_LABEL[a.status]}</td>
+                  </tr>
+                )
+              })}
+              {!appts.length && <tr><td colSpan={5} className="px-4 py-6">No hay turnos este día.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <>
       <div role="tablist" aria-label="Profesional" className="mb-3 flex gap-2 md:hidden">
         {pros.map((p) => (
           <button key={p.id} type="button" role="tab" aria-selected={mobilePro === p.id} onClick={() => setMobilePro(p.id)}
@@ -101,6 +148,9 @@ export function AgendaBoard({ day, pros, appts }: { day: string; pros: AgendaPro
           {pros.map((p) => <Column key={p.id} pro={p} show={p.id === mobilePro} onOpen={open} appts={appts.filter((a) => a.professionalId === p.id)} />)}
         </DndContext>
       </div>
+
+        </>
+      )}
 
       <dialog ref={dlg} className="g-modal" aria-labelledby="ag-title" onClose={() => setDetail(null)} onClick={(e) => { if (e.target === dlg.current) dlg.current?.close() }}>
         {detail && (

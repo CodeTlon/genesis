@@ -7,7 +7,7 @@ const cormorant = Cormorant_Garamond({ subsets: ['latin'], weight: ['500', '600'
 const robotoCondensed = Roboto_Condensed({ subsets: ['latin'], weight: ['400'], display: 'swap', variable: '--font-roboto-condensed' })
 
 export const metadata: Metadata = {
-  title: 'Genesis · Panel',
+  title: 'GENESIS · Panel',
   description: 'Sistema interno de gestión',
   robots: { index: false, follow: false },
 }

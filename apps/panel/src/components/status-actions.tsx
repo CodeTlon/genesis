@@ -18,7 +18,7 @@ export function StatusBadge({ status }: { status: ApptStatus }) {
   return <span className={`inline-flex rounded-full px-3 py-1 text-sm ${tone[status]}`}>{STATUS_LABEL[status]}</span>
 }
 
-export function StatusActions({ id, status }: { id: string; status: ApptStatus }) {
+export function StatusActions({ id, status, compact = false }: { id: string; status: ApptStatus; compact?: boolean }) {
   const [pending, start] = useTransition()
   const { toast } = useToast()
   const acts = NEXT[status] ?? []
@@ -34,7 +34,7 @@ export function StatusActions({ id, status }: { id: string; status: ApptStatus }
               ...(a.to !== 'done' ? { actionLabel: 'Deshacer', onAction: () => { void changeStatus(id, status) } } : {}),
             })
           })}
-          className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro hover:bg-lila/40 disabled:opacity-60">
+          className={`rounded-control border border-violeta-oscuro text-violeta-oscuro hover:bg-lila/40 disabled:opacity-60 ${compact ? 'min-h-10 px-3 text-sm' : 'min-h-touch px-4'}`}>
           {a.label}
         </button>
       ))}

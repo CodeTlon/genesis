@@ -1,14 +1,12 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { WhatsAppLogo } from './icons'
 
 const ICONS: Record<string, string> = {
   '/hoy': 'M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10l1.4 1.4m0-12.8L17 7M7 17l-1.4 1.4M12 8a4 4 0 100 8 4 4 0 000-8z',
   '/resumen': 'M5 20V10M12 20V4M19 20v-7',
   '/agenda': 'M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z',
   '/pacientes': 'M16 19v-1a4 4 0 00-4-4H8a4 4 0 00-4 4v1m8-9a3 3 0 100-6 3 3 0 000 6zm8 9v-1a4 4 0 00-3-3.9M16 4.1a3 3 0 010 5.8',
-  '/whatsapp': 'M21 12a8 8 0 01-11.7 7.1L4 20l1-4.7A8 8 0 1121 12z',
   '/sitio': 'M12 21a9 9 0 100-18 9 9 0 000 18zM3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18',
   '/plantillas': 'M8 4h8l3 3v13H5V4h3zm0 8h8m-8 4h5',
   '/ayuda': 'M12 21a9 9 0 100-18 9 9 0 000 18zm0-5v.01M9.5 9.5a2.5 2.5 0 114 2c-.9.6-1.5 1.1-1.5 2',
@@ -25,7 +23,7 @@ export function Nav({ items, nuevas }: { items: { href: string; label: string; d
         return (
           <Link key={n.href} href={n.href} aria-current={active ? 'page' : undefined}
             className={`${n.desktopOnly ? 'max-md:hidden ' : ''}relative flex min-h-touch min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-control px-0.5 text-[10px] leading-tight md:flex-none md:flex-row md:justify-start md:gap-3 md:px-4 md:text-base ${active ? 'bg-lila/60 font-semibold text-tinta' : 'hover:bg-lila/40'}`}>
-            {n.href === '/whatsapp' ? <WhatsAppLogo className="size-5 md:size-6" /> : <svg aria-hidden viewBox="0 0 24 24" className="size-5 shrink-0 md:size-6 text-violeta-oscuro" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d={ICONS[n.href]} /></svg>}
+            <svg aria-hidden viewBox="0 0 24 24" className="size-5 shrink-0 md:size-6 text-violeta-oscuro" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d={ICONS[n.href]} /></svg>
             <span className="md:hidden">{SHORT[n.href] ?? n.label}</span>
             <span className="hidden md:inline">{n.label}</span>
             {n.href === '/sitio' && nuevas > 0 && <span className="absolute right-1 top-0 rounded-full bg-amber-200 px-1.5 text-xs text-amber-950 md:static md:ml-auto md:px-2 md:text-sm" aria-label={`${nuevas} solicitudes nuevas`}>{nuevas}</span>}

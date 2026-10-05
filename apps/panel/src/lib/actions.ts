@@ -54,10 +54,3 @@ export async function apptInfo(id: string) {
   const a = appt(id)
   return a ? { professionalId: a.professionalId, resource: a.resource, serviceId: a.serviceId } : null
 }
-
-/** Simulador de WhatsApp: la respuesta de la paciente actualiza el turno real de la demo (Carlos Ferreyra, mañana 10:00). */
-export async function whatsappRespond(choice: 'confirm' | 'cancel') {
-  const ok = setApptStatus('a9', choice === 'confirm' ? 'confirmed' : 'cancelled')
-  revalidatePath('/hoy'); revalidatePath('/agenda')
-  return ok
-}

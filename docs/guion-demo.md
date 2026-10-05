@@ -25,10 +25,6 @@ Para mostrarle a Inés. Todo es **ficticio**: pacientes, DNI y teléfonos son in
 ## 4. Agenda (45 s)
 - Arrastrá un turno a otra hora o a otra profesional. Intentá ponerlo encima de otro: el sistema avisa y no lo permite. Probá **Deshacer**.
 
-## 5. WhatsApp simulado (45 s)
-- Recordatorio con opciones, menú con números, **audio** → "Inés te contesta en breve" y alerta en el panel. Una consulta clínica **no** la responde: la deriva.
-- Mostrá el gasto estimado de mensajería.
-
 ## 5 bis. Editar el sitio (1 min) — "y todo esto lo cambiás vos"
 - Panel → **Sitio web** → **Inicio**: cambiá el título y guardá. Abrí el sitio: ya cambió.
 - **Avisos y buscadores**: activá "Cerrado por feriado el lunes" y mostrá la franja en el sitio.

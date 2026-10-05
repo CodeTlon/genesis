@@ -171,7 +171,7 @@ export const DEFAULT_CONTENT = {
   ],
   notice: { active: false, text: '' },
   seo: {
-    title: 'Genesis Estética Integral — Podología y estética en Córdoba',
+    title: 'GENESIS — Podología y estética en Córdoba',
     description: 'Podología, tratamientos faciales y corporales, depilación, cejas, pestañas y uñas en Colorado 5827, Córdoba.',
   },
   disclaimer: 'Los resultados varían según cada persona. La información de esta web es orientativa y no reemplaza la consulta profesional.',

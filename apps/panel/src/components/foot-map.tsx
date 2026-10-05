@@ -121,7 +121,7 @@ export function FootMap({ markers, onChange }: { markers: FootMarker[]; onChange
             </div>
           </fieldset>
           <label className="block">Nota (opcional)
-            <input value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 px-3" />
+            <input value={note} placeholder="Ej: núcleo central, duele al apoyar" onChange={(e) => setNote(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 px-3" />
           </label>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={save} className="min-h-touch rounded-control bg-violeta-oscuro px-5 text-white">Guardar marca</button>

@@ -11,7 +11,6 @@ const STEPS = [
   { href: '/agenda', task: 'Moví un turno de horario', title: 'La agenda', text: 'Arrastrá un turno a otro horario o a la otra profesional. Si el horario está ocupado, te avisa y no lo mueve.' },
   { href: '/pacientes', task: 'Busqué a un paciente', title: 'Pacientes', text: 'Buscá por nombre o DNI (no importan los acentos). Entrá a una ficha para ver su historia, consentimientos y atenciones anteriores.' },
   { href: '/pacientes/p2/atencion?plantilla=B', task: 'Marqué una zona en el mapa de pies', title: 'Registrar una atención', text: 'Completá la plantilla, marcá hallazgos en el mapa de pies y firmá manteniendo apretado el botón. Al firmar se cierra el turno de hoy.' },
-  { href: '/whatsapp', task: 'Respondí al recordatorio', title: 'WhatsApp (simulado)', text: 'Así se vería la confirmación de turnos por WhatsApp. Escribí como si fueras la paciente: es solo una simulación.' },
   { href: '/sitio', task: 'Miré las solicitudes de turno', title: 'El sitio web se edita desde acá', text: 'Textos, servicios, galería y las solicitudes de turno que llegan del sitio público.' },
 ] as const
 

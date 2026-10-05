@@ -85,19 +85,9 @@ test('agenda: no permite doble reserva', async ({ page }) => {
   await expect(page.getByText(/ya está ocupado/)).toBeVisible() // el aviso sale como toast propio
 })
 
-test('WhatsApp simulado: audio y consulta clínica derivan a una persona', async ({ page }) => {
-  await login(page)
-  await page.goto(PANEL + '/whatsapp')
-  await page.getByRole('button', { name: /Mandar un audio/ }).click()
-  await expect(page.getByText('El equipo te contesta en breve.').first()).toBeVisible()
-  await page.getByRole('button', { name: 'Consulta clínica' }).click()
-  await expect(page.getByText('Mensaje que el bot no entendió')).toBeVisible()
-  await expect(page.getByText('Gasto estimado de mensajería')).toBeVisible()
-})
-
 test('accesibilidad (axe) del panel: sin errores críticos ni serios', async ({ page }) => {
   await login(page)
-  for (const p of ['/hoy', '/agenda', '/pacientes', '/pacientes/p2', '/pacientes/p2/atencion?plantilla=B', '/whatsapp', '/plantillas', '/ayuda']) {
+  for (const p of ['/hoy', '/agenda', '/pacientes', '/pacientes/p2', '/pacientes/p2/atencion?plantilla=B', '/plantillas', '/ayuda']) {
     await page.goto(PANEL + p)
     const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
     const bad = r.violations.filter((x) => x.impact === 'critical' || x.impact === 'serious')

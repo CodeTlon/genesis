@@ -54,8 +54,8 @@ export function EntryView({ entry }: { entry: Entry }) {
             <button onClick={() => setOpen(true)} className="mt-2 min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro">Agregar adenda</button>
           ) : (
             <form className="mt-2 space-y-2" onSubmit={(e) => { e.preventDefault(); start(async () => { const r = await addendum(entry.id, entry.patientId, reason, text); if (r.ok) { setOpen(false); setReason(''); setText(''); setMsg('') } else setMsg(r.message ?? '') }) }}>
-              <label className="block">Motivo de la corrección<input value={reason} onChange={(e) => setReason(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/40 px-3" /></label>
-              <label className="block">Texto<textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} className="mt-1 block w-full rounded-control border border-tinta/40 px-3 py-2" /></label>
+              <label className="block">Motivo de la corrección<input value={reason} placeholder="Ej: error de carga, dato que faltaba" onChange={(e) => setReason(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/40 px-3" /></label>
+              <label className="block">Texto<textarea value={text} placeholder="Escribí qué se corrige o se agrega a esta atención…" onChange={(e) => setText(e.target.value)} rows={2} className="mt-1 block w-full rounded-control border border-tinta/40 px-3 py-2" /></label>
               {msg && <p role="alert" className="text-red-800">{msg}</p>}
               <button disabled={pending} className="min-h-touch rounded-control bg-violeta-oscuro px-5 text-white">Guardar adenda</button>
             </form>

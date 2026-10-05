@@ -15,7 +15,6 @@ const NAV = [
   { href: '/resumen', label: 'Resumen' },
   { href: '/agenda', label: 'Agenda' },
   { href: '/pacientes', label: 'Pacientes' },
-  { href: '/whatsapp', label: 'WhatsApp' },
   { href: '/sitio', label: 'Sitio web' },
   { href: '/plantillas', label: 'Plantillas' },
   { href: '/ayuda', label: 'Ayuda', desktopOnly: true },
@@ -28,7 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen md:flex">
       <aside className="print:hidden border-b border-lila/50 bg-white md:min-h-screen md:w-60 md:border-b-0 md:border-r">
         <div className="flex items-center gap-3 px-4 py-4">
-          <Wordmark size="md" tagline />
+          <Wordmark size="md" />
         </div>
         <Nav items={NAV} nuevas={nuevas} />
         <form className="flex gap-2 px-4 pb-4 text-sm md:flex-col">

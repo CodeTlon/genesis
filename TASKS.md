@@ -8,7 +8,7 @@
 - [x] Inicio, Servicios (19 servicios en 5 páginas por grupo), Nosotros, Galería, Contacto, Pedir turno, Privacidad (sin botón de WhatsApp)
 - [x] JSON-LD, sitemap, robots (demo noindex)
 ## Panel
-- [x] Pacientes ficticios, ficha + plantillas A/B/C, mapa de pies, agenda drag&drop, Hoy, WhatsApp simulado, onboarding, plantillas
+- [x] Pacientes ficticios, ficha + plantillas A/B/C, mapa de pies, agenda drag&drop, Hoy, onboarding, plantillas
 ## Cierre
 - [x] Lighthouse móvil (perf 96-98, a11y 100) + axe + 14 E2E verdes + docs/guion-demo.md
 - [x] Sitio editable desde el panel (CMS sobre Postgres): 7 E2E + axe verdes

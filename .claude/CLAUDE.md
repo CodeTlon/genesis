@@ -3,7 +3,7 @@ Sitio público + panel interno (historias clínicas, agenda) para Genesis Estét
 
 ## Reglas propias (anulan defaults de la fábrica)
 - **Sin marca CodeTlon** ni `<CodeTlonBadge />` (pedido del cliente final). Footer neutro.
-- **Sin botón ni links de WhatsApp en el sitio** (pedido de Mateo). El panel solo simula WhatsApp.
+- **Sin WhatsApp en ningún lado**: ni botón ni links en el sitio, y se eliminó el simulador del panel (pedido de Mateo).
 - Datos 100 % ficticios; nada de fotos de pacientes en el repo (las 38 piezas están en `codetlon-cloud/client-assets/genesis…`, solo recortes cat. 3 en `apps/web/public/img`).
 - Plantillas clínicas = **propuestas a validar** con la profesional. No inventar protocolos.
 - Sin trackers, CDNs de terceros ni datos clínicos en localStorage.
@@ -13,7 +13,7 @@ Next 15.5.25 + Tailwind v4 + Turborepo (npm) + Postgres 16 (`docker compose up -
 
 ## Mapa
 - `apps/web`: sitio. Lee TODO el contenido de la base con `@genesis/db/content` (respaldo: `packages/content/src/defaults.ts`). ISR 60 s + `/api/revalidate`.
-- `apps/panel`: demo. `/sitio/*` = CMS del sitio (Postgres; acciones en `src/lib/cms-actions.ts`, imágenes en `lib/cms.ts`). Clínico: `src/lib/store.ts` (datos en memoria), `templates.ts` (plantillas A/B/C), `components/{foot-map,template-form,agenda-board,whatsapp-sim}.tsx`.
+- `apps/panel`: demo. `/sitio/*` = CMS del sitio (Postgres; acciones en `src/lib/cms-actions.ts`, imágenes en `lib/cms.ts`). Clínico: `src/lib/store.ts` (datos en memoria), `templates.ts` (plantillas A/B/C), `components/{foot-map,template-form,agenda-board}.tsx`.
 - `packages/config/tokens.css`: tokens de marca (único archivo). `packages/ui/vendor`: componentes de react-bits adaptados (HoldButton, Stepper).
 - `docs/`: guion-demo, incidentes, imagenes, marca, decisiones.
 

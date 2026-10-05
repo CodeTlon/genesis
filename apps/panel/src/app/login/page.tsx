@@ -7,14 +7,14 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const needsPassword = !!process.env.DEMO_PASSWORD
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-10">
-      <h1 className="text-center"><Wordmark size="xl" tagline className="items-center" /><span className="sr-only"> Panel de gestión</span></h1>
+      <h1 className="text-center"><Wordmark size="xl" className="items-center" /><span className="sr-only"> Panel de gestión</span></h1>
       <p className="mt-2 text-center">Demo interactiva con datos 100 % ficticios. Elegí con qué perfil querés entrar.</p>
       <form action={enterDemo} className="mt-8 space-y-4">
         {tour === '1' && <input type="hidden" name="tour" value="1" />}
         {needsPassword && (
           <div>
             <label htmlFor="password" className="font-semibold">Contraseña de la demo</label>
-            <input id="password" name="password" type="password" autoComplete="current-password" required aria-invalid={!!error} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4" />
+            <input id="password" name="password" placeholder="Escribí la contraseña de la demo" type="password" autoComplete="current-password" required aria-invalid={!!error} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4" />
             {error && <p role="alert" className="mt-2 text-red-800">La contraseña no es correcta. Probá de nuevo.</p>}
           </div>
         )}

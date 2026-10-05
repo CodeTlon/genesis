@@ -98,7 +98,7 @@ function Signed({ patientId, patientName, template, next, entryId }: { patientId
         <section className="rounded-card bg-white p-5 shadow-soft" aria-labelledby="prox">
           <h2 id="prox" className="text-xl font-normal uppercase tracking-[0.06em]">Próximo turno</h2>
           <label className="mt-3 block">Dentro de cuántos días
-            <input type="number" min={1} value={days} onChange={(e) => setDays(Math.max(1, Math.round(Number(e.target.value)) || 1))} className={`${input} max-w-40`} />
+            <input type="number" min={1} placeholder="Ej: 30" value={days} onChange={(e) => setDays(Math.max(1, Math.round(Number(e.target.value)) || 1))} className={`${input} max-w-40`} />
           </label>
           <button disabled={busy || booked} onClick={async () => {
             setBusy(true)
@@ -130,9 +130,9 @@ function FieldInput({ field: f, value, onChange, markers, onMarkers }: {
     case 'footmap':
       return <div><p className="font-semibold">{f.label}</p>{hint}<div className="mt-2"><FootMap markers={markers} onChange={onMarkers} /></div></div>
     case 'longtext':
-      return <div><label htmlFor={id}>{label}</label>{hint}<textarea id={id} rows={3} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={`${input} py-3`} /></div>
+      return <div><label htmlFor={id}>{label}</label>{hint}<textarea id={id} rows={3} placeholder={`Escribí ${f.label.toLowerCase()}…`} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={`${input} py-3`} /></div>
     case 'number':
-      return <div><label htmlFor={id}>{label}</label><input id={id} type="number" inputMode="decimal" value={(value as number | string) ?? ''} onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))} className={`${input} max-w-48`} /></div>
+      return <div><label htmlFor={id}>{label}</label><input id={id} type="number" inputMode="decimal" placeholder={f.unit ? `En ${f.unit}` : 'Ej: 10'} value={(value as number | string) ?? ''} onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))} className={`${input} max-w-48`} /></div>
     case 'date':
       return <div><label htmlFor={id}>{label}</label><input id={id} type="date" value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={`${input} max-w-60`} /></div>
     case 'bool':
@@ -174,6 +174,6 @@ function FieldInput({ field: f, value, onChange, markers, onMarkers }: {
       )
     }
     default:
-      return <div><label htmlFor={id}>{label}</label>{hint}<input id={id} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={input} /></div>
+      return <div><label htmlFor={id}>{label}</label>{hint}<input id={id} placeholder={`Completá: ${f.label.toLowerCase()}`} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={input} /></div>
   }
 }

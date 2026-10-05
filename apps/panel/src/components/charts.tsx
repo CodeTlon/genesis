@@ -25,7 +25,7 @@ function DataTable({ head, rows, caption }: { head: string[]; rows: (string | nu
   return (
     <details className="mt-4">
       <summary className="min-h-touch cursor-pointer py-2 underline decoration-dotted underline-offset-4">Ver como tabla</summary>
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
         <table className="mt-2 w-full text-left">
           <caption className="sr-only">{caption}</caption>
           <thead><tr>{head.map((h) => <th key={h} scope="col" className="border-b border-tinta/30 py-2 pr-4 font-semibold">{h}</th>)}</tr></thead>
@@ -87,8 +87,8 @@ export function ColumnChart({ title, categories, series, values, unit }: {
 }
 
 /** Barras horizontales con el valor al final (etiqueta directa). El color identifica a la profesional. */
-export function BarList({ title, items, unit, series }: {
-  title: string; items: { label: string; value: number; color: string; owner: string }[]; unit: string; series: Series[]
+export function BarList({ title, items, unit, series, columns = ['Servicio', 'Profesional', 'Cantidad'] }: {
+  title: string; columns?: [string, string, string]; items: { label: string; value: number; color: string; owner: string }[]; unit: string; series: Series[]
 }) {
   const id = useId()
   const max = Math.max(1, ...items.map((i) => i.value))
@@ -104,7 +104,7 @@ export function BarList({ title, items, unit, series }: {
           </li>
         ))}
       </ul>
-      <DataTable caption={title} head={['Servicio', 'Profesional', 'Cantidad']} rows={items.map((i) => [i.label, i.owner, i.value])} />
+      <DataTable caption={title} head={columns} rows={items.map((i) => [i.label, i.owner, i.value])} />
     </figure>
   )
 }
