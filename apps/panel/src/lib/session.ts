@@ -26,7 +26,7 @@ export async function enterDemo(formData: FormData) {
   const opts = { httpOnly: true, sameSite: 'lax' as const, path: '/', maxAge: 60 * 60 * 8 }
   jar.set('gp', await sessionToken(), opts)
   jar.set('gu', profile in PROFILES ? profile : 'pr1', opts)
-  redirect('/hoy')
+  redirect(formData.get('tour') === '1' ? '/hoy?tour=1' : '/hoy')
 }
 
 export async function leaveDemo() {

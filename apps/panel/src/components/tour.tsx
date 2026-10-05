@@ -1,11 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { IconHelp } from './icons'
 import { usePathname, useRouter } from 'next/navigation'
 import SpringCheck from '@genesis/ui/vendor/SpringCheck'
 import StatusMark from '@genesis/ui/vendor/StatusMark'
 
 const STEPS = [
   { href: '/hoy', task: 'Cambié el estado de un turno', title: 'Tu día de un vistazo', text: 'Acá ves los turnos de hoy, quién llegó y los avisos importantes (alergias, anticoagulantes, cumpleaños). Probá cambiar el estado de un turno con los botones.' },
+  { href: '/resumen', task: 'Cambié entre profesionales', title: 'Resumen del equipo', text: 'Gráficos de las últimas 8 semanas: turnos atendidos, servicios más pedidos y días más cargados. Elegí una profesional arriba para ver solo lo suyo.' },
   { href: '/agenda', task: 'Moví un turno de horario', title: 'La agenda', text: 'Arrastrá un turno a otro horario o a la otra profesional. Si el horario está ocupado, te avisa y no lo mueve.' },
   { href: '/pacientes', task: 'Busqué a un paciente', title: 'Pacientes', text: 'Buscá por nombre o DNI (no importan los acentos). Entrá a una ficha para ver su historia, consentimientos y atenciones anteriores.' },
   { href: '/pacientes/p2/atencion?plantilla=B', task: 'Marqué una zona en el mapa de pies', title: 'Registrar una atención', text: 'Completá la plantilla, marcá hallazgos en el mapa de pies y firmá manteniendo apretado el botón. Al firmar se cierra el turno de hoy.' },
@@ -16,7 +18,7 @@ const STEPS = [
 const KEY = 'genesis-tour'
 const DONE_KEY = 'genesis-tour-done'
 
-export function Tour() {
+export function Tour({ webUrl }: { webUrl?: string }) {
   const router = useRouter()
   const path = usePathname()
   const [checked, setChecked] = useState<number[]>([])
@@ -24,6 +26,11 @@ export function Tour() {
 
   useEffect(() => {
     try {
+      // Viene de la demo del sitio (?tour=1): se reinicia la guía desde el principio.
+      if (new URLSearchParams(window.location.search).get('tour') === '1') {
+        sessionStorage.setItem(KEY, '0'); sessionStorage.removeItem(DONE_KEY)
+        window.history.replaceState(null, '', window.location.pathname)
+      }
       const saved = sessionStorage.getItem(KEY)
       setStep(saved === null ? 0 : saved === 'off' ? null : Number(saved))
       setChecked(JSON.parse(sessionStorage.getItem(DONE_KEY) ?? '[]'))
@@ -46,7 +53,7 @@ export function Tour() {
   if (step === null) {
     return (
       <button onClick={() => go(0)} className="print:hidden fixed bottom-20 right-3 z-40 flex size-12 items-center justify-center rounded-full bg-violeta-oscuro text-lg text-white md:bottom-4 md:right-4 md:w-auto md:px-5 shadow-soft hover:bg-tinta">
-        <span aria-hidden>?</span><span className="sr-only md:not-sr-only md:ml-2">Guía</span>
+        <IconHelp className="size-6" /><span className="sr-only md:not-sr-only md:ml-2">Guía</span>
       </button>
     )
   }
@@ -60,6 +67,7 @@ export function Tour() {
         <>
           <h2 className="text-lg font-semibold">¡Listo, ya recorriste la demo!</h2>
           <p className="mt-2">Podés seguir probando lo que quieras. Si querés empezar de cero, usá “Reiniciar demo” en el menú.</p>
+          {webUrl && <a href={webUrl} className="mt-3 inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro hover:bg-lila/40">Volver al sitio público</a>}
         </>
       ) : (
         <>

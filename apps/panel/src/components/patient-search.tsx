@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { AlertBadges } from './alert-badges'
-import type { Alert } from '@/lib/types'
+import { ALERT_LABEL, type Alert } from '@/lib/types'
 
 export type PatientRow = { id: string; name: string; dni: string; phone: string; age: number; alerts: Alert[]; search: string }
 
@@ -30,25 +30,40 @@ function near(word: string, token: string) {
 
 export function PatientSearch({ rows }: { rows: PatientRow[] }) {
   const [q, setQ] = useState('')
+  const [only, setOnly] = useState<Alert | 'any' | null>(null)
+  const present = useMemo(() => [...new Set(rows.flatMap((r) => r.alerts))], [rows])
   const filtered = useMemo(() => {
     const tokens = norm(q).split(/\s+/).filter(Boolean)
-    if (!tokens.length) return rows
-    return rows.filter((r) => tokens.every((t) => near(r.search, t)))
-  }, [q, rows])
+    return rows.filter((r) =>
+      tokens.every((t) => near(r.search, t)) &&
+      (only === null || (only === 'any' ? r.alerts.length > 0 : r.alerts.includes(only))))
+  }, [q, rows, only])
+  const chip = (on: boolean) => `min-h-touch rounded-full border px-4 transition-colors ${on ? 'border-violeta-oscuro bg-violeta-oscuro text-white' : 'border-tinta/60 bg-white hover:bg-lila/40'}`
 
   return (
     <div>
       <label htmlFor="q" className="font-semibold">Buscar por nombre, DNI o teléfono</label>
       <input id="q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ej: gonzalez, 351…, 00.000.0…"
-        className="mt-1 block min-h-touch w-full rounded-control border border-tinta/40 bg-white px-4" />
-      <p className="mt-2 text-sm" aria-live="polite">{filtered.length} {filtered.length === 1 ? 'paciente' : 'pacientes'}</p>
-      <ul className="mt-4 grid gap-3 md:grid-cols-2">
+        className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4" />
+      <div role="group" aria-label="Filtrar por alerta" className="mt-4 flex flex-wrap gap-2">
+        <button type="button" aria-pressed={only === null} onClick={() => setOnly(null)} className={chip(only === null)}>Todos ({rows.length})</button>
+        <button type="button" aria-pressed={only === 'any'} onClick={() => setOnly(only === 'any' ? null : 'any')} className={chip(only === 'any')}>Con alertas ({rows.filter((r) => r.alerts.length).length})</button>
+        {present.map((a) => (
+          <button key={a} type="button" aria-pressed={only === a} onClick={() => setOnly(only === a ? null : a)} className={chip(only === a)}>{ALERT_LABEL[a]}</button>
+        ))}
+      </div>
+      <p className="mt-3" aria-live="polite">{filtered.length} {filtered.length === 1 ? 'paciente' : 'pacientes'}</p>
+      <ul className="g-stagger mt-4 grid auto-rows-fr gap-4 md:grid-cols-2 2xl:grid-cols-3">
         {filtered.map((r) => (
-          <li key={r.id}>
-            <Link href={`/pacientes/${r.id}`} className="block rounded-card bg-white p-4 shadow-soft hover:ring-2 hover:ring-violeta">
-              <p className="text-lg font-semibold">{r.name}</p>
-              <p>{r.age} años · DNI {r.dni} · Tel. {r.phone}</p>
-              <div className="mt-2"><AlertBadges alerts={r.alerts} /></div>
+          <li key={r.id} className="h-full">
+            <Link href={`/pacientes/${r.id}`} className="flex h-full min-h-28 items-start gap-4 rounded-card bg-white p-4 shadow-soft transition-shadow hover:ring-2 hover:ring-violeta-oscuro">
+              <span aria-hidden className="grid size-12 flex-none place-items-center rounded-full bg-lila/60 font-semibold text-tinta">{r.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-lg font-semibold">{r.name}</span>
+                <span className="block truncate">{r.age} años · DNI {r.dni}</span>
+                <span className="block truncate">Tel. {r.phone}</span>
+              </span>
+              <span className="flex min-h-6 flex-none items-start"><AlertBadges alerts={r.alerts} compact max={3} /></span>
             </Link>
           </li>
         ))}

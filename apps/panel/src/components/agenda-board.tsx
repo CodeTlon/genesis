@@ -1,6 +1,6 @@
 'use client'
 import { DndContext, KeyboardSensor, MouseSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { moveAppointment } from '@/lib/actions'
 import { hhmm, localToIso } from '@/lib/dates'
 import { AlertBadges } from './alert-badges'
@@ -13,34 +13,39 @@ export type AgendaAppt = {
 }
 export type AgendaPro = { id: string; name: string; color: string }
 
-const START = 8 * 60, END = 20 * 60, PPM = 1.2, SNAP = 15
+const START = 8 * 60, END = 20 * 60, PPM = 1.5, SNAP = 15, MIN_H = 44
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
-function Card({ a, color }: { a: AgendaAppt; color: string }) {
+function Card({ a, color, onOpen }: { a: AgendaAppt; color: string; onOpen: (a: AgendaAppt) => void }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: a.id })
+  const h = Math.max(a.durationMin * PPM - 2, MIN_H)
+  const inactive = a.status === 'cancelled' || a.status === 'no_show'
   return (
     <div
       ref={setNodeRef} {...listeners} {...attributes}
-      aria-label={`${a.patient}, ${a.service}, ${hhmm(a.startMin)} a ${hhmm(a.startMin + a.durationMin)}. ${STATUS_LABEL[a.status]}. Arrastrá (en celular, mantener apretado) para mover.`}
-      style={{ top: (a.startMin - START) * PPM, height: a.durationMin * PPM - 2, borderLeftColor: color, transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined }}
-      className={`absolute inset-x-1 cursor-grab touch-manipulation select-none overflow-hidden rounded-control border-l-4 bg-white p-2 text-sm shadow-soft active:cursor-grabbing ${isDragging ? 'z-20 opacity-90 ring-2 ring-violeta-oscuro' : 'z-10'} ${a.status === 'cancelled' || a.status === 'no_show' ? 'opacity-50' : ''}`}
+      onClick={() => onOpen(a)}
+      aria-label={`${a.patient}, ${a.service}, ${hhmm(a.startMin)} a ${hhmm(a.startMin + a.durationMin)}. ${STATUS_LABEL[a.status]}. Tocá para ver el detalle; arrastrá (en celular, mantené apretado) para mover.`}
+      style={{ top: (a.startMin - START) * PPM, height: h, borderLeftColor: color, transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined }}
+      className={`absolute inset-x-1 cursor-grab touch-manipulation select-none overflow-hidden rounded-control border-l-4 bg-white px-2 py-1 text-sm shadow-soft transition-shadow hover:shadow-md active:cursor-grabbing ${isDragging ? 'z-20 opacity-90 ring-2 ring-violeta-oscuro' : 'z-10'} ${inactive ? 'opacity-60' : ''}`}
     >
-      <p className="font-semibold leading-tight">{hhmm(a.startMin)} · {a.patient}</p>
-      <p className="leading-tight">{a.service} · {a.resource}</p>
-      <AlertBadges alerts={a.alerts} compact />
+      <div className="flex items-start justify-between gap-1">
+        <p className={`min-w-0 truncate font-semibold leading-6 ${inactive ? 'line-through' : ''}`}>{hhmm(a.startMin)} · {a.patient}</p>
+        <AlertBadges alerts={a.alerts} compact />
+      </div>
+      {h >= 60 && <p className="truncate leading-tight">{a.service} · {a.resource}</p>}
     </div>
   )
 }
 
-function Column({ pro, appts, show }: { pro: AgendaPro; appts: AgendaAppt[]; show: boolean }) {
+function Column({ pro, appts, show, onOpen }: { pro: AgendaPro; appts: AgendaAppt[]; show: boolean; onOpen: (a: AgendaAppt) => void }) {
   const { setNodeRef, isOver } = useDroppable({ id: pro.id })
   const hours = Array.from({ length: (END - START) / 60 }, (_, i) => i)
   return (
     <div className={`min-w-40 flex-1 ${show ? '' : 'hidden md:block'}`}>
-      <p className="mb-1 text-center font-semibold" style={{ color: pro.color }}>{pro.name}</p>
+      <p className="mb-1 flex items-center justify-center gap-2 font-semibold"><span aria-hidden className="size-3 rounded-sm" style={{ background: pro.color }} />{pro.name}</p>
       <div ref={setNodeRef} className={`relative rounded-card border border-lila/60 ${isOver ? 'bg-lila/30' : 'bg-white/60'}`} style={{ height: (END - START) * PPM }}>
         {hours.map((h) => <div key={h} aria-hidden className="absolute inset-x-0 border-t border-lila/50" style={{ top: h * 60 * PPM }} />)}
-        {appts.map((a) => <Card key={a.id} a={a} color={pro.color} />)}
+        {appts.map((a) => <Card key={a.id} a={a} color={pro.color} onOpen={onOpen} />)}
       </div>
     </div>
   )
@@ -51,6 +56,11 @@ export function AgendaBoard({ day, pros, appts }: { day: string; pros: AgendaPro
   const { toast } = useToast()
   const [, start] = useTransition()
   const [mobilePro, setMobilePro] = useState(pros[0]?.id)
+  const [detail, setDetail] = useState<AgendaAppt | null>(null)
+  const dlg = useRef<HTMLDialogElement>(null)
+  const lastDrag = useRef(0)
+  // Después de arrastrar el navegador dispara un click: se ignora para no abrir el detalle sin querer.
+  const open = (a: AgendaAppt) => { if (Date.now() - lastDrag.current > 300) { setDetail(a); dlg.current?.showModal() } }
   const [manual, setManual] = useState<Record<string, { time: string; pro: string }>>({})
 
   function doMove(a: AgendaAppt, startMin: number, professionalId: string, isUndo = false) {
@@ -64,6 +74,7 @@ export function AgendaBoard({ day, pros, appts }: { day: string; pros: AgendaPro
   }
 
   function onDragEnd(e: DragEndEvent) {
+    lastDrag.current = Date.now()
     const a = appts.find((x) => x.id === e.active.id)
     if (!a) return
     const deltaMin = Math.round(e.delta.y / PPM / SNAP) * SNAP
@@ -87,9 +98,27 @@ export function AgendaBoard({ day, pros, appts }: { day: string; pros: AgendaPro
           {Array.from({ length: (END - START) / 60 }, (_, i) => <span key={i} className="absolute -translate-y-2 text-xs" style={{ top: i * 60 * PPM }}>{hhmm(START + i * 60)}</span>)}
         </div>
         <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-          {pros.map((p) => <Column key={p.id} pro={p} show={p.id === mobilePro} appts={appts.filter((a) => a.professionalId === p.id)} />)}
+          {pros.map((p) => <Column key={p.id} pro={p} show={p.id === mobilePro} onOpen={open} appts={appts.filter((a) => a.professionalId === p.id)} />)}
         </DndContext>
       </div>
+
+      <dialog ref={dlg} className="g-modal" aria-labelledby="ag-title" onClose={() => setDetail(null)} onClick={(e) => { if (e.target === dlg.current) dlg.current?.close() }}>
+        {detail && (
+          <div>
+            <h2 id="ag-title" className="text-xl font-semibold">{detail.patient}</h2>
+            <p className="mt-1">{hhmm(detail.startMin)} a {hhmm(detail.startMin + detail.durationMin)} · {detail.durationMin} min</p>
+            <p>{detail.service} · {detail.resource}</p>
+            <p className="mt-2"><span className="rounded-full bg-lila/50 px-3 py-1 text-sm">{STATUS_LABEL[detail.status]}</span></p>
+            {detail.alerts.length > 0 ? (
+              <div className="mt-4">
+                <p className="font-semibold">Alertas clínicas</p>
+                <div className="mt-1"><AlertBadges alerts={detail.alerts} /></div>
+              </div>
+            ) : <p className="mt-4">Sin alertas clínicas.</p>}
+            <div className="mt-6 flex justify-end"><button type="button" autoFocus onClick={() => dlg.current?.close()} className="min-h-touch rounded-control bg-violeta-oscuro px-6 text-white hover:bg-tinta">Cerrar</button></div>
+          </div>
+        )}
+      </dialog>
 
       <details className="mt-8 rounded-card bg-white p-4 shadow-soft">
         <summary className="min-h-touch cursor-pointer py-2 font-semibold">Mover un turno escribiendo la hora (sin arrastrar)</summary>

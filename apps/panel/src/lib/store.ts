@@ -7,8 +7,8 @@ import type { Addendum, Appointment, ApptStatus, Entry, EntryPayload, Patient, P
  */
 
 export const PROFESSIONALS: Professional[] = [
-  { id: 'pr1', name: 'Inés (Podología)', area: 'Podología', color: '#7b3fb8' },
-  { id: 'pr2', name: 'Valentina (Estética)', area: 'Estética', color: '#1d6354' },
+  { id: 'pr1', name: 'Profesional de Podología', area: 'Podología', color: '#7b3fb8' },
+  { id: 'pr2', name: 'Profesional de Estética', area: 'Estética', color: '#12866a' },
 ]
 
 export const SERVICES: Service[] = [
@@ -62,7 +62,7 @@ const apptsSeed: Appointment[] = [
 ]
 
 const E = (id: string, patientId: string, templateCode: TemplateCode, daysAgo: number, payload: EntryPayload): Entry => ({
-  id, patientId, templateCode, templateVersion: 1, payload, status: 'signed', author: templateCode === 'C' ? 'Valentina (Estética)' : 'Inés (Podología)',
+  id, patientId, templateCode, templateVersion: 1, payload, status: 'signed', author: templateCode === 'C' ? 'Profesional de Estética' : 'Profesional de Podología',
   createdAt: localToIso(addDays(today, -daysAgo), '10:30'), signedAt: localToIso(addDays(today, -daysAgo), '10:50'), addenda: [],
 })
 
@@ -82,10 +82,28 @@ const entriesSeed: Entry[] = [
   E('e5', 'p5', 'C', 30, { zona: 'Axilas', sesion: 3, fototipo: 'III', contra: [], longitud: '808 nm', energia: 18, pulso: 30, frecuencia: 2, reaccion: 'Leve eritema', indicaciones: 'Evitar sol directo 48 h.' }),
 ]
 
-return { patients: patientsSeed, appts: apptsSeed, entries: entriesSeed }
+// Historial ficticio de 8 semanas, solo para el dashboard (no aparece en la agenda ni en las fichas). Determinístico: mismo resultado cada día.
+  let r = 42
+  const rnd = () => { r = (r + 0x6d2b79f5) | 0; let t = Math.imul(r ^ (r >>> 15), 1 | r); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
+  const history: HistoryRow[] = []
+  const podo = ['s1', 's1', 's1', 's2'], est = ['s3', 's3', 's4', 's4', 's5', 's6']
+  for (let back = 1; back <= 56; back++) {
+    const day = addDays(today, -back)
+    const dow = new Date(`${day}T12:00:00`).getDay()
+    if (dow === 0) continue
+    for (const pr of ['pr1', 'pr2'] as const) {
+      const n = Math.round((pr === 'pr1' ? 4 : 5) + rnd() * 3 - (dow === 6 ? 2 : 0) + (dow === 2 || dow === 4 ? 1 : 0))
+      for (let k = 0; k < n; k++) {
+        const x = rnd()
+        history.push({ day, professionalId: pr, serviceId: (pr === 'pr1' ? podo : est)[Math.floor(rnd() * (pr === 'pr1' ? podo : est).length)], patientId: `p${1 + Math.floor(rnd() * 10)}`, status: x < 0.8 ? 'done' : x < 0.89 ? 'no_show' : 'cancelled' })
+      }
+    }
+  }
+  return { patients: patientsSeed, appts: apptsSeed, entries: entriesSeed, history }
 }
 
-type DB = { patients: Patient[]; appts: Appointment[]; entries: Entry[]; seq: number; day: string }
+export type HistoryRow = { day: string; professionalId: string; serviceId: string; patientId: string; status: ApptStatus }
+type DB = { patients: Patient[]; appts: Appointment[]; entries: Entry[]; history: HistoryRow[]; seq: number; day: string }
 const g = globalThis as unknown as { __genesis?: DB }
 const fresh = (): DB => { const day = todayKey(); return { ...buildSeed(day), seq: 100, day } }
 /** La semilla es relativa a "hoy": si cambia el día, se regenera para que la agenda nunca quede vacía. */
@@ -96,6 +114,7 @@ const nextId = (p: string) => `${p}${++cur().seq}`
 export const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
 export const patients = () => cur().patients
+export const historyRows = () => cur().history
 export const patient = (id: string) => cur().patients.find((p) => p.id === id)
 export const service = (id: string) => SERVICES.find((s) => s.id === id)
 export const professional = (id: string) => PROFESSIONALS.find((p) => p.id === id)

@@ -7,7 +7,7 @@ async function login(page: Page) {
   await page.addInitScript(() => sessionStorage.setItem('genesis-tour', 'off')) // sin la guía flotante encima
   await page.goto(PANEL + '/login')
   await page.getByLabel('Contraseña de la demo').fill('demo123')
-  await page.getByRole('button', { name: /Entrar como Inés/ }).click()
+  await page.getByRole('button', { name: /Entrar como profesional de Podología/ }).click()
   await expect(page).toHaveURL(/\/hoy/)
 }
 
@@ -15,7 +15,7 @@ test('acceso protegido: sin sesión redirige y la clave incorrecta avisa', async
   await page.goto(PANEL + '/pacientes')
   await expect(page).toHaveURL(/\/login/)
   await page.getByLabel('Contraseña de la demo').fill('mala')
-  await page.getByRole('button', { name: /Entrar como Inés/ }).click()
+  await page.getByRole('button', { name: /Entrar como profesional de Podología/ }).click()
   await expect(page.locator('p[role=alert]')).toContainText('no es correcta')
 })
 
@@ -78,7 +78,7 @@ test('agenda: no permite doble reserva', async ({ page }) => {
   await login(page)
   await page.goto(PANEL + '/agenda')
   await page.getByText('Mover un turno escribiendo la hora').click()
-  // Turno de Roberto (10:00, Inés) → 09:00, cuando Norma ya tiene turno con Inés
+  // Turno de Roberto (10:00, podología) → 09:00, cuando Norma ya tiene turno con podología
   const row = page.locator('li', { hasText: 'Roberto Sánchez' }).filter({ has: page.getByLabel('Hora') })
   await row.getByLabel('Hora').fill('09:00')
   await row.getByRole('button', { name: 'Mover' }).click()
@@ -89,7 +89,7 @@ test('WhatsApp simulado: audio y consulta clínica derivan a una persona', async
   await login(page)
   await page.goto(PANEL + '/whatsapp')
   await page.getByRole('button', { name: /Mandar un audio/ }).click()
-  await expect(page.getByText('Inés te contesta en breve.').first()).toBeVisible()
+  await expect(page.getByText('El equipo te contesta en breve.').first()).toBeVisible()
   await page.getByRole('button', { name: 'Consulta clínica' }).click()
   await expect(page.getByText('Mensaje que el bot no entendió')).toBeVisible()
   await expect(page.getByText('Gasto estimado de mensajería')).toBeVisible()

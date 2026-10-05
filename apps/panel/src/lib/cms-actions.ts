@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import {
+  getContent,
   deleteGalleryItem, deleteGroup, deleteMediaByUrl, deleteService, move, saveGalleryItem, saveGroup, saveService, setContent, setRequestStatus,
   type Faq,
 } from '@genesis/db/content'
@@ -38,7 +39,7 @@ export async function saveInicio(fd: FormData) {
 // ---------- Nosotros ----------
 export async function saveNosotros(fd: FormData) {
   await run('/sitio/nosotros', async () => {
-    await setContent('about', { title: str(fd, 'title'), lead: str(fd, 'lead'), body: str(fd, 'body'), howTitle: str(fd, 'howTitle'), how: str(fd, 'how') })
+    await setContent('about', { ...(await getContent('about')), title: str(fd, 'title'), lead: str(fd, 'lead'), body: str(fd, 'body'), howTitle: str(fd, 'howTitle'), how: str(fd, 'how') })
     await setContent('team', jsonList<{ name: string; role: string; license: string; photo: string }>(fd, 'team').filter((m) => m.name?.trim()).map((m) => ({ name: m.name, role: m.role ?? '', license: m.license ?? '', photo: m.photo ?? '' })))
   })
 }
@@ -47,6 +48,7 @@ export async function saveNosotros(fd: FormData) {
 export async function saveContacto(fd: FormData) {
   await run('/sitio/contacto', async () => {
     await setContent('contact', {
+      ...(await getContent('contact')),
       address: str(fd, 'address'), mapsUrl: str(fd, 'mapsUrl'), instagram: str(fd, 'instagram'), instagramHandle: str(fd, 'instagramHandle'),
       phone: str(fd, 'phone'), email: str(fd, 'email'),
       hours: jsonList<{ text: string }>(fd, 'hours').map((h) => h.text?.trim()).filter(Boolean),

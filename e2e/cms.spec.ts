@@ -12,7 +12,7 @@ async function login(page: Page) {
   await page.addInitScript(() => sessionStorage.setItem('genesis-tour', 'off')) // sin la guía flotante encima
   await page.goto(PANEL + '/login')
   await page.getByLabel('Contraseña de la demo').fill('demo123')
-  await page.getByRole('button', { name: /Entrar como Inés/ }).click()
+  await page.getByRole('button', { name: /Entrar como profesional de Podología/ }).click()
   await expect(page).toHaveURL(/\/hoy/)
 }
 

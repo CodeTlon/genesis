@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { IconCake } from '@/components/icons'
 import { AlertBadges } from '@/components/alert-badges'
 import { StatusActions, StatusBadge } from '@/components/status-actions'
 import { PrintButton } from '@/components/print-button'
@@ -35,7 +36,7 @@ export default function Hoy() {
       </section>
 
       {cumples.length > 0 && (
-        <p className="mt-6 rounded-card bg-lila/50 p-4">🎂 Hoy cumple años: <strong>{cumples.map((p) => `${p.firstName} ${p.lastName}`).join(', ')}</strong>. Podés mandarle un saludo.</p>
+        <p className="mt-6 rounded-card bg-lila/50 p-4"><IconCake className="mr-1 size-5 text-violeta-oscuro" /> Hoy cumple años: <strong>{cumples.map((p) => `${p.firstName} ${p.lastName}`).join(', ')}</strong>. Podés mandarle un saludo.</p>
       )}
       {menores.length > 0 && (
         <p className="mt-3 rounded-card bg-amber-100 p-4 text-amber-950">{menores.length === 1 ? 'Hay 1 turno con un menor de edad' : `Hay ${menores.length} turnos con menores de edad`}: el consentimiento lo firma el responsable.</p>

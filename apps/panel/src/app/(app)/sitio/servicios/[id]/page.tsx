@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { IconChevronUp, IconChevronDown } from '@/components/icons'
 import { getGroups } from '@genesis/db/content'
 import { Check, ImageField, Notice, PageHead, Save, Text } from '@/components/cms'
 import { ListEditor } from '@/components/list-editor'
@@ -63,7 +64,7 @@ export default async function Grupo({ params, searchParams }: { params: Promise<
                   {(['up', 'down'] as const).map((dir) => (
                     <form key={dir} action={moveItem}>
                       <Hidden v={{ table: 'site_services', id: s.id, dir, return: here }} />
-                      <button disabled={(dir === 'up' && i === 0) || (dir === 'down' && i === g.services.length - 1)} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40">{dir === 'up' ? '↑ Subir' : '↓ Bajar'}</button>
+                      <button disabled={(dir === 'up' && i === 0) || (dir === 'down' && i === g.services.length - 1)} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40">{dir === 'up' ? <><IconChevronUp /> Subir</> : <><IconChevronDown /> Bajar</>}</button>
                     </form>
                   ))}
                   <form action={removeService}>

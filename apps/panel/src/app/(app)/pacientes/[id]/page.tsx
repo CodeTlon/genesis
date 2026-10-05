@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { IconArrowLeft } from '@/components/icons'
 import { notFound } from 'next/navigation'
 import { AlertBadges } from '@/components/alert-badges'
 import { EntryView } from '@/components/entry-view'
@@ -22,7 +23,7 @@ export default async function Ficha({ params }: { params: Promise<{ id: string }
 
   return (
     <main>
-      <Link href="/pacientes" className="inline-flex min-h-touch items-center underline">← Pacientes</Link>
+      <Link href="/pacientes" className="inline-flex min-h-touch items-center underline"><IconArrowLeft /> Pacientes</Link>
       <header className="rounded-card bg-white p-6 shadow-soft">
         <h1 className="text-3xl font-normal">{p.firstName} {p.lastName}</h1>
         <div className="mt-2"><AlertBadges alerts={p.alerts} /></div>

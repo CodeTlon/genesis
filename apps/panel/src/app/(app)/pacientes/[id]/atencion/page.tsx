@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { IconArrowLeft } from '@/components/icons'
 import Link from 'next/link'
 import { TemplateForm } from '@/components/template-form'
 import { AlertBadges } from '@/components/alert-badges'
@@ -33,7 +34,7 @@ export default async function Atencion({ params, searchParams }: {
 
   return (
     <main>
-      <Link href={`/pacientes/${p.id}`} className="inline-flex min-h-touch items-center underline">← Ficha de {p.firstName}</Link>
+      <Link href={`/pacientes/${p.id}`} className="inline-flex min-h-touch items-center underline"><IconArrowLeft /> Ficha de {p.firstName}</Link>
       <h1 className="mt-2 text-3xl font-normal uppercase tracking-[0.06em]">{template.name}</h1>
       <p className="mt-1 text-lg">{p.firstName} {p.lastName}</p>
       <div className="mt-2 mb-6"><AlertBadges alerts={p.alerts} /></div>

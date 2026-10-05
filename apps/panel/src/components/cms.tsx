@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { IconArrowLeft, IconExternal } from './icons'
 import { WEB_URL, previewUrl } from '@/lib/cms'
 
 export const inputCls = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/40 bg-white px-4'
@@ -12,11 +13,11 @@ export function Notice({ ok, error }: { ok?: string; error?: string }) {
 export function PageHead({ title, intro, back, view }: { title: string; intro?: string; back?: { href: string; label: string }; view?: string }) {
   return (
     <header className="mb-6">
-      {back && <Link href={back.href} className="inline-flex min-h-touch items-center underline">← {back.label}</Link>}
+      {back && <Link href={back.href} className="inline-flex min-h-touch items-center underline"><IconArrowLeft /> {back.label}</Link>}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-normal uppercase tracking-[0.08em]">{title}</h1>
         {view !== undefined && (
-          <a href={`${WEB_URL}${view}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro">Ver en el sitio ↗</a>
+          <a href={`${WEB_URL}${view}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro">Ver en el sitio <IconExternal /></a>
         )}
       </div>
       {intro && <p className="mt-2 max-w-2xl">{intro}</p>}

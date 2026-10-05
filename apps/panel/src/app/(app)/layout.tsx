@@ -1,22 +1,24 @@
-import Image from 'next/image'
+import { Wordmark } from '@genesis/ui/wordmark'
 import Link from 'next/link'
 import { countNewRequests } from '@genesis/db/content'
 import { ConfirmButton } from '@/components/confirm-button'
 import { MotionRoot } from '@/components/motion-root'
 import { Nav } from '@/components/nav'
 import { Tour } from '@/components/tour'
+import { WEB_URL } from '@/lib/cms'
 import { leaveDemo, restartDemo } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 
 const NAV = [
   { href: '/hoy', label: 'Hoy' },
+  { href: '/resumen', label: 'Resumen' },
   { href: '/agenda', label: 'Agenda' },
   { href: '/pacientes', label: 'Pacientes' },
   { href: '/whatsapp', label: 'WhatsApp' },
   { href: '/sitio', label: 'Sitio web' },
   { href: '/plantillas', label: 'Plantillas' },
-  { href: '/ayuda', label: 'Ayuda' },
+  { href: '/ayuda', label: 'Ayuda', desktopOnly: true },
 ]
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -26,8 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen md:flex">
       <aside className="print:hidden border-b border-lila/50 bg-white md:min-h-screen md:w-60 md:border-b-0 md:border-r">
         <div className="flex items-center gap-3 px-4 py-4">
-          <Image src="/logo.webp" alt="" width={44} height={44} className="rounded-full" />
-          <span className="font-normal uppercase tracking-[0.1em]">Genesis</span>
+          <Wordmark size="md" tagline />
         </div>
         <Nav items={NAV} nuevas={nuevas} />
         <form className="flex gap-2 px-4 pb-4 text-sm md:flex-col">
@@ -40,7 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           Modo capacitación · Demo con datos 100 % ficticios · Podés practicar sin miedo
         </p>
         <div className="mx-auto max-w-6xl px-4 py-8 pb-56 md:pb-40">{children}</div>
-        <Tour />
+        <Tour webUrl={WEB_URL} />
       </div>
     </div>
     </MotionRoot>

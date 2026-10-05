@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { IconChevronLeft, IconChevronRight } from '@/components/icons'
 import { AgendaBoard, type AgendaAppt } from '@/components/agenda-board'
 import { PrintButton } from '@/components/print-button'
 import { addDays, fmtDateLong, isoToLocal, todayKey } from '@/lib/dates'
@@ -30,9 +31,9 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
           <p className="mt-1 first-letter:uppercase">{fmtDateLong(day)}{FERIADOS_DEMO[day] ? ` · ${FERIADOS_DEMO[day]}` : ''}</p>
         </div>
         <div className="flex flex-wrap gap-2 print:hidden">
-          <Link href={`/agenda?dia=${addDays(day, -1)}`} className={nav}>← Anterior</Link>
+          <Link href={`/agenda?dia=${addDays(day, -1)}`} className={nav}><IconChevronLeft /> Anterior</Link>
           <Link href="/agenda" className={nav}>Hoy</Link>
-          <Link href={`/agenda?dia=${addDays(day, 1)}`} className={nav}>Siguiente →</Link>
+          <Link href={`/agenda?dia=${addDays(day, 1)}`} className={nav}>Siguiente <IconChevronRight /></Link>
           <PrintButton label="Imprimir" />
         </div>
       </div>

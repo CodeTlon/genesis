@@ -1,4 +1,5 @@
 import { getGallery } from '@genesis/db/content'
+import { IconChevronUp, IconChevronDown } from '@/components/icons'
 import { Check, ImageField, Notice, PageHead, Save, Text } from '@/components/cms'
 import { addGalleryItem, moveItem, removeGalleryItem, updateGalleryItem } from '@/lib/cms-actions'
 import { previewUrl } from '@/lib/cms'
@@ -34,7 +35,7 @@ export default async function Galeria({ searchParams }: { searchParams: Promise<
               {(['up', 'down'] as const).map((dir) => (
                 <form key={dir} action={moveItem}>
                   <Hidden v={{ table: 'gallery_items', id: it.id, dir, return: '/sitio/galeria' }} />
-                  <button disabled={(dir === 'up' && i === 0) || (dir === 'down' && i === items.length - 1)} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40">{dir === 'up' ? '↑ Subir' : '↓ Bajar'}</button>
+                  <button disabled={(dir === 'up' && i === 0) || (dir === 'down' && i === items.length - 1)} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40">{dir === 'up' ? <><IconChevronUp /> Subir</> : <><IconChevronDown /> Bajar</>}</button>
                 </form>
               ))}
               <form action={removeGalleryItem}>

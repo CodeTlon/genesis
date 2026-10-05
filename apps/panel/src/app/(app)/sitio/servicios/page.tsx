@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { IconChevronUp, IconChevronDown } from '@/components/icons'
 import { getGroups } from '@genesis/db/content'
 import { Notice, PageHead, inputCls } from '@/components/cms'
 import { createGroup, moveItem } from '@/lib/cms-actions'
@@ -24,7 +25,7 @@ export default async function Servicios({ searchParams }: { searchParams: Promis
               {(['up', 'down'] as const).map((dir) => (
                 <form key={dir} action={moveItem}>
                   <input type="hidden" name="table" value="service_groups" /><input type="hidden" name="id" value={g.id} /><input type="hidden" name="dir" value={dir} /><input type="hidden" name="return" value="/sitio/servicios" />
-                  <button disabled={(dir === 'up' && i === 0) || (dir === 'down' && i === groups.length - 1)} aria-label={`${dir === 'up' ? 'Subir' : 'Bajar'} ${g.name}`} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40">{dir === 'up' ? '↑ Subir' : '↓ Bajar'}</button>
+                  <button disabled={(dir === 'up' && i === 0) || (dir === 'down' && i === groups.length - 1)} aria-label={`${dir === 'up' ? 'Subir' : 'Bajar'} ${g.name}`} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40">{dir === 'up' ? <><IconChevronUp /> Subir</> : <><IconChevronDown /> Bajar</>}</button>
                 </form>
               ))}
               <Link href={`/sitio/servicios/${g.id}`} className="inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-5 text-white">Editar</Link>

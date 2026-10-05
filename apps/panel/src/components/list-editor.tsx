@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { IconChevronUp, IconChevronDown } from './icons'
 
 type Item = Record<string, string>
 export type ListField = { key: string; label: string; textarea?: boolean }
@@ -28,8 +29,8 @@ export function ListEditor({ name, initial, fields, addLabel, itemLabel }: { nam
               ))}
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" onClick={() => swap(i, -1)} disabled={i === 0} aria-label={`Subir ${itemLabel} ${i + 1}`} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40">↑ Subir</button>
-              <button type="button" onClick={() => swap(i, 1)} disabled={i === items.length - 1} aria-label={`Bajar ${itemLabel} ${i + 1}`} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40">↓ Bajar</button>
+              <button type="button" onClick={() => swap(i, -1)} disabled={i === 0} aria-label={`Subir ${itemLabel} ${i + 1}`} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40"><IconChevronUp /> Subir</button>
+              <button type="button" onClick={() => swap(i, 1)} disabled={i === items.length - 1} aria-label={`Bajar ${itemLabel} ${i + 1}`} className="min-h-touch rounded-control border border-violeta-oscuro px-4 text-violeta-oscuro disabled:opacity-40"><IconChevronDown /> Bajar</button>
               <button type="button" onClick={() => setItems((p) => p.filter((_, j) => j !== i))} className="min-h-touch rounded-control border border-red-800 px-4 text-red-900">Quitar</button>
             </div>
           </li>

@@ -1,16 +1,16 @@
-import Image from 'next/image'
+import { Wordmark } from '@genesis/ui/wordmark'
 import { enterDemo } from '@/lib/session'
 import { PROFILES } from '@/lib/profiles'
 
-export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const { error } = await searchParams
+export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string; tour?: string }> }) {
+  const { error, tour } = await searchParams
   const needsPassword = !!process.env.DEMO_PASSWORD
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-10">
-      <Image src="/logo.webp" alt="Genesis" width={96} height={96} className="mx-auto" priority />
-      <h1 className="mt-6 text-center text-2xl uppercase tracking-[0.06em]">Panel Genesis</h1>
+      <h1 className="text-center"><Wordmark size="xl" tagline className="items-center" /><span className="sr-only"> Panel de gestión</span></h1>
       <p className="mt-2 text-center">Demo interactiva con datos 100 % ficticios. Elegí con qué perfil querés entrar.</p>
       <form action={enterDemo} className="mt-8 space-y-4">
+        {tour === '1' && <input type="hidden" name="tour" value="1" />}
         {needsPassword && (
           <div>
             <label htmlFor="password" className="font-semibold">Contraseña de la demo</label>
@@ -20,8 +20,8 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         )}
         {Object.entries(PROFILES).map(([id, p], i) => (
           <button key={id} name="profile" value={id} className={`min-h-touch w-full rounded-control px-4 py-3 text-left transition-colors ${i === 0 ? 'bg-violeta-oscuro text-white hover:bg-tinta' : 'border border-tinta/60 bg-white hover:bg-lila/40'}`}>
-            <span className="block font-semibold">Entrar como {p.name}</span>
-            <span className="block text-sm opacity-90">{p.role} · datos de práctica</span>
+            <span className="block font-semibold">{p.loginLabel}</span>
+            <span className="block text-sm opacity-90">Datos de práctica, sin pacientes reales</span>
           </button>
         ))}
       </form>
