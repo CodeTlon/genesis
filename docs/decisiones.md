@@ -77,10 +77,11 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **Datos:** la semilla es relativa a "hoy" y se regenera si cambia el día, así que la agenda nunca queda vacía. El estado es compartido entre visitantes (no por sesión): suficiente para una demo con pocas personas; "Reiniciar demo" lo restaura.
 - **Seguridad:** se eliminó el secreto por defecto de `/api/revalidate`: en producción, sin `REVALIDATE_SECRET` el endpoint queda cerrado.
 
-## ADR-011 Un solo proyecto en Vercel con dos servicios
-- **Qué:** `vercel.json` en la raíz define dos servicios: `web` (`apps/web`, en `/`) y `panel` (`apps/panel`, en `/panel`). Un solo proyecto, un solo dominio. Las reglas de `rewrites` van de lo más específico a lo más general (`/panel` y `/panel/(.*)` antes del `/(.*)` del sitio).
-- **basePath del panel:** `next.config.mjs` usa `basePath: '/panel'` solo cuando `VERCEL` está definida. En local (`:3001`) y en Docker queda en la raíz, así que los e2e y el `Dockerfile.panel` no cambian.
-- **Links entre apps:** el sitio resuelve el enlace al panel en `/api/panel-url` en cada visita: `PANEL_URL` si existe, `<dominio>/panel` en Vercel, `localhost:3001` en local. El panel enlaza al sitio con ruta relativa en Vercel (`WEB_URL` vacío).
-- **Datos del panel:** siguen en memoria. En Vercel pueden volver al estado inicial si la función se reinicia o cambia de instancia; para la demo se acepta y existe "Reiniciar demo".
-- **Sin variables obligatorias:** no hace falta `DATABASE_URL` ni `PANEL_URL`. Sin base, el sitio usa los textos por defecto y "Sitio web" del panel no guarda cambios.
-- **Pendiente de verificar en Vercel:** el enrutado entre servicios no se puede probar en local. Si algo falla, el plan B es importar el repo dos veces (Root Directory `apps/web` y `apps/panel`) y definir `PANEL_URL`.
+## ADR-011 Sitio y panel en una sola app (un build, un dominio)
+- **Qué:** el panel dejó de ser una app aparte. Vive dentro de `apps/web` bajo `/panel`. Un solo build y un solo dominio: en Vercel se importa el repo con **Root Directory `apps/web`**, sin `vercel.json`.
+- **Estructura:** dos grupos de rutas con layout raíz propio: `app/(site)/…` (sitio, con header y footer) y `app/(panel)/panel/…` (panel, con su menú lateral). `app/not-found.tsx` es el 404 global, con su propio `<html>`.
+- **Código del panel:** `src/panel/{components,lib}` (se importa con `@/panel/...`) y `src/middleware.ts`, que protege solo `/panel/*`. Todas las rutas internas del panel llevan el prefijo `/panel`.
+- **Sin pegamento entre apps:** se eliminaron `WEB_URL`, `PANEL_URL`, `REVALIDATE_SECRET`, `/api/revalidate` y `/api/panel-url`. El sitio enlaza al panel con `/panel/login?tour=1` y el panel actualiza el sitio con `revalidatePath` directo.
+- **Datos del panel:** siguen en memoria. En Vercel pueden volver al estado inicial si la función se reinicia o cambia de instancia: se acepta para la demo, y existe "Reiniciar demo".
+- **Sin variables obligatorias:** ni `DATABASE_URL` (sin base el sitio usa los textos por defecto y "Sitio web" del panel no guarda) ni `DEMO_PASSWORD` (sin ella el acceso es libre con perfiles ficticios).
+- **Reemplaza** a la idea anterior de dos proyectos o dos servicios y al `Dockerfile.panel`.

@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright'
 import path from 'node:path'
 
 const WEB = 'http://localhost:3000'
-const PANEL = 'http://localhost:3001'
+const PANEL = 'http://localhost:3000/panel'
 const PHOTO = path.join(__dirname, '..', 'apps', 'web', 'public', 'img', 'img-10.webp')
 
 test.describe.configure({ mode: 'serial' })

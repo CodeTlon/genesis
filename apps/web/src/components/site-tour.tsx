@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { usePanelUrl } from './use-panel-url'
 import { IconArrowRight, IconCheck, IconSparkle } from './icons'
 
 const STEPS = [
@@ -15,7 +15,6 @@ const KEY = 'genesis-site-tour'
 
 /** Demo guiada del sitio: arranca sola la primera vez y termina llevando al panel (donde sigue la guía). Estado solo en sessionStorage. */
 export function SiteTour() {
-  const panelUrl = usePanelUrl()
   const router = useRouter()
   const path = usePathname()
   const [step, setStep] = useState<number | null | undefined>(undefined)
@@ -52,9 +51,7 @@ export function SiteTour() {
         <>
           <h2 className="text-lg font-semibold">Ahora, el panel del equipo</h2>
           <p className="mt-2">Así gestiona Genesis sus pacientes, la agenda y este mismo sitio. Entrás con un perfil de práctica, sin contraseña, y la guía sigue allá.</p>
-          {panelUrl
-            ? <a href={`${panelUrl}/login?tour=1`} className="mt-4 inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-control bg-violeta-oscuro px-4 text-white hover:bg-tinta">Seguir en el panel<IconArrowRight className="size-5" /></a>
-            : <p className="mt-3 rounded-control bg-lila/40 p-3 text-sm">{panelUrl === null ? 'Buscando el panel…' : 'El panel de la demo todavía no está publicado.'}</p>}
+          <Link href="/panel/login?tour=1" className="mt-4 inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-control bg-violeta-oscuro px-4 text-white hover:bg-tinta">Seguir en el panel<IconArrowRight className="size-5" /></Link>
         </>
       ) : (
         <>

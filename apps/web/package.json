@@ -10,14 +10,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@genesis/config": "*",
+    "@genesis/content": "*",
+    "@genesis/db": "*",
+    "@genesis/ui": "*",
+    "motion": "^12.0.0",
+    "next": "15.5.25",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.25",
-    "@genesis/config": "*",
-    "@genesis/ui": "*",
-    "@genesis/content": "*",
-    "zod": "^3.23.0",
-    "@genesis/db": "*"
+    "sharp": "^0.34.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "typescript": "^5",

@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
-const PANEL = 'http://localhost:3001'
+const PANEL = 'http://localhost:3000/panel'
 
 async function login(page: Page) {
   await page.addInitScript(() => sessionStorage.setItem('genesis-tour', 'off')) // sin la guía flotante encima

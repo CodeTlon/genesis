@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { getContent, getGroups } from '@genesis/db/content'
 import { SITE } from '@/lib/site'
 import { BackToTop } from './back-to-top'
-import { PanelLink } from './panel-link'
 import { IconCard, IconClock, IconInstagram, IconMail, IconPhone, IconPin } from './icons'
 
 const head = 'font-label text-base uppercase tracking-widest text-lila'
@@ -46,7 +45,7 @@ export async function Footer() {
             <li><Link href="/consejos" className={link}>Consejos</Link></li>
             <li><Link href="/galeria" className={link}>Galería</Link></li>
             <li><Link href="/privacidad" className={link}>Privacidad y aviso legal</Link></li>
-            <li><PanelLink className={`${link} font-semibold text-lila`} /></li>
+            <li><Link href="/panel/login?tour=1" className={`${link} font-semibold text-lila`}>Ver demo guiada del panel</Link></li>
           </ul>
         </nav>
       </div>

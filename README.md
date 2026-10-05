@@ -8,7 +8,7 @@ Sitio web y sistema interno de gestión (pacientes, historia clínica, agenda) p
 Next.js 15.5.25, TypeScript, Tailwind v4, PostgreSQL 16 (`pg` con migraciones SQL), Turborepo (npm workspaces). Decisiones en `docs/decisiones.md`.
 
 ## Estructura
-`apps/web` (sitio público) · `apps/panel` (sistema interno y editor del sitio) · `packages/{db,ui,config,content}` · `e2e/` (Playwright) · `docs/`
+`apps/web` (una sola app: sitio público en `/` y panel interno en `/panel`) · `packages/{db,ui,config,content}` · `e2e/` (Playwright) · `docs/`
 
 ## Seguir en otra PC
 
@@ -26,12 +26,11 @@ npm run db:seed           # carga los grupos, servicios y galería iniciales
 npm run db:verify         # (opcional) 14 comprobaciones de las garantías del esquema
 
 npm run build
-npm run start -w @genesis/web     # sitio  → http://localhost:3000
-npm run start -w @genesis/panel   # panel  → http://localhost:3001
+npm run start -w @genesis/web     # sitio → http://localhost:3000   ·   panel → http://localhost:3000/panel
 ```
 
-- **Variables:** sin ninguna variable funciona en local. La contraseña del panel por defecto es `genesis-demo`; para cambiarla (o para que coincida con los tests, `demo123`) usá `DEMO_PASSWORD`. Ver `.env.example`; los valores reales van en `.env.local` de cada app y nunca se commitean.
-- **Tests E2E:** `npx playwright install chromium` (una sola vez) y `npm run test:e2e`. Necesitan `npm run build` previo y los puertos 3000 y 3001 libres.
+- **Variables:** sin ninguna variable funciona en local. El panel no pide contraseña por defecto (botón «Entrar como…»); si definís `DEMO_PASSWORD` la exige (los tests usan `demo123`). Ver `.env.example`; los valores reales van en `.env.local` de cada app y nunca se commitean.
+- **Tests E2E:** `npx playwright install chromium` (una sola vez) y `npm run test:e2e`. Necesitan `npm run build` previo y el puerto 3000 libre.
 - **Datos:** el contenido del sitio (textos, servicios, galería, solicitudes de turno) vive en Postgres. Los pacientes, turnos y atenciones del panel son ficticios y están en memoria: se reinician al reiniciar el servidor.
 - **Mapa del proyecto, reglas y errores conocidos:** `.claude/CLAUDE.md` y `.claude/ERRORES.md`. Guion de la demo: `docs/guion-demo.md`.
 
@@ -45,3 +44,6 @@ npm run start -w @genesis/panel   # panel  → http://localhost:3001
 
 ## Licencia
 Propietaria, todos los derechos reservados. Ver [LICENSE](LICENSE).
+
+## Deploy en Vercel
+Importar el repo con **Root Directory `apps/web`** (framework Next.js). No hace falta `vercel.json` ni ninguna variable de entorno. Detalle en `docs/decisiones.md` (ADR-011).
