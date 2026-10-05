@@ -22,3 +22,36 @@ html { font-size: 112.5%; }          /* base 18px (requisito de accesibilidad) *
 body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
 :focus-visible { outline: 3px solid var(--color-violeta-oscuro); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Movimiento: transiciones suaves en controles y entrada de página. Se anulan con prefers-reduced-motion (regla de arriba). */
+a, button, summary, input, select, textarea { transition: color .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .2s ease, opacity .15s ease, transform .15s ease; }
+button:not(:disabled):active, a[class*="bg-"]:active { transform: scale(0.98); }
+button:disabled { cursor: not-allowed; opacity: .6; }
+@keyframes g-fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* Entrada de página: solo movimiento (sin opacidad), así el contraste del texto nunca queda a medias. */
+@keyframes g-rise { from { transform: translateY(8px); } to { transform: none; } }
+.g-enter { animation: g-rise .3s ease-out both; }
+@keyframes g-pulse { 50% { opacity: .45; } }
+.g-skeleton { background: color-mix(in srgb, var(--color-lila) 45%, transparent); border-radius: var(--radius-control, .5rem); animation: g-pulse 1.4s ease-in-out infinite; }
+
+/* Scrollbar con la marca (Firefox + WebKit) */
+html { scrollbar-width: thin; scrollbar-color: var(--color-violeta-oscuro) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--color-violeta-oscuro) 55%, transparent); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-violeta-oscuro); background-clip: content-box; }
+
+/* Modales propios (<dialog>): reemplazan alert/confirm del navegador */
+dialog.g-modal { margin: auto; max-width: min(28rem, calc(100vw - 2rem)); border: 0; border-radius: var(--radius-card); padding: 1.5rem; box-shadow: 0 20px 60px rgb(0 0 0 / .25); animation: g-fade-up .2s ease-out both; }
+dialog.g-modal::backdrop { background: rgb(40 25 55 / .45); backdrop-filter: blur(2px); }
+
+/* Escalonado: los hijos directos entran de a uno (listas de turnos, tarjetas). */
+.g-stagger > * { animation: g-rise .4s ease-out both; }
+.g-stagger > *:nth-child(2) { animation-delay: .05s; } .g-stagger > *:nth-child(3) { animation-delay: .1s; }
+.g-stagger > *:nth-child(4) { animation-delay: .15s; } .g-stagger > *:nth-child(5) { animation-delay: .2s; }
+.g-stagger > *:nth-child(n+6) { animation-delay: .25s; }
+
+/* Versión CSS de BlurText: el título se enfoca al cargar. Solo filtro (sin opacidad) para no alterar el contraste durante la animación. */
+@keyframes g-blur { from { filter: blur(10px); transform: translateY(6px); } to { filter: none; transform: none; } }
+.g-blur-in { animation: g-blur .9s cubic-bezier(.2,.7,.2,1) both; }
+.g-blur-in-2 { animation: g-blur .9s .15s cubic-bezier(.2,.7,.2,1) both; }
