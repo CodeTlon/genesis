@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { resetDemo } from './store'
+import { clearFrom } from './state'
 import { PROFILES, type ProfileId } from './profiles'
 
 export async function sessionToken() {
@@ -24,6 +25,7 @@ export async function enterDemo(formData: FormData) {
   const profile = String(formData.get('profile'))
   const jar = await cookies()
   const opts = { httpOnly: true, sameSite: 'lax' as const, path: '/', maxAge: 60 * 60 * 8 }
+  clearFrom(jar) // cada entrada a la demo parte de los datos iniciales
   jar.set('gp', await sessionToken(), opts)
   jar.set('gu', profile in PROFILES ? profile : 'pr1', opts)
   redirect(formData.get('tour') === '1' ? '/panel/hoy?tour=1' : '/panel/hoy')
@@ -37,6 +39,7 @@ export async function leaveDemo() {
 
 export async function restartDemo() {
   resetDemo()
+  clearFrom(await cookies())
   revalidatePath('/', 'layout')
   redirect('/panel/hoy')
 }

@@ -103,13 +103,46 @@ const entriesSeed: Entry[] = [
 }
 
 export type HistoryRow = { day: string; professionalId: string; serviceId: string; patientId: string; status: ApptStatus }
-type DB = { patients: Patient[]; appts: Appointment[]; entries: Entry[]; history: HistoryRow[]; seq: number; day: string }
+/**
+ * Cambios que hizo cada visitante. En serverless (Vercel) cada pedido puede caer en una instancia distinta, así que el estado no puede
+ * vivir solo en memoria: el registro viaja en una cookie (ver state.ts) y se reaplica sobre los datos de práctica en cada pedido.
+ */
+export type Op =
+  | { k: 's'; id: string; st: ApptStatus }
+  | { k: 'm'; id: string; start: string; pro: string }
+  | { k: 'n'; a: Appointment }
+  | { k: 'e'; e: Entry }
+  | { k: 'a'; eid: string; ad: Addendum }
+type DB = { patients: Patient[]; appts: Appointment[]; entries: Entry[]; history: HistoryRow[]; seq: number; day: string; log: Op[] }
 const g = globalThis as unknown as { __genesis?: DB }
-const fresh = (): DB => { const day = todayKey(); return { ...buildSeed(day), seq: 100, day } }
+const fresh = (): DB => { const day = todayKey(); return { ...buildSeed(day), seq: 100, day, log: [] } }
 /** La semilla es relativa a "hoy": si cambia el día, se regenera para que la agenda nunca quede vacía. */
 const cur = (): DB => (g.__genesis && g.__genesis.day === todayKey() ? g.__genesis : (g.__genesis = fresh()))
 export const resetDemo = () => { g.__genesis = fresh() }
 const nextId = (p: string) => `${p}${++cur().seq}`
+let replaying = false
+const rec = (op: Op) => { if (!replaying) cur().log.push(op) }
+const bump = (id: string) => { const n = Number(id.replace(/\D/g, '')); if (n > cur().seq) cur().seq = n }
+
+function apply(op: Op) {
+  const db = cur()
+  if (op.k === 's') { const a = db.appts.find((x) => x.id === op.id); if (a) a.status = op.st }
+  else if (op.k === 'm') { const a = db.appts.find((x) => x.id === op.id); if (a) { a.start = op.start; a.professionalId = op.pro } }
+  else if (op.k === 'n') { db.appts.push(structuredClone(op.a)); bump(op.a.id) }
+  // Siempre copias: el registro y el estado no pueden compartir objetos (una adenda agregada se colaría en el registro y se aplicaría dos veces).
+  else if (op.k === 'e') { const e = structuredClone(op.e); const i = db.entries.findIndex((x) => x.id === e.id); if (i >= 0) db.entries[i] = e; else db.entries.push(e); bump(e.id) }
+  else { const e = db.entries.find((x) => x.id === op.eid); if (e) { e.addenda.push(structuredClone(op.ad)); bump(op.ad.id) } }
+}
+
+export const exportLog = (): { day: string; ops: Op[] } => ({ day: cur().day, ops: cur().log })
+
+/** Reconstruye el estado del visitante: datos de práctica de hoy + sus cambios. Si el registro es de otro día, se descarta. */
+export function importLog(saved: { day: string; ops: Op[] } | null) {
+  g.__genesis = fresh()
+  if (!saved || saved.day !== g.__genesis.day) return
+  replaying = true
+  try { for (const op of saved.ops) apply(op); g.__genesis.log = saved.ops } finally { replaying = false }
+}
 
 export const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -153,6 +186,7 @@ export function moveAppt(id: string, startIso: string, professionalId: string): 
   if (!c.ok) return c
   a.start = startIso
   a.professionalId = professionalId
+  rec({ k: 'm', id, start: startIso, pro: professionalId })
   return { ok: true }
 }
 
@@ -170,6 +204,7 @@ export function setApptStatus(id: string, status: ApptStatus): boolean {
   const a = appt(id)
   if (!a || (a.status !== status && !NEXT_STATUS[a.status].includes(status))) return false
   a.status = status
+  rec({ k: 's', id, st: status })
   return true
 }
 
@@ -182,6 +217,7 @@ export function scheduleNext(patientId: string, serviceId: string, professionalI
     if (checkConflict(null, professionalId, resource, new Date(start).toISOString(), s.durationMin).ok) {
       const a: Appointment = { id: nextId('a'), patientId, serviceId, professionalId, resource, start: new Date(start).toISOString(), durationMin: s.durationMin, status: 'pending' }
       cur().appts.push(a)
+      rec({ k: 'n', a: structuredClone(a) })
       return a
     }
   }
@@ -192,6 +228,15 @@ export const entriesOf = (pid: string) => cur().entries.filter((e) => e.patientI
 export const entry = (id: string) => cur().entries.find((e) => e.id === id)
 export const lastSigned = (pid: string, code: TemplateCode) => entriesOf(pid).find((e) => e.templateCode === code && e.status === 'signed')
 
+/** Una atención se guarda varias veces mientras se escribe (borrador): queda solo la última versión en el registro. */
+function recEntry(e: Entry) {
+  if (replaying) return
+  const log = cur().log
+  const i = log.findIndex((o) => o.k === 'e' && o.e.id === e.id)
+  const op: Op = { k: 'e', e: structuredClone(e) }
+  if (i >= 0) log[i] = op; else log.push(op)
+}
+
 export function saveEntry(input: { id?: string; patientId: string; templateCode: TemplateCode; payload: EntryPayload; sign: boolean; author: string }): { ok: true; entry: Entry } | { ok: false; message: string } {
   if (input.id) {
     const e = entry(input.id)
@@ -200,6 +245,7 @@ export function saveEntry(input: { id?: string; patientId: string; templateCode:
     if (e.status === 'signed') return { ok: false, message: 'Esta atención ya está firmada. Para corregirla, agregá una adenda.' }
     e.payload = input.payload
     if (input.sign) { e.status = 'signed'; e.signedAt = new Date().toISOString() }
+    recEntry(e)
     return { ok: true, entry: e }
   }
   const now = new Date().toISOString()
@@ -208,6 +254,7 @@ export function saveEntry(input: { id?: string; patientId: string; templateCode:
     status: input.sign ? 'signed' : 'draft', author: input.author, createdAt: now, signedAt: input.sign ? now : undefined, addenda: [],
   }
   cur().entries.push(e)
+  recEntry(e)
   return { ok: true, entry: e }
 }
 
@@ -216,5 +263,6 @@ export function addAddendum(entryId: string, author: string, reason: string, tex
   if (!e || e.status !== 'signed') return { ok: false, message: 'Solo se pueden agregar adendas a atenciones firmadas.' }
   const a: Addendum = { id: nextId('ad'), author, reason, text, at: new Date().toISOString() }
   e.addenda.push(a)
+  rec({ k: 'a', eid: entryId, ad: structuredClone(a) })
   return { ok: true }
 }

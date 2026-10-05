@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { hydrate } from '@/panel/lib/state'
 import { BarList, ColumnChart, type Series } from '@/panel/components/charts'
 import { todayKey } from '@/panel/lib/dates'
 import { historyRows, PROFESSIONALS, SERVICES } from '@/panel/lib/store'
@@ -12,6 +13,7 @@ const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0)
 
 export default async function Resumen({ searchParams }: { searchParams: Promise<{ pro?: string }> }) {
   const { pro } = await searchParams
+  await hydrate()
   const sel = PROFESSIONALS.find((p) => p.id === pro)
   const all = historyRows()
   const rows = sel ? all.filter((r) => r.professionalId === sel.id) : all

@@ -56,3 +56,15 @@ test('accesibilidad (axe): sin errores críticos ni serios', async ({ page }) =>
     expect(bad.map((b) => `${p}: ${b.id}`), `axe en ${p}`).toEqual([])
   }
 })
+
+test('galería: el visor amplía la foto y se navega con flechas', async ({ page }) => {
+  await page.goto(WEB + '/galeria')
+  await page.getByRole('button', { name: /^Ampliar:/ }).first().click()
+  const visor = page.getByRole('dialog', { name: 'Foto ampliada' })
+  await expect(visor).toBeVisible()
+  await expect(visor.getByText(/^1 de \d+$/)).toBeVisible()
+  await page.keyboard.press('ArrowRight')
+  await expect(visor.getByText(/^2 de \d+$/)).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(visor).toBeHidden()
+})

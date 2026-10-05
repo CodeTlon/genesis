@@ -1,4 +1,5 @@
 import { BarList } from '@/panel/components/charts'
+import { hydrate } from '@/panel/lib/state'
 import { PatientSearch, type PatientRow } from '@/panel/components/patient-search'
 import { age, isoToLocal } from '@/panel/lib/dates'
 import { apptsOfPatient, entriesOf, norm, patients } from '@/panel/lib/store'
@@ -6,7 +7,8 @@ import { ALERT_LABEL, type Alert } from '@/panel/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-export default function Pacientes() {
+export default async function Pacientes() {
+  await hydrate()
   const now = Date.now()
   const rows: PatientRow[] = patients().map((p) => {
     const next = apptsOfPatient(p.id)

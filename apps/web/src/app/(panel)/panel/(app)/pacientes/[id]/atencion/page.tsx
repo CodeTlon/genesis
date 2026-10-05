@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { hydrate } from '@/panel/lib/state'
 import { IconArrowLeft } from '@/panel/components/icons'
 import Link from 'next/link'
 import { TemplateForm } from '@/panel/components/template-form'
@@ -15,6 +16,7 @@ export default async function Atencion({ params, searchParams }: {
 }) {
   const { id } = await params
   const { plantilla, turno } = await searchParams
+  await hydrate()
   const p = patient(id)
   if (!p) notFound()
 

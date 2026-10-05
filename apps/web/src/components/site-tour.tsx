@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { IconArrowRight, IconCheck, IconSparkle } from './icons'
+import { IconArrowRight, IconArrowUp, IconCheck, IconChevronDown, IconSparkle } from './icons'
 
 const STEPS = [
   { href: '/', title: 'Bienvenida a la demo', text: 'Este es el sitio público, lo que ven las personas que buscan Genesis. Mirá la portada: horarios, servicios, opiniones y preguntas frecuentes.' },
@@ -12,20 +12,28 @@ const STEPS = [
 ] as const
 
 const KEY = 'genesis-site-tour'
+const MIN_KEY = 'genesis-site-tour-min'
 
 /** Demo guiada del sitio: arranca sola la primera vez y termina llevando al panel (donde sigue la guía). Estado solo en sessionStorage. */
 export function SiteTour() {
   const router = useRouter()
   const path = usePathname()
   const [step, setStep] = useState<number | null | undefined>(undefined)
+  const [min, setMinState] = useState(false) // minimizada: sigue activa, solo ocupa menos lugar
 
   useEffect(() => {
     try {
       if (new URLSearchParams(window.location.search).get('guia') === '1') { sessionStorage.setItem(KEY, '0'); window.history.replaceState(null, '', window.location.pathname) }
+      setMinState(sessionStorage.getItem(MIN_KEY) === '1')
       const saved = sessionStorage.getItem(KEY)
       setStep(saved === null ? 0 : saved === 'off' ? null : Number(saved))
     } catch { setStep(0) }
   }, [])
+
+  const setMin = (v: boolean) => {
+    setMinState(v)
+    try { sessionStorage.setItem(MIN_KEY, v ? '1' : '0') } catch { /* sin storage: sigue funcionando */ }
+  }
 
   const go = (n: number | null) => {
     setStep(n)
@@ -42,11 +50,22 @@ export function SiteTour() {
     )
   }
 
+  if (min) {
+    return (
+      <button onClick={() => setMin(false)} aria-label="Abrir la demo guiada" className="g-enter print:hidden fixed bottom-4 right-4 z-40 flex min-h-touch items-center gap-2 rounded-full bg-violeta-oscuro px-5 text-white shadow-soft transition-colors hover:bg-tinta">
+        <IconSparkle className="size-5" />
+        <span>Guía · {step >= STEPS.length ? 'último paso' : `paso ${step + 1} de ${STEPS.length + 1}`}</span>
+        <IconArrowUp className="size-4" />
+      </button>
+    )
+  }
+
   const done = step >= STEPS.length
   const s = STEPS[Math.min(step, STEPS.length - 1)]
   const onScreen = !done && path === s.href
   return (
     <aside role="dialog" aria-label="Demo guiada" className="g-enter print:hidden fixed inset-x-3 bottom-3 z-40 mx-auto max-w-md rounded-card border border-lila bg-white p-5 shadow-soft md:inset-x-auto md:bottom-4 md:right-4">
+      <button type="button" onClick={() => setMin(true)} aria-label="Minimizar la guía (sigue activa)" className="absolute right-3 top-3 grid size-9 place-items-center rounded-full text-tinta transition-colors hover:bg-lila/40"><IconChevronDown className="size-5" /></button>
       {done ? (
         <>
           <h2 className="text-lg font-semibold">Ahora, el panel del equipo</h2>

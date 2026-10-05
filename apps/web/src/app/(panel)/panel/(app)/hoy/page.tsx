@@ -1,16 +1,18 @@
 import Link from 'next/link'
+import { hydrate } from '@/panel/lib/state'
 import { AlertBadges } from '@/panel/components/alert-badges'
 import { IconCake, IconPerson } from '@/panel/components/icons'
 import { StatusActions, StatusBadge } from '@/panel/components/status-actions'
 import { PrintButton } from '@/panel/components/print-button'
-import CountUp from '@genesis/ui/vendor/CountUp'
+import { CountUp } from '@/components/count-up'
 import { age, fmtDateLong, fmtTime, isBirthdayToday, todayKey } from '@/panel/lib/dates'
 import { ALERT_LABEL, type Alert } from '@/panel/lib/types'
 import { apptsOn, patient, patients, professional, PROFESSIONALS, service } from '@/panel/lib/store'
 
 export const dynamic = 'force-dynamic'
 
-export default function Hoy() {
+export default async function Hoy() {
+  await hydrate() // estado de esta persona (último await: lo que sigue lee de forma síncrona)
   const day = todayKey()
   const appts = apptsOn(day).filter((a) => a.status !== 'cancelled')
   const count = (s: string) => appts.filter((a) => a.status === s).length
@@ -24,7 +26,7 @@ export default function Hoy() {
 
   const stat = (n: number, label: string, warn = false) => (
     <div className={`rounded-card p-4 shadow-soft ${warn && n > 0 ? 'bg-amber-100 text-amber-950' : 'bg-white'}`}>
-      <p className="text-3xl font-normal"><CountUp to={n} duration={1.2} /></p>
+      <p className="text-3xl font-normal"><CountUp to={n} /></p>
       <p className="mt-1 text-sm">{label}</p>
     </div>
   )

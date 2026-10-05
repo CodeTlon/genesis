@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { hydrate } from '@/panel/lib/state'
 import { IconArrowLeft } from '@/panel/components/icons'
 import { notFound } from 'next/navigation'
 import { AlertBadges } from '@/panel/components/alert-badges'
@@ -15,7 +16,9 @@ const Consent = ({ label, v }: { label: string; v: 'vigente' | 'pendiente' }) =>
 )
 
 export default async function Ficha({ params }: { params: Promise<{ id: string }> }) {
-  const p = patient((await params).id)
+  const { id } = await params
+  await hydrate()
+  const p = patient(id)
   if (!p) notFound()
   const entries = entriesOf(p.id)
   const appts = apptsOfPatient(p.id).sort((a, b) => b.start.localeCompare(a.start))

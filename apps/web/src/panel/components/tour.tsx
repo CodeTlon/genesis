@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { IconHelp } from './icons'
+import { IconChevronDown, IconChevronUp, IconHelp } from './icons'
 import { usePathname, useRouter } from 'next/navigation'
 import SpringCheck from '@genesis/ui/vendor/SpringCheck'
 import StatusMark from '@genesis/ui/vendor/StatusMark'
@@ -16,11 +16,13 @@ const STEPS = [
 
 const KEY = 'genesis-tour'
 const DONE_KEY = 'genesis-tour-done'
+const MIN_KEY = 'genesis-tour-min'
 
 export function Tour({ webUrl }: { webUrl?: string }) {
   const router = useRouter()
   const path = usePathname()
   const [checked, setChecked] = useState<number[]>([])
+  const [min, setMinState] = useState(false) // minimizada: sigue activa, solo ocupa menos lugar
   const [step, setStep] = useState<number | null | undefined>(undefined) // undefined = todavía no sabemos (evita el parpadeo del botón)
 
   useEffect(() => {
@@ -30,6 +32,7 @@ export function Tour({ webUrl }: { webUrl?: string }) {
         sessionStorage.setItem(KEY, '0'); sessionStorage.removeItem(DONE_KEY)
         window.history.replaceState(null, '', window.location.pathname)
       }
+      setMinState(sessionStorage.getItem(MIN_KEY) === '1')
       const saved = sessionStorage.getItem(KEY)
       setStep(saved === null ? 0 : saved === 'off' ? null : Number(saved))
       setChecked(JSON.parse(sessionStorage.getItem(DONE_KEY) ?? '[]'))
@@ -40,6 +43,11 @@ export function Tour({ webUrl }: { webUrl?: string }) {
     setStep(n)
     try { sessionStorage.setItem(KEY, n === null ? 'off' : String(n)) } catch { /* sin storage: sigue funcionando */ }
     if (n !== null && n < STEPS.length) router.push(STEPS[n].href)
+  }
+
+  const setMin = (v: boolean) => {
+    setMinState(v)
+    try { sessionStorage.setItem(MIN_KEY, v ? '1' : '0') } catch { /* sin storage: sigue funcionando */ }
   }
 
   const toggle = (i: number, on: boolean) => {
@@ -57,11 +65,22 @@ export function Tour({ webUrl }: { webUrl?: string }) {
     )
   }
 
+  if (min) {
+    return (
+      <button onClick={() => setMin(false)} aria-label="Abrir la guía de la demo" className="g-enter print:hidden fixed bottom-20 right-3 z-40 flex min-h-touch items-center gap-2 rounded-full bg-violeta-oscuro px-4 text-white shadow-soft transition-colors hover:bg-tinta md:bottom-4 md:right-4 md:px-5">
+        <IconHelp className="size-6" />
+        <span className="max-md:sr-only">Guía · {step >= STEPS.length ? 'último paso' : `paso ${step + 1} de ${STEPS.length}`}</span>
+        <IconChevronUp className="size-4 max-md:hidden" />
+      </button>
+    )
+  }
+
   const done = step >= STEPS.length
   const s = STEPS[Math.min(step, STEPS.length - 1)]
   const onScreen = !done && path === s.href.split('?')[0]
   return (
     <aside role="dialog" aria-label="Guía de la demo" className="g-enter print:hidden fixed inset-x-3 bottom-20 z-40 mx-auto max-w-md rounded-card border border-lila bg-white p-5 shadow-soft md:inset-x-auto md:bottom-4 md:right-4">
+      <button type="button" onClick={() => setMin(true)} aria-label="Minimizar la guía (sigue activa)" className="absolute right-3 top-3 grid size-9 place-items-center rounded-full text-tinta transition-colors hover:bg-lila/40"><IconChevronDown className="size-5" /></button>
       {done ? (
         <>
           <h2 className="text-lg font-semibold">¡Listo, ya recorriste la demo!</h2>

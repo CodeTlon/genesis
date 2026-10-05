@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { hydrate } from '@/panel/lib/state'
 import { IconChevronLeft, IconChevronRight } from '@/panel/components/icons'
 import { AgendaBoard, type AgendaAppt } from '@/panel/components/agenda-board'
 import { PrintButton } from '@/panel/components/print-button'
@@ -11,6 +12,7 @@ const FERIADOS_DEMO: Record<string, string> = {} // Fase 1: feriados de Argentin
 
 export default async function Agenda({ searchParams }: { searchParams: Promise<{ dia?: string }> }) {
   const { dia } = await searchParams
+  await hydrate()
   const today = todayKey()
   const day = dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) ? dia : today
 

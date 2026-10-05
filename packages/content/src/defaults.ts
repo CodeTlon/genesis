@@ -182,10 +182,15 @@ export type ContentKey = keyof SiteContent
 
 // Galería inicial: solo imágenes de equipos y productos, sin personas (ver docs/imagenes.md, categoría 3).
 export const DEFAULT_GALLERY = [
+  { image: '/img/grupo-podologia.webp', alt: 'Podología clínica: atención con instrumental esterilizado' },
+  { image: '/img/grupo-facial.webp', alt: 'Tratamiento facial con equipo de radiofrecuencia' },
   { image: '/img/img-10.webp', alt: 'Equipo de depilación láser con pantalla de control' },
   { image: '/img/img-11.webp', alt: 'Cabezales del equipo de crio radiofrecuencia' },
   { image: '/img/img-21.webp', alt: 'Cabezal de radiofrecuencia fraccionada' },
   { image: '/img/img-17.webp', alt: 'Mesa con productos y accesorios para tratamientos faciales' },
   { image: '/img/img-29.webp', alt: 'Estante con esmaltes de colores para uñas soft gel' },
   { image: '/img/img-1.webp', alt: 'Herramientas de madera para maderoterapia' },
+  { image: '/img/grupo-depilacion.webp', alt: 'Depilación láser en piernas con equipo multilongitud de onda' },
+  { image: '/img/grupo-cejas-pestanas-unas.webp', alt: 'Diseño y laminado de cejas' },
+  { image: '/img/grupo-corporal.webp', alt: 'Tratamiento corporal con equipo de cavitación' },
 ]
