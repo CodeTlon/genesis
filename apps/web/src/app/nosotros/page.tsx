@@ -14,13 +14,13 @@ export default async function Nosotros() {
   const [about, team] = await Promise.all([getContent('about'), getContent('team')])
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="text-3xl font-light uppercase tracking-[0.15em]">{about.title}</h1>
+      <h1 className="text-3xl font-normal uppercase tracking-[0.08em]">{about.title}</h1>
       <p className="mt-6 text-lg">{about.lead}</p>
       <p className="mt-4">{about.body}</p>
 
       {team.length > 0 && (
         <>
-          <h2 className="mt-12 text-xl font-light uppercase tracking-[0.12em]">Equipo</h2>
+          <h2 className="mt-12 text-xl font-normal uppercase tracking-[0.06em]">Equipo</h2>
           <ul className="mt-4 space-y-3">
             {team.map((m, i) => (
               <li key={i} className="flex items-center gap-4 rounded-card bg-white p-5 shadow-soft">
@@ -35,7 +35,7 @@ export default async function Nosotros() {
         </>
       )}
 
-      <h2 className="mt-12 text-xl font-light uppercase tracking-[0.12em]">{about.howTitle}</h2>
+      <h2 className="mt-12 text-xl font-normal uppercase tracking-[0.06em]">{about.howTitle}</h2>
       <p className="mt-4">{about.how}</p>
       <Link href="/pedir-turno" className="mt-8 inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-6 text-white">Pedir turno</Link>
     </main>

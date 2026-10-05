@@ -30,8 +30,8 @@ export default async function GrupoPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-16">
-      <nav aria-label="Ruta" className="text-sm"><Link href="/servicios" className="underline">Servicios</Link> / {g.name}</nav>
-      <h1 className="mt-4 text-3xl font-light uppercase tracking-[0.15em]">{g.name}</h1>
+      <nav aria-label="Ruta" className="text-base"><Link href="/servicios" className="underline">Servicios</Link> / {g.name}</nav>
+      <h1 className="mt-4 text-3xl font-normal uppercase tracking-[0.08em]">{g.name}</h1>
       <p className="mt-3 text-lg">{g.intro}</p>
 
       {g.services.length > 1 && (
@@ -47,13 +47,13 @@ export default async function GrupoPage({ params }: Props) {
           <section key={s.slug} id={s.slug} className="scroll-mt-24">
             <div className="grid gap-6 md:grid-cols-[1fr_16rem] md:items-start">
               <div>
-                {s.hook && <p className="font-label text-sm uppercase tracking-widest text-violeta-oscuro">{s.hook}</p>}
-                <h2 className="mt-2 text-2xl font-light uppercase tracking-[0.12em]">{s.name}</h2>
+                {s.hook && <p className="font-label text-base uppercase tracking-widest text-violeta-oscuro">{s.hook}</p>}
+                <h2 className="mt-2 text-2xl font-normal uppercase tracking-[0.06em]">{s.name}</h2>
                 <p className="mt-3">{s.summary}</p>
                 {(s.sessions || s.price) && (
-                  <p className="mt-3 text-sm">{[s.sessions && `Sesiones: ${s.sessions}`, s.price && `Valor: ${s.price}`].filter(Boolean).join(' · ')}</p>
+                  <p className="mt-3 text-base">{[s.sessions && `Sesiones: ${s.sessions}`, s.price && `Valor: ${s.price}`].filter(Boolean).join(' · ')}</p>
                 )}
-                {s.notice && <p className="mt-2 text-sm italic">{s.notice}</p>}
+                {s.notice && <p className="mt-2 text-base italic">{s.notice}</p>}
                 <Link href={`/pedir-turno?servicio=${g.slug}`} className="mt-5 inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-5 text-white">Pedir turno</Link>
               </div>
               {s.image && (
@@ -68,7 +68,7 @@ export default async function GrupoPage({ params }: Props) {
 
       {g.faq.length > 0 && (
         <section className="mt-16" aria-labelledby="faq">
-          <h2 id="faq" className="text-2xl font-light uppercase tracking-[0.12em]">Preguntas frecuentes</h2>
+          <h2 id="faq" className="text-2xl font-normal uppercase tracking-[0.06em]">Preguntas frecuentes</h2>
           <div className="mt-4 space-y-3">
             {g.faq.map((f) => (
               <details key={f.q} className="rounded-card bg-white p-4 shadow-soft">
@@ -80,8 +80,8 @@ export default async function GrupoPage({ params }: Props) {
         </section>
       )}
 
-      <p className="mt-10 text-sm">{disclaimer}</p>
-      {g.faq.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />}
+      <p className="mt-10 text-base">{disclaimer}</p>
+      {g.faq.length > 0 && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd).replace(/</g, '\\u003c') }} />}
     </main>
   )
 }

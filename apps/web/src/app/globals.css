@@ -1,2 +1,4 @@
 @import "tailwindcss";
 @import "@genesis/config/tokens.css";
+/* packages/ui llega por node_modules (symlink) y Tailwind no lo escanea solo: sin esto faltan las clases de los componentes compartidos. */
+@source "../../../../packages/ui";

@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Header />
         <div id="contenido">{children}</div>
         <Footer />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       </body>
     </html>
   )

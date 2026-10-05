@@ -13,7 +13,7 @@ export default async function Galeria() {
   const [items, disclaimer] = await Promise.all([getGallery(), getContent('disclaimer')])
   return (
     <main className="mx-auto max-w-6xl px-4 py-16">
-      <h1 className="text-3xl font-light uppercase tracking-[0.15em]">Galería</h1>
+      <h1 className="text-3xl font-normal uppercase tracking-[0.08em]">Galería</h1>
       <p className="mt-3 max-w-2xl">Un vistazo al equipamiento y a los productos que usamos.</p>
       <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((f) => (

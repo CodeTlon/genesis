@@ -14,7 +14,7 @@ export default async function Contacto() {
   const label = 'font-label text-sm uppercase tracking-widest text-violeta-oscuro'
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="text-3xl font-light uppercase tracking-[0.15em]">Contacto</h1>
+      <h1 className="text-3xl font-normal uppercase tracking-[0.08em]">Contacto</h1>
       <dl className="mt-8 space-y-6">
         <div>
           <dt className={label}>Dirección</dt>
