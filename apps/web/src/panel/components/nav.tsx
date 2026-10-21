@@ -3,16 +3,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const ICONS: Record<string, string> = {
-  '/panel/hoy': 'M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10l1.4 1.4m0-12.8L17 7M7 17l-1.4 1.4M12 8a4 4 0 100 8 4 4 0 000-8z',
-  '/panel/resumen': 'M5 20V10M12 20V4M19 20v-7',
-  '/panel/agenda': 'M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z',
   '/panel/pacientes': 'M16 19v-1a4 4 0 00-4-4H8a4 4 0 00-4 4v1m8-9a3 3 0 100-6 3 3 0 000 6zm8 9v-1a4 4 0 00-3-3.9M16 4.1a3 3 0 010 5.8',
   '/panel/sitio': 'M12 21a9 9 0 100-18 9 9 0 000 18zM3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18',
-  '/panel/plantillas': 'M8 4h8l3 3v13H5V4h3zm0 8h8m-8 4h5',
-  '/panel/ayuda': 'M12 21a9 9 0 100-18 9 9 0 000 18zm0-5v.01M9.5 9.5a2.5 2.5 0 114 2c-.9.6-1.5 1.1-1.5 2',
 }
 
-const SHORT: Record<string, string> = { '/panel/sitio': 'Sitio', '/panel/plantillas': 'Fichas' }
+
+const SHORT: Record<string, string> = { '/panel/sitio': 'Sitio' }
 
 export function Nav({ items, nuevas }: { items: { href: string; label: string; desktopOnly?: boolean }[]; nuevas: number }) {
   const path = usePathname()

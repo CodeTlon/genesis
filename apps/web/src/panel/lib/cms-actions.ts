@@ -1,4 +1,5 @@
 'use server'
+import { guardCms } from './guard'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import {
@@ -29,6 +30,7 @@ async function run(path: string, fn: () => Promise<void>, okPath = path) {
 
 // ---------- Inicio ----------
 export async function saveInicio(fd: FormData) {
+  await guardCms()
   await run('/panel/sitio/inicio', async () => {
     const image = await resolveImage(fd, 'heroImage')
     await setContent('hero', { eyebrow: str(fd, 'eyebrow'), title: str(fd, 'title'), text: str(fd, 'text'), primaryCta: str(fd, 'primaryCta') || 'Pedir turno', secondaryCta: str(fd, 'secondaryCta') || 'Ver servicios', image })
@@ -39,6 +41,7 @@ export async function saveInicio(fd: FormData) {
 
 // ---------- Nosotros ----------
 export async function saveNosotros(fd: FormData) {
+  await guardCms()
   await run('/panel/sitio/nosotros', async () => {
     await setContent('about', { ...(await getContent('about')), title: str(fd, 'title'), lead: str(fd, 'lead'), body: str(fd, 'body'), howTitle: str(fd, 'howTitle'), how: str(fd, 'how') })
     await setContent('team', jsonList<{ name: string; role: string; license: string; photo: string }>(fd, 'team').filter((m) => m.name?.trim()).map((m) => ({ name: m.name, role: m.role ?? '', license: m.license ?? '', photo: m.photo ?? '' })))
@@ -47,6 +50,7 @@ export async function saveNosotros(fd: FormData) {
 
 // ---------- Contacto ----------
 export async function saveContacto(fd: FormData) {
+  await guardCms()
   await run('/panel/sitio/contacto', async () => {
     await setContent('contact', {
       ...(await getContent('contact')),
@@ -59,6 +63,7 @@ export async function saveContacto(fd: FormData) {
 
 // ---------- Avisos y SEO ----------
 export async function saveGeneral(fd: FormData) {
+  await guardCms()
   await run('/panel/sitio/general', async () => {
     await setContent('notice', { active: fd.get('noticeActive') === 'on', text: str(fd, 'noticeText') })
     await setContent('seo', { title: str(fd, 'seoTitle'), description: str(fd, 'seoDescription') })
@@ -68,6 +73,7 @@ export async function saveGeneral(fd: FormData) {
 
 // ---------- Servicios ----------
 export async function createGroup(fd: FormData) {
+  await guardCms()
   const name = str(fd, 'name')
   if (!name) back('/panel/sitio/servicios', 'error', 'Escribí el nombre del grupo.')
   let id = ''
@@ -82,6 +88,7 @@ export async function createGroup(fd: FormData) {
 }
 
 export async function updateGroup(fd: FormData) {
+  await guardCms()
   const id = str(fd, 'id')
   await run(`/panel/sitio/servicios/${id}`, async () => {
     const image = await resolveImage(fd, 'image')
@@ -93,6 +100,7 @@ export async function updateGroup(fd: FormData) {
 }
 
 export async function removeGroup(fd: FormData) {
+  await guardCms()
   const id = str(fd, 'id')
   await run('/panel/sitio/servicios', async () => {
     const image = str(fd, 'image')
@@ -102,6 +110,7 @@ export async function removeGroup(fd: FormData) {
 }
 
 export async function moveItem(fd: FormData) {
+  await guardCms()
   const table = str(fd, 'table') as 'service_groups' | 'site_services' | 'gallery_items'
   if (!['service_groups', 'site_services', 'gallery_items'].includes(table)) return
   await move(table, str(fd, 'id'), str(fd, 'dir') === 'up' ? 'up' : 'down')
@@ -111,6 +120,7 @@ export async function moveItem(fd: FormData) {
 }
 
 export async function upsertService(fd: FormData) {
+  await guardCms()
   const groupId = str(fd, 'groupId')
   const path = `/panel/sitio/servicios/${groupId}`
   if (!str(fd, 'name')) back(path, 'error', 'Escribí el nombre del tratamiento.')
@@ -124,6 +134,7 @@ export async function upsertService(fd: FormData) {
 }
 
 export async function removeService(fd: FormData) {
+  await guardCms()
   const path = `/panel/sitio/servicios/${str(fd, 'groupId')}`
   await run(path, async () => {
     await deleteService(str(fd, 'id'))
@@ -134,6 +145,7 @@ export async function removeService(fd: FormData) {
 
 // ---------- Galería ----------
 export async function addGalleryItem(fd: FormData) {
+  await guardCms()
   await run('/panel/sitio/galeria', async () => {
     const image = await resolveImage(fd, 'image')
     if (!image) throw new UserError('Elegí una imagen para subir.')
@@ -143,12 +155,14 @@ export async function addGalleryItem(fd: FormData) {
 }
 
 export async function updateGalleryItem(fd: FormData) {
+  await guardCms()
   await run('/panel/sitio/galeria', async () => {
     await saveGalleryItem({ id: str(fd, 'id'), image: safeImage(str(fd, 'image')), alt: str(fd, 'alt'), consent_public: fd.get('consent') === 'on', published: fd.get('published') === 'on' })
   })
 }
 
 export async function removeGalleryItem(fd: FormData) {
+  await guardCms()
   await run('/panel/sitio/galeria', async () => {
     await deleteGalleryItem(str(fd, 'id'))
     const image = str(fd, 'image')
@@ -158,6 +172,7 @@ export async function removeGalleryItem(fd: FormData) {
 
 // ---------- Solicitudes ----------
 export async function markRequest(fd: FormData) {
+  await guardCms()
   const status = str(fd, 'status')
   if (status !== 'new' && status !== 'done' && status !== 'discarded') return
   await setRequestStatus(str(fd, 'id'), status)

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
 
 export default function Index() {
-  redirect('/panel/hoy')
+  redirect('/panel/pacientes')
 }

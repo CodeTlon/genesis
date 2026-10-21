@@ -1,21 +1,25 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { getSessionCookie } from 'better-auth/cookies'
+import { flags } from '@/lib/flags'
 
-// Demo: el panel (/panel) no pide contraseña por defecto (botón "Entrar como..."). Si se define DEMO_PASSWORD, se exige.
-// El sitio público no pasa por acá (ver matcher).
-export async function proxy(req: NextRequest) {
-  if (req.nextUrl.pathname === '/panel/login') return NextResponse.next()
-  const expected = await token(process.env.DEMO_PASSWORD)
-  if (req.cookies.get('gp')?.value === expected) return NextResponse.next()
+// Filtro barato. Panel: sin cookie de sesión → login (la validación real contra la base y el rol la hace el servidor en cada
+// página y acción: panel/lib/auth-server.ts). Sitio público: si FEATURE_SITE no está activo, todo redirige al panel.
+export function proxy(req: NextRequest) {
+  const path = req.nextUrl.pathname
+  if (!path.startsWith('/panel')) {
+    if (flags.site()) return NextResponse.next()
+    const url = req.nextUrl.clone()
+    url.pathname = '/panel'
+    url.search = ''
+    return NextResponse.redirect(url)
+  }
+  if (path === '/panel/login') return NextResponse.next()
+  if (getSessionCookie(req)) return NextResponse.next()
   const url = req.nextUrl.clone()
   url.pathname = '/panel/login'
-  url.search = req.nextUrl.searchParams.get('tour') === '1' ? '?tour=1' : ''
+  url.search = ''
   return NextResponse.redirect(url)
 }
 
-async function token(pw?: string) {
-  if (!pw) return 'open'
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`genesis:${pw}`))
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-export const config = { matcher: ['/panel', '/panel/:path*'] }
+// Excluye internos de Next, APIs (tienen su propia validación), medios y archivos estáticos.
+export const config = { matcher: ['/((?!_next/|api/|panel-media/|media/|img/|fonts/|favicon.ico|icon.svg|apple-icon.png).*)'] }

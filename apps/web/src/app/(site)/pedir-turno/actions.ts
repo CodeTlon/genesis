@@ -1,4 +1,5 @@
 'use server'
+import { flags } from '@/lib/flags'
 import { z } from 'zod'
 import { createRequest } from '@genesis/db/content'
 
@@ -14,6 +15,7 @@ const schema = z.object({
 export type TurnoState = { ok: boolean; errors?: Record<string, string>; message?: string } | null
 
 export async function pedirTurno(_prev: unknown, formData: FormData): Promise<TurnoState> {
+  if (!flags.site()) return { ok: false, message: 'El sitio no está disponible.' }
   const parsed = schema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {
     const errors: Record<string, string> = {}

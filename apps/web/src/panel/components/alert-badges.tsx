@@ -8,6 +8,7 @@ const ICON: Record<Alert, ReactNode> = {
   embarazo: <IconHeart className="size-4" />,
   marcapasos: <IconPulse className="size-4" />,
   alergia: <IconWarning className="size-4" />,
+  circulacion: <IconPulse className="size-4" />,
   menor: <IconPerson className="size-4" />,
 }
 
@@ -15,6 +16,7 @@ const ICON: Record<Alert, ReactNode> = {
 const TONE: Record<Alert, string> = {
   anticoagulantes: 'bg-rose-100 text-rose-950 ring-rose-700/50',
   marcapasos: 'bg-rose-100 text-rose-950 ring-rose-700/50',
+  circulacion: 'bg-amber-100 text-amber-950 ring-amber-700/50',
   diabetes: 'bg-amber-100 text-amber-950 ring-amber-700/50',
   alergia: 'bg-amber-100 text-amber-950 ring-amber-700/50',
   embarazo: 'bg-sky-100 text-sky-950 ring-sky-700/50',

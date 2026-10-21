@@ -1,45 +1,43 @@
 'use server'
-import { cookies } from 'next/headers'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { revalidatePath } from 'next/cache'
-import { resetDemo } from './store'
-import { clearFrom } from './state'
-import { PROFILES, type ProfileId } from './profiles'
+import { and, eq, gt, sql } from 'drizzle-orm'
+import { db, schema } from '@genesis/db/client'
+import { getAuth } from '@/lib/auth'
+import { audit, clientIp } from './auth-server'
 
-export async function sessionToken() {
-  const pw = process.env.DEMO_PASSWORD
-  if (!pw) return 'open'
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`genesis:${pw}`))
-  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('')
+// Por correo el umbral es bajo; por IP es alto para no dejar afuera a todo un consultorio que comparte conexión.
+const MAX_FALLOS_CORREO = 5
+const MAX_FALLOS_IP = 30
+const VENTANA_MIN = 15
+
+export async function signIn(formData: FormData) {
+  const email = String(formData.get('email') ?? '').trim().toLowerCase()
+  const password = String(formData.get('password') ?? '')
+  const ip = await clientIp()
+
+  // Límite de intentos por correo e IP (persistente: sobrevive reinicios y varias instancias).
+  const desde = new Date(Date.now() - VENTANA_MIN * 60_000)
+  const fallos = (cond: ReturnType<typeof sql>) =>
+    db().select({ n: sql<number>`count(*)::int` }).from(schema.auditLog)
+      .where(and(eq(schema.auditLog.action, 'login_failed'), gt(schema.auditLog.at, desde), cond)).then((r) => r[0].n)
+  const [porCorreo, porIp] = await Promise.all([
+    fallos(sql`${schema.auditLog.entityId} = ${email}`),
+    ip ? fallos(sql`${schema.auditLog.ip} = ${ip}`) : Promise.resolve(0),
+  ])
+  if (porCorreo >= MAX_FALLOS_CORREO || porIp >= MAX_FALLOS_IP) redirect('/panel/login?error=bloqueado')
+
+  try {
+    const res = await getAuth().api.signInEmail({ body: { email, password }, headers: await headers() })
+    await audit(res.user.id, 'login')
+  } catch {
+    await audit(null, 'login_failed', 'email', email)
+    redirect('/panel/login?error=1')
+  }
+  redirect('/panel/pacientes')
 }
 
-export async function currentAuthor() {
-  const id = (await cookies()).get('gu')?.value as ProfileId | undefined
-  return (id && PROFILES[id]?.name) || PROFILES.pr1.name
-}
-
-/** Entrar sin contraseña (salvo que DEMO_PASSWORD esté definida) eligiendo un perfil ficticio. */
-export async function enterDemo(formData: FormData) {
-  const pw = process.env.DEMO_PASSWORD
-  if (pw && formData.get('password') !== pw) redirect('/panel/login?error=1')
-  const profile = String(formData.get('profile'))
-  const jar = await cookies()
-  const opts = { httpOnly: true, sameSite: 'lax' as const, path: '/', maxAge: 60 * 60 * 8 }
-  clearFrom(jar) // cada entrada a la demo parte de los datos iniciales
-  jar.set('gp', await sessionToken(), opts)
-  jar.set('gu', profile in PROFILES ? profile : 'pr1', opts)
-  redirect(formData.get('tour') === '1' ? '/panel/hoy?tour=1' : '/panel/hoy')
-}
-
-export async function leaveDemo() {
-  const jar = await cookies()
-  jar.delete('gp'); jar.delete('gu')
+export async function signOut() {
+  await getAuth().api.signOut({ headers: await headers() })
   redirect('/panel/login')
-}
-
-export async function restartDemo() {
-  resetDemo()
-  clearFrom(await cookies())
-  revalidatePath('/', 'layout')
-  redirect('/panel/hoy')
 }
