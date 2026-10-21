@@ -85,3 +85,28 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **Datos del panel:** siguen en memoria. En Vercel pueden volver al estado inicial si la función se reinicia o cambia de instancia: se acepta para la demo, y existe "Reiniciar demo".
 - **Sin variables obligatorias:** ni `DATABASE_URL` (sin base el sitio usa los textos por defecto y "Sitio web" del panel no guarda) ni `DEMO_PASSWORD` (sin ella el acceso es libre con perfiles ficticios).
 - **Reemplaza** a la idea anterior de dos proyectos o dos servicios y al `Dockerfile.panel`.
+
+## ADR-012 De demo a proyecto real (reemplaza ADR-008 y ADR-010)
+- **Qué:** se descartó la demo. Genesis es el sistema de historias clínicas de Inés (podología). Los datos viven en Postgres, no en memoria ni cookies. Se eliminaron agenda, "Hoy", "Resumen", plantillas de láser/anamnesis, perfiles de práctica, "Reiniciar demo" y la guía interactiva.
+- **Ramas:** `feature/*` → PR a `dev` → `test` → `main`. Promover lo hace Mateo.
+- **Alcance:** pacientes, antecedentes estructurados con alertas, casos (conclusión y sugerencias), evoluciones firmadas con adenda, mapa de pies v2 (egipcio/griego/romano, a tratar/tratado), fotos privadas, consentimientos, auditoría, exportación imprimible. El sitio público y el CMS se conservan pero **apagados por defecto** (`FEATURE_SITE`, `FEATURE_CMS`).
+- **Pendiente de validar con Inés:** campos de antecedentes, lesiones y zonas del mapa, y si usa otra clasificación de pie (plano, cavo).
+
+## ADR-013 Alineación con la flota
+- Next 16.4.2, React 19.3.1, TypeScript 6.0.3, Zod 4.6.7, ESLint 10 plano, Better Auth 1.7.12, Drizzle 0.45.4. Versiones exactas, sin `^`. `middleware.ts` pasó a `proxy.ts`.
+- **Desvío conocido:** las migraciones son SQL a mano (`packages/db/migrations`), y `schema.ts` de Drizzle las **refleja** para consultar con tipos; no se usa `drizzle-kit generate`. Motivo: el esquema ya tenía extensiones, triggers y `EXCLUDE` que Drizzle no genera. Si se agrega una columna hay que tocar el SQL **y** `schema.ts`.
+- **Instalación:** Better Auth declara peers opcionales que rompen el resolvedor de npm (`edgesOut`). Se instala con `--legacy-peer-deps` (también en el Dockerfile). `zod` va declarado en la raíz porque `better-call` lo busca ahí.
+- Tailwind quedó en 4.3.3. Fuentes autoalojadas: ya lo estaban (`@/fonts`).
+
+## ADR-014 Seguridad de datos clínicos
+- **Cifrado:** AES-256-GCM a nivel aplicación (`panel/lib/crypto.ts`) para antecedentes, motivo, conclusión, sugerencias, payload de evoluciones y texto de adendas. `CLINICAL_DATA_ENCRYPTION_KEY` es obligatoria y no tiene valor por defecto. **Si se pierde, los datos son irrecuperables:** se guarda aparte y fuera del backup de la base. Quedan en claro los campos por los que se busca o filtra (nombre, DNI, estado del caso).
+- **Inmutabilidad en la base:** evoluciones firmadas, adendas y `audit_log` no se editan ni se borran (triggers). Sin borrado físico de pacientes (`deleted_at`) ni de fotos.
+- **Hash encadenado:** cada evolución firmada guarda el hash de la anterior del paciente.
+- **Sesión:** Better Auth, sin registro público; usuarios por `scripts/crear-usuario.mjs`. Sesión de 8 h. `proxy.ts` solo filtra por cookie; **cada página y acción vuelve a validar** con `requireUser()` contra la base. Bloqueo de login: 5 fallos por correo y 30 por IP en 15 min (umbrales distintos para que un atacante no deje afuera a todo el consultorio).
+- **Server Actions son endpoints públicos:** todas las del panel y las 14 del CMS exigen sesión; las del CMS además el flag. El formulario público de turnos exige `FEATURE_SITE`.
+- **Fotos:** `/panel-media/[id]` con sesión, `no-store`, `nosniff`, CSP `sandbox` y auditoría. Subida por route handler: lista cerrada de tipos validada por **contenido** con `sharp`, máximo 8 MB, re-encode a WebP (sin EXIF/GPS), nombre UUID, volumen fuera de `public/`. Sin consentimiento de fotos vigente no se sube (lo exige además `consent_id NOT NULL`).
+- **Límites conocidos:** el límite de intentos de login depende de `x-forwarded-for` (detrás de Coolify lo fija el proxy). No hay 2FA ni rotación de la clave de cifrado todavía.
+
+## ADR-015 Despliegue y respaldos
+- `docker-compose.coolify.yml` (app + `postgres:17-alpine`, volúmenes `pgdata` y `storage`), un compose por entorno con **sus propias** claves. `docker-entrypoint.sh` no arranca sin variables obligatorias y `scripts/migrar.mjs` falla cerrado.
+- `scripts/backup.sh` (dump + fotos a B2) y `scripts/restaurar.sh` (simulacro sobre base descartable). **Hasta que `docs/restauraciones.md` tenga un simulacro fechado contra B2 real, no se cargan pacientes reales.**

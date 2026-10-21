@@ -153,9 +153,10 @@ test('el pedido de turno del sitio llega a la bandeja de solicitudes del panel',
 
 test('accesibilidad (axe) del editor del sitio', async ({ page }) => {
   await login(page)
-  const groupsHref = await (async () => { await page.goto(PANEL + '/sitio/servicios'); return page.getByRole('link', { name: 'Editar' }).first().getAttribute('href') })()
-  for (const p of ['/sitio', '/sitio/inicio', '/sitio/servicios', groupsHref!, '/sitio/nosotros', '/sitio/contacto', '/sitio/general', '/sitio/galeria', '/sitio/solicitudes']) {
+  const groupsHref = await (async () => { await page.goto(PANEL + '/sitio/servicios'); return page.getByRole('link', { name: 'Editar' }).first().getAttribute('href') })().then((h) => h!.replace(/^\/panel/, ''))
+  for (const p of ['/sitio', '/sitio/inicio', '/sitio/servicios', groupsHref, '/sitio/nosotros', '/sitio/contacto', '/sitio/general', '/sitio/galeria', '/sitio/solicitudes']) {
     await page.goto(PANEL + p)
+    await expect(page).toHaveTitle(/GENESIS/) // Next 16 envía los metadatos por streaming: esperarlos antes de evaluar el título
     const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
     const bad = r.violations.filter((x) => x.impact === 'critical' || x.impact === 'serious')
     expect(bad.map((b) => `${p}: ${b.id} ${b.nodes.slice(0, 2).map((n) => n.html.slice(0, 120)).join(' | ')}`), `axe en ${p}`).toEqual([])

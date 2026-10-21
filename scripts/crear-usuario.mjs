@@ -1,10 +1,16 @@
 // Alta de un usuario del panel (no hay registro público). Uso, dentro del contenedor o en local:
 //   DATABASE_URL=... node scripts/crear-usuario.mjs "Nombre Apellido" correo@dominio.com [admin|profesional] [matrícula]
 // La contraseña se pide por la terminal (no queda en el historial ni en argumentos del proceso).
-import { randomBytes, randomUUID } from 'node:crypto'
+import { randomBytes, randomUUID, scrypt } from 'node:crypto'
 import { createInterface } from 'node:readline/promises'
 import pg from 'pg'
-import { hashPassword } from 'better-auth/crypto'
+
+// Mismo algoritmo que Better Auth (@better-auth/utils password.node): scrypt N=16384 r=16 p=1, clave de 64 bytes, sal hex, NFKC.
+// Se replica acá para que el script corra dentro del contenedor, donde better-auth viene empaquetado y no como módulo suelto.
+const hashPassword = (password) => new Promise((resolve, reject) => {
+  const salt = randomBytes(16).toString('hex')
+  scrypt(password.normalize('NFKC'), salt, 64, { N: 16384, r: 16, p: 1, maxmem: 128 * 16384 * 16 * 2 }, (err, key) => (err ? reject(err) : resolve(`${salt}:${key.toString('hex')}`)))
+})
 
 const [name, email, role = 'profesional', license = null] = process.argv.slice(2)
 if (!name || !email || !['admin', 'profesional'].includes(role)) {

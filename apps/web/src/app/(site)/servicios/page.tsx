@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { getContent, getGroups } from '@genesis/db/content'
-import { Reveal } from '@genesis/ui/reveal'
+
 import { GroupGrid } from '@/components/group-grid'
 
 export const revalidate = 60

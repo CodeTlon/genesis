@@ -3,7 +3,6 @@ import { getContent } from '@genesis/db/content'
 import '../globals.css'
 import { fontVars } from '@/fonts'
 import { Header } from '@/components/header'
-import { SiteTour } from '@/components/site-tour'
 import { Footer } from '@/components/footer'
 import { SITE } from '@/lib/site'
 
@@ -40,7 +39,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Header />
         <div id="contenido">{children}</div>
         <Footer />
-        <SiteTour />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       </body>
     </html>

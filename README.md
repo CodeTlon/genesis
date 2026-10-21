@@ -1,49 +1,28 @@
 # Genesis
 
-Sitio web y sistema interno de gestión (pacientes, historia clínica, agenda) para Genesis Estética Integral, Córdoba.
+Sistema de historias clínicas de podología para Genesis Estética Integral (Córdoba): pacientes, antecedentes, casos, evoluciones firmadas, mapa de pies y fotos clínicas privadas. El sitio público existe pero está apagado por defecto.
 
-**Estado:** Fase 0 — demo con datos 100 % ficticios.
+**Estado:** proyecto real en construcción. **No cargar pacientes reales** hasta cumplir los puntos de `docs/restauraciones.md` (backup en B2 con simulacro fechado) y validar los campos con Inés.
 
 ## Stack
-Next.js 15.5.25, TypeScript, Tailwind v4, PostgreSQL 16 (`pg` con migraciones SQL), Turborepo (npm workspaces). Decisiones en `docs/decisiones.md`.
+Next.js 16.4.2, React 19.3.1, TypeScript 6, Tailwind v4, PostgreSQL 17 (Docker) con migraciones SQL y Drizzle para consultas, Better Auth, Turborepo (npm workspaces). Decisiones en `docs/decisiones.md`.
 
 ## Estructura
-`apps/web` (una sola app: sitio público en `/` y panel interno en `/panel`) · `packages/{db,ui,config,content}` · `e2e/` (Playwright) · `docs/`
+`apps/web` (una app: panel en `/panel`, sitio en `/` si `FEATURE_SITE=true`) · `packages/{db,ui,config,content}` · `scripts/` · `e2e/` (Playwright) · `docs/`
 
-## Seguir en otra PC
-
-**Requisitos:** Node 24, Git, Docker Desktop. Para clonar el repo privado, tener `gh auth login` (o credenciales de GitHub) con una cuenta de la organización CodeTlon.
-
+## Desarrollo local
 ```bash
-git clone https://github.com/CodeTlon/genesis.git
-cd genesis
-git checkout dev          # se trabaja en `dev`; `main` queda con lo entregado
-npm install
-
-docker compose up -d db   # Postgres 16 en el puerto 5433
-npm run db:migrate        # crea las tablas
-npm run db:seed           # carga los grupos, servicios y galería iniciales
-npm run db:verify         # (opcional) 14 comprobaciones de las garantías del esquema
-
-npm run build
-npm run start -w @genesis/web     # sitio → http://localhost:3000   ·   panel → http://localhost:3000/panel
+cp .env.example .env            # completar BETTER_AUTH_SECRET y CLINICAL_DATA_ENCRYPTION_KEY (ver comentarios)
+docker compose up -d db         # Postgres en el puerto 5433
+npm install --legacy-peer-deps
+npm run db:migrate && npm run db:seed
+node scripts/crear-usuario.mjs "Nombre Apellido" correo@dominio.com admin
+npm run dev -w @genesis/web
 ```
+`npm run build` y luego `npm run test:e2e` (levanta la app en :3000 con secretos de prueba y los flags del sitio y el CMS encendidos; necesita la base migrada).
 
-- **Variables:** sin ninguna variable funciona en local. El panel no pide contraseña por defecto (botón «Entrar como…»); si definís `DEMO_PASSWORD` la exige (los tests usan `demo123`). Ver `.env.example`; los valores reales van en `.env.local` de cada app y nunca se commitean.
-- **Tests E2E:** `npx playwright install chromium` (una sola vez) y `npm run test:e2e`. Necesitan `npm run build` previo y el puerto 3000 libre.
-- **Datos:** el contenido del sitio (textos, servicios, galería, solicitudes de turno) vive en Postgres. Los pacientes, turnos y atenciones del panel son ficticios y están en memoria: se reinician al reiniciar el servidor.
-- **Mapa del proyecto, reglas y errores conocidos:** `.claude/CLAUDE.md` y `.claude/ERRORES.md`. Guion de la demo: `docs/guion-demo.md`.
+## Ramas y entornos
+`feature/<origen>-<tarea>` → PR a `dev` → `test` → `main`. Producción en Coolify con `docker-compose.coolify.yml`; variables en `.env.example`.
 
-## Changelog
-| Versión | Cambio |
-|---|---|
-| v0.1.0 | setup del repo y documentación de Checkpoints 1–2 |
-| v0.2.0 | sitio público (5 grupos de servicios) y panel de la demo: Hoy, agenda, pacientes, fichas A/B/C, mapa de pies |
-| v0.3.0 | sitio 100 % editable desde el panel (Sitio web): portada, servicios, nosotros, contacto, galería con consentimiento, aviso y SEO; bandeja de solicitudes de turno; migración 0002 |
-| v0.3.1 | guía para clonar y seguir en otra PC |
-
-## Licencia
-Propietaria, todos los derechos reservados. Ver [LICENSE](LICENSE).
-
-## Deploy en Vercel
-Importar el repo con **Root Directory `apps/web`** (framework Next.js). No hace falta `vercel.json` ni ninguna variable de entorno. Detalle en `docs/decisiones.md` (ADR-011).
+## Cambios
+- **2026-10-21** — Pasa de demo a proyecto real: Postgres, login real, cifrado de campos clínicos, antecedentes, casos, mapa de pies v2, fotos privadas, consentimientos, auditoría, Docker/Coolify y backups.

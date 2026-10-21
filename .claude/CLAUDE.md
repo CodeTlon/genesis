@@ -1,20 +1,23 @@
 # Genesis — memoria del proyecto
-Sitio público + panel interno (historias clínicas, agenda) para Genesis Estética Integral (Córdoba). **Fase 0: demo con datos ficticios.** Repo `CodeTlon/genesis`, ramas `main`/`dev`. Commits sin Co-Authored-By.
+Sistema de historias clínicas de podología para Inés (Genesis Estética Integral, Córdoba) + sitio público (apagado por defecto). **Proyecto real, ya no es demo.** Repo `CodeTlon/genesis`, ramas `feature/*` → `dev` → `test` → `main`. Commits sin Co-Authored-By.
 
 ## Reglas propias (anulan defaults de la fábrica)
 - **Sin marca CodeTlon** ni `<CodeTlonBadge />` (pedido del cliente final). Footer neutro.
-- **Sin WhatsApp en ningún lado**: ni botón ni links en el sitio, y se eliminó el simulador del panel (pedido de Mateo).
-- Datos 100 % ficticios; nada de fotos de pacientes en el repo (las 38 piezas están en `codetlon-cloud/client-assets/genesis…`, solo recortes cat. 3 en `apps/web/public/img`).
+- **Sin WhatsApp en ningún lado** (pedido de Mateo).
+- **No cargar pacientes reales** hasta tener backup en B2 con simulacro de restauración fechado (`docs/restauraciones.md`) y los campos validados con Inés. Datos de prueba, siempre ficticios.
+- Nunca subir al repo fotos de pacientes ni la ficha de papel de Inés (tiene datos de una paciente real).
 - Plantillas clínicas = **propuestas a validar** con la profesional. No inventar protocolos.
 - Sin trackers, CDNs de terceros ni datos clínicos en localStorage.
+- `CLINICAL_DATA_ENCRYPTION_KEY` jamás en el repo ni en el backup de la base; si se pierde, los datos son irrecuperables.
 
 ## Stack y comandos
-Next 15.5.25 + Tailwind v4 + Turborepo (npm) + Postgres 16 (`docker compose up -d db`, `npm run db:migrate`, `db:seed`, `db:verify`). `npm run build`, `npm run test:e2e` (requiere build; levanta la app única en :3000, sitio en `/` y panel en `/panel`, con `DEMO_PASSWORD=demo123`). Decisiones en `docs/decisiones.md` (ADR-001…008).
+Next 16.4.2 + React 19.3.1 + Tailwind v4 + Better Auth + Drizzle (consultas) + Postgres 17, Turborepo (npm, instalar con `--legacy-peer-deps`). Postgres local en **:5433**. `npm run build`, `npm run test:e2e` (requiere build y base migrada). Usuarios: `scripts/crear-usuario.mjs`. Decisiones en `docs/decisiones.md` (ADR-012…015).
 
 ## Mapa
-- `apps/web`: UNA sola app. Sitio en `app/(site)` y panel en `app/(panel)/panel`; el código del panel va en `src/panel/{components,lib}` (`@/panel/...`). Sitio: lee TODO el contenido de la base con `@genesis/db/content` (respaldo: `packages/content/src/defaults.ts`), ISR 60 s. Panel: `/panel/sitio/*` = CMS del sitio (Postgres; acciones en `src/panel/lib/cms-actions.ts`); clínico: `src/panel/lib/store.ts` (datos en memoria), `templates.ts` (plantillas A/B/C), `src/panel/components/*`.
-- `packages/config/tokens.css`: tokens de marca (único archivo). `packages/ui/vendor`: componentes de react-bits adaptados (HoldButton, Stepper).
-- `docs/`: guion-demo, incidentes, imagenes, marca, decisiones.
+- `apps/web/src/panel/lib`: `repo.ts` (datos, cifra y descifra), `actions.ts` (Server Actions: sesión + zod + auditoría), `crypto.ts`, `photos.ts`, `auth-server.ts` (`requireUser`, `audit`), `types.ts`, `templates.ts`.
+- `apps/web/src/app/(panel)/panel/(app)/pacientes/**`: lista, ficha, casos, evolución, historia imprimible. `app/panel-media/[photoId]` y `app/api/clinico/fotos`: fotos privadas.
+- `packages/db`: `migrations/*.sql` (fuente de verdad) y `src/schema.ts` (Drizzle, **debe reflejar el SQL**).
+- Flags (`src/lib/flags.ts`): `FEATURE_SITE`, `FEATURE_CMS`, apagados por defecto.
 
 ## Pendiente
-Pasar pacientes/agenda/atenciones del panel de memoria a Postgres (el SQL ya está verificado); Fase 1 (auth+2FA, cifrado, auditoría, backups); datos de Inés (matrículas, horarios, teléfono).
+Validar con Inés antecedentes, lesiones y zonas del mapa; test e2e de galería del sitio (`test.fixme`, desde Next 16); 2FA y rotación de clave de cifrado; simulacro de restauración contra B2 real; deploy en Coolify (`docker-compose.coolify.yml`); inscripción AAIP y texto de consentimiento revisado por una persona con matrícula.
