@@ -10,15 +10,17 @@
     "verify": "tsx src/verify.ts"
   },
   "dependencies": {
-    "pg": "^8.13.0",
-    "@genesis/content": "*"
+    "@genesis/content": "*",
+    "drizzle-orm": "0.45.4",
+    "pg": "8.23.1"
   },
   "devDependencies": {
-    "tsx": "^4.19.0",
-    "@types/pg": "^8.11.0"
+    "@types/pg": "8.23.1",
+    "tsx": "4.23.15"
   },
   "exports": {
     "./client": "./src/client.ts",
+    "./schema": "./src/schema.ts",
     "./content": "./src/content.ts"
   }
 }

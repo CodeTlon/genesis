@@ -1,5 +1,5 @@
 export const SITE = {
-  name: 'Genesis Estética Integral',
+  name: 'GENESIS',
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://genesis-demo.vercel.app',
   indexable: process.env.SITE_INDEXABLE === '1', // la demo va noindex
 }

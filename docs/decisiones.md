@@ -68,3 +68,45 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **Imágenes:** se procesan en el servidor con sharp (corrige orientación, achica a 1600 px, pasa a WebP y **elimina EXIF/GPS**), tope 4 MB (el cuerpo de las funciones de Vercel corta en ~4,5 MB) y se guardan en la tabla `media`, servidas por `/media/<id>`. Fase 1: object storage cifrado.
 - **Consentimiento en la galería:** una constraint de la base (`CHECK (NOT published OR consent_public)`) impide publicar una foto sin confirmar que no hay personas o que hay consentimiento de uso público (regla de imagen del prompt).
 - **Fuera de alcance por ahora:** roles (todo el que entra al panel edita; Fase 1), historial de versiones del contenido, editor de plantillas clínicas, vista previa sin publicar.
+
+## ADR-010 Demo pública compartible por link
+- **Qué:** una versión de la demo para mostrar por link, pensada para una persona no técnica (~40 años), que se recorre sola con una guía interactiva.
+- **Acceso:** el login es un botón "Entrar como Inés / Valentina" (perfiles ficticios, sin contraseña). Si se define `DEMO_PASSWORD`, se exige. Hay "Reiniciar demo" y "Salir" en el menú. El perfil elegido firma las atenciones.
+- **Tour guiado:** `apps/panel/src/components/tour.tsx`, 6 pasos que navegan a cada pantalla; el paso se guarda solo en `sessionStorage` (no hay datos clínicos). Se relanza con el botón "Guía".
+- **Hosting:** el sitio va en Vercel **sin base** (usa `@genesis/content/defaults`; el formulario de turno simula el envío). El panel va en **un solo proceso** (`Dockerfile.panel`, Railway/Fly con 1 instancia) porque su estado vive en memoria y en serverless se perdería entre requests. Sin `DATABASE_URL` en producción no se intenta conectar a localhost, y `/sitio` no guarda cambios.
+- **Datos:** la semilla es relativa a "hoy" y se regenera si cambia el día, así que la agenda nunca queda vacía. El estado es compartido entre visitantes (no por sesión): suficiente para una demo con pocas personas; "Reiniciar demo" lo restaura.
+- **Seguridad:** se eliminó el secreto por defecto de `/api/revalidate`: en producción, sin `REVALIDATE_SECRET` el endpoint queda cerrado.
+
+## ADR-011 Sitio y panel en una sola app (un build, un dominio)
+- **Qué:** el panel dejó de ser una app aparte. Vive dentro de `apps/web` bajo `/panel`. Un solo build y un solo dominio: en Vercel se importa el repo con **Root Directory `apps/web`**, sin `vercel.json`.
+- **Estructura:** dos grupos de rutas con layout raíz propio: `app/(site)/…` (sitio, con header y footer) y `app/(panel)/panel/…` (panel, con su menú lateral). `app/not-found.tsx` es el 404 global, con su propio `<html>`.
+- **Código del panel:** `src/panel/{components,lib}` (se importa con `@/panel/...`) y `src/middleware.ts`, que protege solo `/panel/*`. Todas las rutas internas del panel llevan el prefijo `/panel`.
+- **Sin pegamento entre apps:** se eliminaron `WEB_URL`, `PANEL_URL`, `REVALIDATE_SECRET`, `/api/revalidate` y `/api/panel-url`. El sitio enlaza al panel con `/panel/login?tour=1` y el panel actualiza el sitio con `revalidatePath` directo.
+- **Datos del panel:** siguen en memoria. En Vercel pueden volver al estado inicial si la función se reinicia o cambia de instancia: se acepta para la demo, y existe "Reiniciar demo".
+- **Sin variables obligatorias:** ni `DATABASE_URL` (sin base el sitio usa los textos por defecto y "Sitio web" del panel no guarda) ni `DEMO_PASSWORD` (sin ella el acceso es libre con perfiles ficticios).
+- **Reemplaza** a la idea anterior de dos proyectos o dos servicios y al `Dockerfile.panel`.
+
+## ADR-012 De demo a proyecto real (reemplaza ADR-008 y ADR-010)
+- **Qué:** se descartó la demo. Genesis es el sistema de historias clínicas de Inés (podología). Los datos viven en Postgres, no en memoria ni cookies. Se eliminaron agenda, "Hoy", "Resumen", plantillas de láser/anamnesis, perfiles de práctica, "Reiniciar demo" y la guía interactiva.
+- **Ramas:** `feature/*` → PR a `dev` → `test` → `main`. Promover lo hace Mateo.
+- **Alcance:** pacientes, antecedentes estructurados con alertas, casos (conclusión y sugerencias), evoluciones firmadas con adenda, mapa de pies v2 (egipcio/griego/romano, a tratar/tratado), fotos privadas, consentimientos, auditoría, exportación imprimible. El sitio público y el CMS se conservan pero **apagados por defecto** (`FEATURE_SITE`, `FEATURE_CMS`).
+- **Pendiente de validar con Inés:** campos de antecedentes, lesiones y zonas del mapa, y si usa otra clasificación de pie (plano, cavo).
+
+## ADR-013 Alineación con la flota
+- Next 16.4.2, React 19.3.1, TypeScript 6.0.3, Zod 4.6.7, ESLint 10 plano, Better Auth 1.7.12, Drizzle 0.45.4. Versiones exactas, sin `^`. `middleware.ts` pasó a `proxy.ts`.
+- **Desvío conocido:** las migraciones son SQL a mano (`packages/db/migrations`), y `schema.ts` de Drizzle las **refleja** para consultar con tipos; no se usa `drizzle-kit generate`. Motivo: el esquema ya tenía extensiones, triggers y `EXCLUDE` que Drizzle no genera. Si se agrega una columna hay que tocar el SQL **y** `schema.ts`.
+- **Instalación:** Better Auth declara peers opcionales que rompen el resolvedor de npm (`edgesOut`). Se instala con `--legacy-peer-deps` (también en el Dockerfile). `zod` va declarado en la raíz porque `better-call` lo busca ahí.
+- Tailwind quedó en 4.3.3. Fuentes autoalojadas: ya lo estaban (`@/fonts`).
+
+## ADR-014 Seguridad de datos clínicos
+- **Cifrado:** AES-256-GCM a nivel aplicación (`panel/lib/crypto.ts`) para antecedentes, motivo, conclusión, sugerencias, payload de evoluciones y texto de adendas. `CLINICAL_DATA_ENCRYPTION_KEY` es obligatoria y no tiene valor por defecto. **Si se pierde, los datos son irrecuperables:** se guarda aparte y fuera del backup de la base. Quedan en claro los campos por los que se busca o filtra (nombre, DNI, estado del caso).
+- **Inmutabilidad en la base:** evoluciones firmadas, adendas y `audit_log` no se editan ni se borran (triggers). Sin borrado físico de pacientes (`deleted_at`) ni de fotos.
+- **Hash encadenado:** cada evolución firmada guarda el hash de la anterior del paciente.
+- **Sesión:** Better Auth, sin registro público; usuarios por `scripts/crear-usuario.mjs`. Sesión de 8 h. `proxy.ts` solo filtra por cookie; **cada página y acción vuelve a validar** con `requireUser()` contra la base. Bloqueo de login: 5 fallos por correo y 30 por IP en 15 min (umbrales distintos para que un atacante no deje afuera a todo el consultorio).
+- **Server Actions son endpoints públicos:** todas las del panel y las 14 del CMS exigen sesión; las del CMS además el flag. El formulario público de turnos exige `FEATURE_SITE`.
+- **Fotos:** `/panel-media/[id]` con sesión, `no-store`, `nosniff`, CSP `sandbox` y auditoría. Subida por route handler: lista cerrada de tipos validada por **contenido** con `sharp`, máximo 8 MB, re-encode a WebP (sin EXIF/GPS), nombre UUID, volumen fuera de `public/`. Sin consentimiento de fotos vigente no se sube (lo exige además `consent_id NOT NULL`).
+- **Límites conocidos:** el límite de intentos de login depende de `x-forwarded-for` (detrás de Coolify lo fija el proxy). No hay 2FA ni rotación de la clave de cifrado todavía.
+
+## ADR-015 Despliegue y respaldos
+- `docker-compose.coolify.yml` (app + `postgres:17-alpine`, volúmenes `pgdata` y `storage`), un compose por entorno con **sus propias** claves. `docker-entrypoint.sh` no arranca sin variables obligatorias y `scripts/migrar.mjs` falla cerrado.
+- `scripts/backup.sh` (dump + fotos a B2) y `scripts/restaurar.sh` (simulacro sobre base descartable). **Hasta que `docs/restauraciones.md` tenga un simulacro fechado contra B2 real, no se cargan pacientes reales.**

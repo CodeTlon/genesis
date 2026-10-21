@@ -1,0 +1,38 @@
+# Despliegue en Coolify: app + Postgres con volúmenes propios. Un compose por entorno (test / main), cada uno con SUS variables y SUS claves.
+# Variables obligatorias (cargarlas en Coolify, nunca en el repo): ver .env.example. Sin ellas el contenedor no arranca.
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://genesis:${POSTGRES_PASSWORD}@db:5432/genesis
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      CLINICAL_DATA_ENCRYPTION_KEY: ${CLINICAL_DATA_ENCRYPTION_KEY}
+      PHOTOS_DIR: /data/storage/clinico
+      FEATURE_SITE: ${FEATURE_SITE:-false}
+      FEATURE_CMS: ${FEATURE_CMS:-false}
+      NEXT_PUBLIC_SITE_URL: ${BETTER_AUTH_URL}
+      SITE_INDEXABLE: "0"
+    volumes:
+      - storage:/data/storage
+    expose: ["3000"]
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: genesis
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: genesis
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U genesis -d genesis"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  pgdata:
+  storage:

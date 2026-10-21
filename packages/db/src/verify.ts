@@ -1,7 +1,7 @@
 // Verifica contra un Postgres real las garantías del esquema. Corre dentro de una transacción que se revierte.
 import pg from 'pg'
 
-const url = process.env.DATABASE_URL ?? 'postgres://genesis:genesis@localhost:5432/genesis'
+const url = process.env.DATABASE_URL ?? 'postgres://genesis:genesis@localhost:5433/genesis'
 const c = new pg.Client({ connectionString: url })
 await c.connect()
 
