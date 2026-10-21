@@ -5,7 +5,7 @@ import path from 'node:path'
 const DATABASE_URL = process.env.DATABASE_URL ?? 'postgres://genesis:genesis@localhost:5433/genesis'
 
 // Requiere `npm run build` previo y la base migrada. Levanta la app única en :3000 en modo producción.
-// Los secretos son SOLO de prueba. Sitio y CMS se encienden acá para poder probar sus pantallas; en producción están apagados por defecto.
+// Los secretos son SOLO de prueba.
 export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
@@ -21,8 +21,6 @@ export default defineConfig({
         BETTER_AUTH_URL: 'http://localhost:3000',
         CLINICAL_DATA_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
         PHOTOS_DIR: path.join(os.tmpdir(), 'genesis-e2e-fotos'),
-        FEATURE_SITE: 'true',
-        FEATURE_CMS: 'true',
       },
     },
   ],

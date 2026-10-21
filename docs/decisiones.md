@@ -110,3 +110,9 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 ## ADR-015 Despliegue y respaldos
 - `docker-compose.coolify.yml` (app + `postgres:17-alpine`, volúmenes `pgdata` y `storage`), un compose por entorno con **sus propias** claves. `docker-entrypoint.sh` no arranca sin variables obligatorias y `scripts/migrar.mjs` falla cerrado.
 - `scripts/backup.sh` (dump + fotos a B2) y `scripts/restaurar.sh` (simulacro sobre base descartable). **Hasta que `docs/restauraciones.md` tenga un simulacro fechado contra B2 real, no se cargan pacientes reales.**
+
+## ADR-016 Sin sitio público ni CMS (reemplaza lo del sitio en ADR-001…011 y los flags de ADR-012)
+- **Qué:** el cliente final quiere solo historias clínicas. Se eliminaron el sitio público (`app/(site)`), el CMS (`/panel/sitio`, `cms*.ts`), `packages/content`, el seed, los flags `FEATURE_SITE` y `FEATURE_CMS` y los componentes del sitio. `/` redirige al panel; `robots.txt` no indexa nada.
+- **Base de datos:** la migración `0004_solo_historias.sql` borra las tablas del sitio, la agenda y la simulación de WhatsApp (`media`, `service_groups`, `site_services`, `gallery_items`, `site_content`, `appointment_requests`, `appointments`, `resources`, `services`, `whatsapp_threads_demo`) y `foot_markers` (sin uso: las marcas van en el payload cifrado). **Es irreversible** para esas tablas; no había datos reales.
+- **Quedan** `areas`, `professionals`, `form_templates` y `form_template_versions` solo porque `clinical_entries` tiene FK hacia ellas (nullable). Se pueden soltar más adelante.
+- **Recuperación:** todo el código eliminado sigue en el historial de git (commit `8e78e50` es el último con sitio y CMS).

@@ -1,12 +1,12 @@
 import { test, expect, type Page } from '@playwright/test'
-import path from 'node:path'
 import pg from 'pg'
-import { DB, ensureUser, login, USER } from './helpers'
+import { DB, ensureUser, login } from './helpers'
 
 test.describe.configure({ mode: 'serial' })
 test.beforeAll(() => ensureUser())
 
-const FOTO = path.join(__dirname, '..', 'apps', 'web', 'public', 'img', 'img-10.webp')
+// Foto de prueba generada en memoria (PNG de 8x8): el repo no lleva ninguna imagen clínica.
+const FOTO = { name: 'foto-prueba.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWM4URGFFTEMLQkAKKBmgU0/yJsAAAAASUVORK5CYII=', 'base64') }
 const RUN = Date.now().toString(36)
 const MOTIVO = `Motivo-secreto-${RUN}`
 let patientUrl = ''
@@ -186,9 +186,14 @@ test('login: clave incorrecta no entra y los intentos repetidos se bloquean', as
   await login(page)
 })
 
-test('sin FEATURE_SITE el sitio público redirige y con ella se publica (probado con el flag encendido en este servidor)', async ({ page }) => {
-  const r = await page.goto('/')
-  expect(r!.status()).toBe(200)
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-  void USER
+test('no hay sitio público: la raíz lleva al login y el CMS ya no existe', async ({ page, playwright }) => {
+  await page.goto('/')
+  await expect(page).toHaveURL(/\/panel\/login/)
+  const anon = await playwright.request.newContext({ baseURL: 'http://localhost:3000', maxRedirects: 0 })
+  expect((await anon.get('/robots.txt')).status()).toBe(200)
+  expect(await (await anon.get('/robots.txt')).text()).toContain('Disallow: /')
+  await anon.dispose()
+  await login(page)
+  await page.goto('/panel/sitio')
+  await expect(page.getByText('No encontramos esa página')).toBeVisible()
 })

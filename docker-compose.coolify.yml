@@ -12,10 +12,6 @@ services:
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
       CLINICAL_DATA_ENCRYPTION_KEY: ${CLINICAL_DATA_ENCRYPTION_KEY}
       PHOTOS_DIR: /data/storage/clinico
-      FEATURE_SITE: ${FEATURE_SITE:-false}
-      FEATURE_CMS: ${FEATURE_CMS:-false}
-      NEXT_PUBLIC_SITE_URL: ${BETTER_AUTH_URL}
-      SITE_INDEXABLE: "0"
     volumes:
       - storage:/data/storage
     expose: ["3000"]

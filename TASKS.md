@@ -1,15 +1,19 @@
-# Tasks — Genesis (Fase 0)
-## Setup
-- [x] Repo GitHub privado CodeTlon/genesis + ramas main y dev (push verificado)
-- [x] Turborepo + Next 15.5.25 (build+typecheck+lint verdes)
-- [x] Tokens de marca + fuentes (next/font)
-- [x] docker-compose + migración 0001 verificada en Postgres 16 real (npm run db:verify: 14 garantías)
-## Sitio público
-- [x] Inicio, Servicios (19 servicios en 5 páginas por grupo), Nosotros, Galería, Contacto, Pedir turno, Privacidad (sin botón de WhatsApp)
-- [x] JSON-LD, sitemap, robots (demo noindex)
-## Panel
-- [x] Pacientes ficticios, ficha + plantillas A/B/C, mapa de pies, agenda drag&drop, Hoy, onboarding, plantillas
-## Cierre
-- [x] Lighthouse móvil (perf 96-98, a11y 100) + axe + 14 E2E verdes + docs/guion-demo.md
-- [x] Sitio editable desde el panel (CMS sobre Postgres): 7 E2E + axe verdes
-- [ ] Deploy demo (manual de Mateo: Vercel x2 + Postgres administrado + variables de .env.example)
+# Tasks — Genesis (historias clínicas de podología)
+
+## Hecho
+- [x] Base real: Postgres, login (Better Auth), cifrado de campos clínicos, auditoría, inmutabilidad en la base
+- [x] Pacientes, antecedentes con alertas, casos (conclusión y sugerencias), evoluciones firmadas + adendas
+- [x] Mapa de pies v2 (egipcio / griego / romano, a tratar / tratado)
+- [x] Fotos clínicas privadas + consentimientos; historia imprimible / PDF
+- [x] Docker + compose de Coolify, backup y simulacro (scripts), health
+- [x] Sin sitio público ni CMS (ADR-016)
+
+## Antes de cargar pacientes reales
+- [ ] Simulacro de restauración contra B2 real, fechado en `docs/restauraciones.md`
+- [ ] Deploy en Coolify (`test` y `main`) con secretos propios; `CLINICAL_DATA_ENCRYPTION_KEY` guardada aparte
+- [ ] Validar con Inés: antecedentes, lesiones, zonas del mapa, otros tipos de pie
+- [ ] Texto de consentimiento revisado por una persona con matrícula; consulta AAIP
+
+## Después
+- [ ] 2FA y rotación de la clave de cifrado
+- [ ] Limpiar tablas heredadas sin uso (`areas`, `professionals`, `form_templates*`) cuando se pueda soltar su FK en `clinical_entries`
