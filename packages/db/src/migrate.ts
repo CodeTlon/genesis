@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
-const url = process.env.DATABASE_URL ?? 'postgres://genesis:genesis@localhost:5432/genesis'
+const url = process.env.DATABASE_URL ?? 'postgres://genesis:genesis@localhost:5433/genesis'
 const dir = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations')
 
 const client = new pg.Client({ connectionString: url })

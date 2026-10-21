@@ -1,5 +1,5 @@
 import { revalidatePath } from 'next/cache'
-import sharp from 'sharp'
+import sharp, { type OutputInfo } from 'sharp'
 import { deleteMediaByUrl, saveMedia } from '@genesis/db/content'
 
 /** Avisa al sitio público que cambió el contenido para que se actualice al instante (si no, se actualiza solo en ≤ 60 s). Sitio y panel son la misma app. */
@@ -17,7 +17,7 @@ export async function uploadImage(file: File): Promise<string> {
   if (!OK_TYPES.has(file.type)) throw new UserError('Subí una imagen JPG, PNG o WebP.')
   if (file.size > MAX_BYTES) throw new UserError('La imagen pesa más de 4 MB. Probá con una más liviana.')
   const buf = Buffer.from(await file.arrayBuffer())
-  let out: { data: Buffer; info: sharp.OutputInfo }
+  let out: { data: Buffer; info: OutputInfo }
   try {
     out = await sharp(buf).rotate().resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true }).webp({ quality: 82 }).toBuffer({ resolveWithObject: true })
   } catch {

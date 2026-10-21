@@ -16,6 +16,7 @@ async function run(path: string, fn: () => Promise<void>, okPath = path) {
     await fn()
   } catch (e) {
     if (e instanceof UserError) back(path, 'error', e.message)
+    console.error('cms: guardado fallido', e)
     const code = (e as { code?: string }).code
     if (code === '23505') back(path, 'error', 'Ya existe un elemento con ese nombre. Elegí otro.')
     if (code === '23514') back(path, 'error', 'Para publicar la foto confirmá que no hay personas o que tenés su consentimiento.')

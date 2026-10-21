@@ -8,6 +8,6 @@ export default defineConfig({
   reporter: 'list',
   use: { trace: 'retain-on-failure' },
   webServer: [
-    { command: 'npm run start -w @genesis/web', port: 3000, reuseExistingServer: true, timeout: 60_000, env: { DEMO_PASSWORD: 'demo123' } },
+    { command: 'npm run start -w @genesis/web', port: 3000, reuseExistingServer: true, timeout: 60_000, env: { DEMO_PASSWORD: 'demo123', DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://genesis:genesis@localhost:5433/genesis' } },
   ],
 })

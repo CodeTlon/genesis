@@ -7,7 +7,7 @@ const schema = z.object({
   telefono: z.string().trim().regex(/^[0-9 +()-]{8,20}$/, 'Revisá el teléfono: usá solo números.').refine((v) => v.replace(/\D/g, '').length >= 8, 'Revisá el teléfono: faltan números.'),
   servicio: z.string().regex(/^[a-z0-9-]{0,60}$/).optional(),
   mensaje: z.string().trim().max(500).optional(),
-  acepto: z.literal('on', { errorMap: () => ({ message: 'Necesitamos tu OK para usar estos datos.' }) }),
+  acepto: z.literal('on', { error: 'Necesitamos tu OK para usar estos datos.' }),
   web: z.string().optional(), // honeypot
 })
 

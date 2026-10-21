@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // Demo: el panel (/panel) no pide contraseña por defecto (botón "Entrar como..."). Si se define DEMO_PASSWORD, se exige.
 // El sitio público no pasa por acá (ver matcher).
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   if (req.nextUrl.pathname === '/panel/login') return NextResponse.next()
   const expected = await token(process.env.DEMO_PASSWORD)
   if (req.cookies.get('gp')?.value === expected) return NextResponse.next()

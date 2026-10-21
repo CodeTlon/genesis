@@ -20,7 +20,7 @@ cd genesis
 git checkout dev          # se trabaja en `dev`; `main` queda con lo entregado
 npm install
 
-docker compose up -d db   # Postgres 16 en el puerto 5432
+docker compose up -d db   # Postgres 16 en el puerto 5433
 npm run db:migrate        # crea las tablas
 npm run db:seed           # carga los grupos, servicios y galería iniciales
 npm run db:verify         # (opcional) 14 comprobaciones de las garantías del esquema

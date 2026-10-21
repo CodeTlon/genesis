@@ -10,7 +10,7 @@ export function pool(): pg.Pool {
   // Demo sin base: en producción no se intenta conectar a localhost; el sitio usa los textos por defecto.
   if (!url && process.env.NODE_ENV === 'production') throw new Error('DATABASE_URL no configurada')
   return (g.__genesisPool ??= new pg.Pool({
-    connectionString: url ?? 'postgres://genesis:genesis@localhost:5432/genesis',
+    connectionString: url ?? 'postgres://genesis:genesis@localhost:5433/genesis',
     connectionTimeoutMillis: url ? 5000 : 1500,
     max: 5,
   }))
