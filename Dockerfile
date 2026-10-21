@@ -4,7 +4,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/web/package.json apps/web/
 COPY packages/config/package.json packages/config/
-COPY packages/content/package.json packages/content/
 COPY packages/db/package.json packages/db/
 COPY packages/ui/package.json packages/ui/
 RUN npm ci --legacy-peer-deps
@@ -22,7 +21,6 @@ WORKDIR /app
 RUN apk add --no-cache tini && addgroup -S app && adduser -S app -G app && mkdir -p /data/storage/clinico && chown -R app:app /data
 COPY --from=build --chown=app:app /app/apps/web/.next/standalone ./
 COPY --from=build --chown=app:app /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=build --chown=app:app /app/apps/web/public ./apps/web/public
 COPY --from=build --chown=app:app /app/scripts ./scripts
 COPY --from=build --chown=app:app /app/packages/db/migrations ./packages/db/migrations
 COPY --chown=app:app docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

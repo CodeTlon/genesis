@@ -14,13 +14,8 @@ const nextConfig = {
   output: 'standalone',
   outputFileTracingRoot: root,
   poweredByHeader: false,
-  transpilePackages: ['@genesis/config', '@genesis/ui', '@genesis/db', '@genesis/content'],
+  transpilePackages: ['@genesis/config', '@genesis/ui', '@genesis/db'],
   serverExternalPackages: ['pg', 'sharp'],
-  experimental: { serverActions: { bodySizeLimit: '5mb' } }, // el CMS sube imágenes por Server Action; las fotos clínicas usan /api/clinico/fotos
-  images: {
-    formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-  },
   async headers() {
     return [{
       source: '/:path*',
