@@ -1,8 +1,9 @@
-export type Alert = 'diabetes' | 'anticoagulantes' | 'embarazo' | 'marcapasos' | 'alergia' | 'menor'
+export type Alert = 'diabetes' | 'anticoagulantes' | 'antiagregados' | 'embarazo' | 'marcapasos' | 'alergia' | 'menor'
 
 export const ALERT_LABEL: Record<Alert, string> = {
   diabetes: 'Diabetes',
   anticoagulantes: 'Anticoagulantes',
+  antiagregados: 'Antiagregados',
   embarazo: 'Embarazo/lactancia',
   marcapasos: 'Marcapasos/implantes',
   alergia: 'Alergia',
@@ -23,6 +24,16 @@ export type Patient = {
   consent: { data: 'vigente' | 'pendiente'; imageClinical: 'vigente' | 'pendiente'; imagePublic: 'vigente' | 'pendiente' }
   usesInsoles?: boolean
   medication?: string
+  /** Datos de la ficha de papel (REQ-PAC-005) */
+  firstVisit?: string
+  nationality?: string
+  sex?: string
+  heightCm?: number
+  weightKg?: number
+  bloodGroup?: string
+  occupation?: string
+  otherActivities?: string
+  emergency?: { name: string; phone: string }
 }
 
 export type Professional = { id: string; name: string; area: 'Podología' | 'Estética'; color: string }
@@ -50,7 +61,7 @@ export type Appointment = {
   status: ApptStatus
 }
 
-export type TemplateCode = 'A' | 'B' | 'C'
+export type TemplateCode = 'A' | 'B' | 'C' | 'F'
 
 export type FootMarker = { side: 'left' | 'right'; view: 'plantar' | 'dorsal'; zone: string; finding: string; severity: 1 | 2 | 3; note?: string }
 

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { addendum } from '@/lib/actions'
-import { TEMPLATES } from '@/lib/templates'
+import { formatDigits, formatShape, TEMPLATES } from '@/lib/templates'
 import { fmtDate } from '@/lib/dates'
 import type { Entry, FootMarker } from '@/lib/types'
 
@@ -28,7 +28,7 @@ export function EntryView({ entry }: { entry: Entry }) {
       </header>
       <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
         {t.fields.filter((f) => f.type !== 'footmap' && entry.payload[f.id] !== undefined).map((f) => (
-          <div key={f.id}><dt className="text-sm text-tinta/70">{f.label}</dt><dd>{show(entry.payload[f.id])}{f.unit ? ` ${f.unit}` : ''}</dd></div>
+          <div key={f.id}><dt className="text-sm text-tinta/70">{f.label}</dt><dd>{f.type === 'digits' ? formatDigits(entry.payload[f.id], f.zones) : f.type === 'footshape' ? formatShape(entry.payload[f.id]) : show(entry.payload[f.id])}{f.unit ? ` ${f.unit}` : ''}</dd></div>
         ))}
       </dl>
       {markers.length > 0 && (

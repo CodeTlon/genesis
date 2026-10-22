@@ -1,6 +1,6 @@
 import { ALERT_LABEL, type Alert } from '@/lib/types'
 
-const ICON: Record<Alert, string> = { diabetes: '◐', anticoagulantes: '✚', embarazo: '♡', marcapasos: '⚡', alergia: '⚠', menor: '☺' }
+const ICON: Record<Alert, string> = { diabetes: '◐', anticoagulantes: '✚', antiagregados: '✚', embarazo: '♡', marcapasos: '⚡', alergia: '⚠', menor: '☺' }
 
 /** Siempre texto + ícono (nunca solo ícono). `compact` muestra solo el ícono con título para la agenda, pero conserva el texto accesible. */
 export function AlertBadges({ alerts, compact = false }: { alerts: Alert[]; compact?: boolean }) {

@@ -28,9 +28,14 @@ El sistema DEBE mostrar las alertas del paciente (diabetes, anticoagulantes, emb
 - confianza: confirmado
 
 ### REQ-PAC-004 [must] Tutor obligatorio si es menor
-El sistema DEBERÍA exigir el nombre del tutor cuando el paciente es menor de 18 años.
+El sistema DEBE exigir el nombre del tutor cuando el paciente es menor de 18 años.
 - Escenario: Dado un paciente nacido hace 10 años, Cuando se guarda sin tutor, Entonces se rechaza con un aviso.
-- verify: e2e e2e/panel.spec.ts
-- confianza: gap
+- verify: e2e e2e/historias.spec.ts
+- confianza: confirmado
 
-<!-- Gap: el esquema (0001_init.sql) dice "validar en app" y el tipo tiene `guardian` obligatorio solo por comentario; no hay test que lo verifique. -->
+### REQ-PAC-005 [must] Datos de la ficha
+El sistema DEBE guardar y mostrar de cada paciente fecha de primera consulta, nacionalidad, sexo, estatura, peso, grupo sanguíneo, actividad laboral y otras actividades, además de un contacto de emergencia opcional.
+- Escenario: Dado un paciente nuevo, Cuando se cargan esos datos, Entonces la ficha los muestra.
+- verify: e2e e2e/historias.spec.ts
+- confianza: confirmado
+

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import HoldButton from '@genesis/ui/vendor/HoldButton'
 import { FootMap } from './foot-map'
 import { bookNext, saveAttention } from '@/lib/actions'
-import type { Field, Template } from '@/lib/templates'
+import { DIGITS, SHAPES, SHAPE_LABEL, type Field, type Template } from '@/lib/templates'
 import type { EntryPayload, FootMarker } from '@/lib/types'
 
 type Values = Record<string, unknown>
@@ -118,6 +118,48 @@ function FieldInput({ field: f, value, onChange, markers, onMarkers }: {
   switch (f.type) {
     case 'footmap':
       return <div><p className="font-semibold">{f.label}</p>{hint}<div className="mt-2"><FootMap markers={markers} onChange={onMarkers} /></div></div>
+    case 'digits': {
+      const o = (value as Record<string, string>) ?? {}
+      const put = (k: string, v: string) => onChange({ ...o, [k]: v })
+      return (
+        <fieldset><legend>{label}</legend>
+          <div className="mt-2 grid gap-4 sm:grid-cols-2">
+            {([['pd', 'Pie derecho'], ['pi', 'Pie izquierdo']] as const).map(([side, title]) => (
+              <div key={side} className="rounded-card border border-tinta/20 p-3">
+                <p className="text-sm font-semibold">{title}</p>
+                {DIGITS.map((n) => (
+                  <label key={n} className="mt-1 flex items-center gap-2"><span className="w-8">{n}°</span>
+                    <input aria-label={`${f.label}, ${title}, dedo ${n}`} value={o[side + n] ?? ''} onChange={(e) => put(side + n, e.target.value)} className="block min-h-touch w-full rounded-control border border-tinta/40 bg-white px-3" />
+                  </label>
+                ))}
+              </div>
+            ))}
+          </div>
+          {f.zones?.map((z) => (
+            <label key={z} className="mt-2 flex items-center gap-2"><span className="w-28">{z}</span>
+              <input aria-label={`${f.label}, ${z}`} value={o[z] ?? ''} onChange={(e) => put(z, e.target.value)} className="block min-h-touch w-full rounded-control border border-tinta/40 bg-white px-3" />
+            </label>
+          ))}
+        </fieldset>
+      )
+    }
+    case 'footshape': {
+      const o = (value as Record<string, string>) ?? {}
+      return (
+        <fieldset><legend>{label}</legend>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            {([['pd', 'Pie derecho'], ['pi', 'Pie izquierdo']] as const).map(([side, title]) => (
+              <label key={side} className="block">{title}
+                <select value={o[side] ?? ''} onChange={(e) => onChange({ ...o, [side]: e.target.value })} className={input}>
+                  <option value="">Elegir…</option>
+                  {SHAPES.map((sh) => <option key={sh} value={sh}>{SHAPE_LABEL[sh]}</option>)}
+                </select>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )
+    }
     case 'longtext':
       return <div><label htmlFor={id}>{label}</label>{hint}<textarea id={id} rows={3} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={`${input} py-3`} /></div>
     case 'number':

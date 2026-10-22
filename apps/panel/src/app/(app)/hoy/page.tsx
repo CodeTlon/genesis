@@ -3,16 +3,18 @@ import { AlertBadges } from '@/components/alert-badges'
 import { StatusActions, StatusBadge } from '@/components/status-actions'
 import { PrintButton } from '@/components/print-button'
 import { age, fmtDateLong, fmtTime, isBirthdayToday, todayKey } from '@/lib/dates'
-import { apptsOn, patient, patients, professional, service } from '@/lib/store'
+import { apptsOn, patients, professional, service } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
 
-export default function Hoy() {
+export default async function Hoy() {
   const day = todayKey()
   const appts = apptsOn(day).filter((a) => a.status !== 'cancelled')
   const toConfirm = appts.filter((a) => a.status === 'pending')
-  const cumples = patients().filter((p) => isBirthdayToday(p.birthDate, day))
-  const menores = appts.filter((a) => patient(a.patientId)?.guardian)
+  const todos = await patients()
+  const porId = new Map(todos.map((p) => [p.id, p]))
+  const cumples = todos.filter((p) => isBirthdayToday(p.birthDate, day))
+  const menores = appts.filter((a) => porId.get(a.patientId)?.guardian)
 
   return (
     <main>
@@ -43,7 +45,7 @@ export default function Hoy() {
       <h2 className="mt-10 text-xl font-light uppercase tracking-[0.12em]">Turnos del día</h2>
       <ul className="mt-4 space-y-3">
         {appts.map((a) => {
-          const p = patient(a.patientId)!
+          const p = porId.get(a.patientId)!
           const pr = professional(a.professionalId)!
           const s = service(a.serviceId)!
           return (

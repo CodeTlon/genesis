@@ -14,7 +14,7 @@ export default async function Atencion({ params, searchParams }: {
 }) {
   const { id } = await params
   const { plantilla, turno } = await searchParams
-  const p = patient(id)
+  const p = await patient(id)
   if (!p) notFound()
 
   const t = turno ? appt(turno) : undefined
@@ -23,7 +23,7 @@ export default async function Atencion({ params, searchParams }: {
   const template = TEMPLATES[code] ?? TEMPLATES.B
 
   // "Chart by exception": precarga con la última entrada firmada de la misma plantilla
-  const prev = lastSigned(p.id, template.code)
+  const prev = await lastSigned(p.id, template.code)
   const initial = prev ? structuredClone(prev.payload) : Object.fromEntries(template.fields.filter((f) => f.default !== undefined).map((f) => [f.id, f.default]))
   const prefilledFrom = prev ? fmtDate(prev.createdAt.slice(0, 10)) : undefined
 

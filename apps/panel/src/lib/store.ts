@@ -1,5 +1,6 @@
+import { query, TENANT_ID } from '@genesis/db/client'
 import { addDays, isoToLocal, localToIso, todayKey } from './dates'
-import type { Addendum, Appointment, ApptStatus, Entry, EntryPayload, Patient, Professional, Service, TemplateCode } from './types'
+import type { Addendum, Alert, Appointment, ApptStatus, Entry, EntryPayload, Patient, Professional, Service, TemplateCode } from './types'
 
 /**
  * Demo: datos 100 % ficticios en memoria del servidor (se reinician al reiniciar).
@@ -82,17 +83,13 @@ export const ENTRIES_SEED: Entry[] = [
   E('e5', 'p5', 'C', 30, { zona: 'Axilas', sesion: 3, fototipo: 'III', contra: [], longitud: '808 nm', energia: 18, pulso: 30, frecuencia: 2, reaccion: 'Leve eritema', indicaciones: 'Evitar sol directo 48 h.' }),
 ]
 
-type DB = { patients: Patient[]; appts: Appointment[]; entries: Entry[]; seq: number }
+type DB = { appts: Appointment[]; seq: number }
 const g = globalThis as unknown as { __genesis?: DB }
-const db: DB = (g.__genesis ??= {
-  patients: structuredClone(PATIENTS_SEED), appts: structuredClone(APPTS_SEED), entries: structuredClone(ENTRIES_SEED), seq: 100,
-})
+const db: DB = (g.__genesis ??= { appts: structuredClone(APPTS_SEED), seq: 100 })
 const nextId = (p: string) => `${p}${++db.seq}`
 
 export const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-export const patients = () => db.patients
-export const patient = (id: string) => db.patients.find((p) => p.id === id)
 export const service = (id: string) => SERVICES.find((s) => s.id === id)
 export const professional = (id: string) => PROFESSIONALS.find((p) => p.id === id)
 
@@ -149,33 +146,160 @@ export function scheduleNext(patientId: string, serviceId: string, professionalI
   return null
 }
 
-export const entriesOf = (pid: string) => db.entries.filter((e) => e.patientId === pid).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-export const entry = (id: string) => db.entries.find((e) => e.id === id)
-export const lastSigned = (pid: string, code: TemplateCode) => entriesOf(pid).find((e) => e.templateCode === code && e.status === 'signed')
+// ── Historias clínicas en Postgres (REQ-HC-012). Los turnos siguen en memoria: la agenda está fuera de alcance (decisión del 18/10). ──
 
-export function saveEntry(input: { id?: string; patientId: string; templateCode: TemplateCode; payload: EntryPayload; sign: boolean; author: string }): { ok: true; entry: Entry } | { ok: false; message: string } {
-  if (input.id) {
-    const e = entry(input.id)
-    if (!e) return { ok: false, message: 'No encontramos esa atención.' }
-    // Inmutabilidad: una entrada firmada no se edita (en Fase 1 lo impone un trigger de la base).
-    if (e.status === 'signed') return { ok: false, message: 'Esta atención ya está firmada. Para corregirla, agregá una adenda.' }
-    e.payload = input.payload
-    if (input.sign) { e.status = 'signed'; e.signedAt = new Date().toISOString() }
-    return { ok: true, entry: e }
-  }
-  const now = new Date().toISOString()
-  const e: Entry = {
-    id: nextId('e'), patientId: input.patientId, templateCode: input.templateCode, templateVersion: 1, payload: input.payload,
-    status: input.sign ? 'signed' : 'draft', author: input.author, createdAt: now, signedAt: input.sign ? now : undefined, addenda: [],
-  }
-  db.entries.push(e)
-  return { ok: true, entry: e }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- fila cruda de pg
+type PRow = Record<string, any>
+/** pg devuelve las columnas date como Date a medianoche local: se formatea con getters locales (sin corrimiento por zona). */
+const ymd = (d: unknown): string => (d instanceof Date ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : d ? String(d).slice(0, 10) : '')
+const toPatient = (r: PRow): Patient => ({
+  id: r.id, firstName: r.first_name, lastName: r.last_name, dni: r.dni ?? '', birthDate: ymd(r.birth_date), phone: r.phone ?? '',
+  address: r.address ?? undefined, insurance: r.insurance ?? undefined, guardian: r.guardian ?? undefined, alerts: r.alerts ?? [], consent: r.consent,
+  usesInsoles: r.uses_insoles ?? undefined, medication: r.medication ?? undefined,
+  firstVisit: ymd(r.first_visit) || undefined, nationality: r.nationality ?? undefined, sex: r.sex ?? undefined,
+  heightCm: r.height_cm == null ? undefined : Number(r.height_cm), weightKg: r.weight_kg == null ? undefined : Number(r.weight_kg), bloodGroup: r.blood_group ?? undefined,
+  occupation: r.occupation ?? undefined, otherActivities: r.other_activities ?? undefined,
+  emergency: r.emergency_name ? { name: r.emergency_name, phone: r.emergency_phone ?? '' } : undefined,
+})
+
+const toEntry = (r: PRow, addenda: Addendum[]): Entry => ({
+  id: r.id, patientId: r.patient_id, templateCode: r.template_code, templateVersion: r.template_version, payload: r.payload, status: r.status, author: r.author,
+  createdAt: new Date(r.created_at).toISOString(), signedAt: r.signed_at ? new Date(r.signed_at).toISOString() : undefined, addenda,
+})
+
+async function insertPatient(p: Patient) {
+  await query(
+    `INSERT INTO hc_patients (id, tenant_id, first_name, last_name, dni, birth_date, phone, address, insurance, guardian, alerts, consent, uses_insoles, medication,
+       first_visit, nationality, sex, height_cm, weight_kg, blood_group, occupation, other_activities, emergency_name, emergency_phone)
+     VALUES ($1,$2,$3,$4,$5,NULLIF($6,'')::date,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24) ON CONFLICT (id) DO NOTHING`,
+    [p.id, TENANT_ID, p.firstName, p.lastName, p.dni, p.birthDate, p.phone, p.address ?? null, p.insurance ?? null, p.guardian ?? null, p.alerts, JSON.stringify(p.consent),
+      p.usesInsoles ?? null, p.medication ?? null, p.firstVisit ?? null, p.nationality ?? null, p.sex ?? null, p.heightCm ?? null, p.weightKg ?? null, p.bloodGroup ?? null,
+      p.occupation ?? null, p.otherActivities ?? null, p.emergency?.name ?? null, p.emergency?.phone ?? null])
 }
 
-export function addAddendum(entryId: string, author: string, reason: string, text: string): { ok: boolean; message?: string } {
-  const e = entry(entryId)
+/** Carga los datos ficticios de la demo la primera vez (base vacía). Se desactiva con GENESIS_SEED=0. */
+let seeded: Promise<void> | undefined
+function ensureSeed(): Promise<void> {
+  return (seeded ??= (async () => {
+    if (process.env.GENESIS_SEED === '0') return
+    const [{ n }] = await query<{ n: string }>('SELECT count(*) AS n FROM hc_patients WHERE tenant_id=$1', [TENANT_ID])
+    if (Number(n) > 0) return
+    for (const p of PATIENTS_SEED) await insertPatient(p)
+    for (const e of ENTRIES_SEED) {
+      await query(
+        `INSERT INTO hc_entries (id, tenant_id, patient_id, template_code, template_version, payload, status, author, signed_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,'signed',$7,$8,$9)`,
+        [e.id, TENANT_ID, e.patientId, e.templateCode, e.templateVersion, JSON.stringify(e.payload), e.author, e.signedAt, e.createdAt])
+    }
+  })().catch((err) => { seeded = undefined; throw err }))
+}
+
+export async function patients(): Promise<Patient[]> {
+  await ensureSeed()
+  return (await query('SELECT * FROM hc_patients WHERE tenant_id=$1 ORDER BY last_name, first_name', [TENANT_ID])).map(toPatient)
+}
+export async function patient(id: string): Promise<Patient | undefined> {
+  await ensureSeed()
+  const [r] = await query('SELECT * FROM hc_patients WHERE tenant_id=$1 AND id=$2', [TENANT_ID, id])
+  return r ? toPatient(r) : undefined
+}
+
+async function withAddenda(rows: PRow[]): Promise<Entry[]> {
+  if (!rows.length) return []
+  const ad = await query('SELECT * FROM hc_addenda WHERE entry_id = ANY($1) ORDER BY created_at', [rows.map((r) => r.id)])
+  return rows.map((r) => toEntry(r, ad.filter((a) => a.entry_id === r.id).map((a) => ({ id: a.id, author: a.author, reason: a.reason, text: a.text, at: new Date(a.created_at).toISOString() }))))
+}
+export async function entriesOf(pid: string): Promise<Entry[]> {
+  await ensureSeed()
+  return withAddenda(await query('SELECT * FROM hc_entries WHERE tenant_id=$1 AND patient_id=$2 ORDER BY created_at DESC', [TENANT_ID, pid]))
+}
+export async function entry(id: string): Promise<Entry | undefined> {
+  const [e] = await withAddenda(await query('SELECT * FROM hc_entries WHERE tenant_id=$1 AND id=$2', [TENANT_ID, id]))
+  return e
+}
+export async function lastSigned(pid: string, code: TemplateCode): Promise<Entry | undefined> {
+  return (await entriesOf(pid)).find((e) => e.templateCode === code && e.status === 'signed')
+}
+
+const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : [])
+/** REQ-HC-008: alertas que levanta una anamnesis (A) o ficha inicial (F) al firmarse. Solo suma: nunca borra una alerta. */
+export function alertsFromPayload(p: EntryPayload): Alert[] {
+  const ant = arr(p.antecedentes)
+  const out: Alert[] = []
+  if (p.diabetes === true || ant.includes('Diabetes')) out.push('diabetes')
+  if (p.ant_anticoagulantes === true || ant.includes('Trastornos de coagulación / anticoagulantes')) out.push('anticoagulantes')
+  if (p.ant_antiagregados === true) out.push('antiagregados')
+  if (p.ant_marcapasos === true || p.marcapasos === true) out.push('marcapasos')
+  if (p.ant_alergicos === true || arr(p.alergias).length > 0) out.push('alergia')
+  if (p.embarazo === 'Embarazo' || p.embarazo === 'Lactancia') out.push('embarazo')
+  return out
+}
+
+export async function saveEntry(input: { id?: string; patientId: string; templateCode: TemplateCode; payload: EntryPayload; sign: boolean; author: string }): Promise<{ ok: true; entry: Entry } | { ok: false; message: string }> {
+  await ensureSeed()
+  let id = input.id
+  if (id) {
+    const e = await entry(id)
+    if (!e) return { ok: false, message: 'No encontramos esa atención.' }
+    // Inmutabilidad: además del chequeo, la base lo impone con un trigger (hc_entries_immutable).
+    if (e.status === 'signed') return { ok: false, message: 'Esta atención ya está firmada. Para corregirla, agregá una adenda.' }
+    await query(`UPDATE hc_entries SET payload=$2, status=$3, signed_at=$4 WHERE id=$1`, [id, JSON.stringify(input.payload), input.sign ? 'signed' : 'draft', input.sign ? new Date().toISOString() : null])
+  } else {
+    id = `${nextId('e')}-${Date.now().toString(36)}`
+    await query(
+      `INSERT INTO hc_entries (id, tenant_id, patient_id, template_code, payload, status, author, signed_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [id, TENANT_ID, input.patientId, input.templateCode, JSON.stringify(input.payload), input.sign ? 'signed' : 'draft', input.author, input.sign ? new Date().toISOString() : null])
+  }
+  if (input.sign && (input.templateCode === 'A' || input.templateCode === 'F')) {
+    const add = alertsFromPayload(input.payload)
+    if (add.length) await query(`UPDATE hc_patients SET alerts = (SELECT array(SELECT DISTINCT unnest(alerts || $2::text[]))) WHERE id=$1`, [input.patientId, add])
+  }
+  return { ok: true, entry: (await entry(id))! }
+}
+
+export async function addAddendum(entryId: string, author: string, reason: string, text: string): Promise<{ ok: boolean; message?: string }> {
+  const e = await entry(entryId)
   if (!e || e.status !== 'signed') return { ok: false, message: 'Solo se pueden agregar adendas a atenciones firmadas.' }
-  const a: Addendum = { id: nextId('ad'), author, reason, text, at: new Date().toISOString() }
-  e.addenda.push(a)
+  await query('INSERT INTO hc_addenda (id, entry_id, author, reason, text) VALUES ($1,$2,$3,$4,$5)', [`ad-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, entryId, author, reason, text])
   return { ok: true }
+}
+
+export type PatientInput = Omit<Patient, 'id' | 'alerts' | 'consent'> & { id?: string }
+
+/** Alta o edición de los datos de la ficha (REQ-PAC-005). No toca alertas ni consentimientos de un paciente existente. */
+export async function savePatient(input: PatientInput): Promise<Patient> {
+  await ensureSeed()
+  const clean = <T extends string | undefined>(v: T) => (typeof v === 'string' && v.trim() === '' ? undefined : v)
+  const num = (v: unknown) => (v === '' || v === undefined || v === null || Number.isNaN(Number(v)) ? null : Number(v))
+  const vals = [
+    input.firstName.trim(), input.lastName.trim(), clean(input.dni) ?? null, input.birthDate || null, clean(input.phone) ?? null, clean(input.address) ?? null,
+    clean(input.insurance) ?? null, clean(input.guardian) ?? null, clean(input.firstVisit) ?? null, clean(input.nationality) ?? null, clean(input.sex) ?? null,
+    num(input.heightCm), num(input.weightKg), clean(input.bloodGroup) ?? null, clean(input.occupation) ?? null, clean(input.otherActivities) ?? null,
+    clean(input.emergency?.name) ?? null, clean(input.emergency?.phone) ?? null,
+  ]
+  if (input.id) {
+    await query(
+      `UPDATE hc_patients SET first_name=$2, last_name=$3, dni=$4, birth_date=$5::date, phone=$6, address=$7, insurance=$8, guardian=$9, first_visit=$10::date, nationality=$11, sex=$12,
+         height_cm=$13, weight_kg=$14, blood_group=$15, occupation=$16, other_activities=$17, emergency_name=$18, emergency_phone=$19 WHERE tenant_id=$20 AND id=$1`,
+      [input.id, ...vals, TENANT_ID])
+    return (await patient(input.id))!
+  }
+  const id = `p${Date.now().toString(36)}`
+  await query(
+    `INSERT INTO hc_patients (id, tenant_id, first_name, last_name, dni, birth_date, phone, address, insurance, guardian, first_visit, nationality, sex, height_cm, weight_kg, blood_group,
+       occupation, other_activities, emergency_name, emergency_phone) VALUES ($1,$20,$2,$3,$4,$5::date,$6,$7,$8,$9,$10::date,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+    [id, ...vals, TENANT_ID])
+  return (await patient(id))!
+}
+
+/** Suma la alerta «menor» a un paciente menor de 18. */
+export async function markMinor(id: string): Promise<void> {
+  await query(`UPDATE hc_patients SET alerts = (SELECT array(SELECT DISTINCT unnest(alerts || ARRAY['menor']))) WHERE id=$1`, [id])
+}
+
+/** Solo para pruebas: vacía las historias y vuelve a cargar los datos ficticios. Exige GENESIS_ALLOW_RESET=1 para que no corra por error. */
+export async function resetDemo(): Promise<void> {
+  if (process.env.GENESIS_ALLOW_RESET !== '1') throw new Error('resetDemo requiere GENESIS_ALLOW_RESET=1')
+  await query('TRUNCATE hc_addenda, hc_entries, hc_patients CASCADE')
+  seeded = undefined
+  await ensureSeed()
 }

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { AgendaBoard, type AgendaAppt } from '@/components/agenda-board'
 import { PrintButton } from '@/components/print-button'
 import { addDays, fmtDateLong, isoToLocal, todayKey } from '@/lib/dates'
-import { apptsOn, patient, PROFESSIONALS, service } from '@/lib/store'
+import { apptsOn, patients, PROFESSIONALS, service } from '@/lib/store'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,8 +13,9 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
   const today = todayKey()
   const day = dia && /^\d{4}-\d{2}-\d{2}$/.test(dia) ? dia : today
 
+  const porId = new Map((await patients()).map((p) => [p.id, p]))
   const appts: AgendaAppt[] = apptsOn(day).map((a) => {
-    const p = patient(a.patientId)!
+    const p = porId.get(a.patientId)!
     return {
       id: a.id, patient: `${p.firstName} ${p.lastName}`, service: service(a.serviceId)!.name, resource: a.resource, professionalId: a.professionalId,
       startMin: isoToLocal(a.start).minutes, durationMin: a.durationMin, status: a.status, alerts: p.alerts,

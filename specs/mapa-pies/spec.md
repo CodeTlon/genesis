@@ -20,3 +20,9 @@ El sistema DEBE guardar las marcas dentro de la atención y dejarlas inmutables 
 - Escenario: Dado una atención firmada con marcas, Cuando se vuelve a abrir, Entonces las marcas siguen y no se pueden cambiar sin adenda.
 - verify: e2e e2e/panel.spec.ts
 - confianza: inferido
+
+### REQ-MAP-003 [must] Forma de pie (fórmula digital)
+El sistema DEBE permitir elegir para cada pie la forma griego, egipcio o romano (cuadrado o polinesio, como figura en la ficha) y guardarla en la atención.
+- Escenario: Dado el mapa, Cuando se elige "griego" para el pie izquierdo y se firma, Entonces la historia muestra "Izq.: griego".
+- verify: e2e e2e/historias.spec.ts
+- confianza: confirmado

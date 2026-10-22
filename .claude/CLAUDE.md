@@ -18,4 +18,4 @@ Next 15.5.25 + Tailwind v4 + Turborepo (npm) + Postgres 16 (`docker compose up -
 - `docs/`: guion-demo, incidentes, imagenes, marca, decisiones.
 
 ## Pendiente
-Pasar pacientes/agenda/atenciones del panel de memoria a Postgres (el SQL ya está verificado); Fase 1 (auth+2FA, cifrado, auditoría, backups); datos de Inés (matrículas, horarios, teléfono).
+Hecho (2026-10-22): pacientes, atenciones y adendas en Postgres (migración 0003), ficha podológica inicial de Inés (plantilla F), forma de pie y alertas desde antecedentes; specs en `specs/` (SDD). Pendiente: delta `fotos-y-seguridad` (fotos con consentimiento, usuarios con 2FA, cifrado, auditoría, backups), mejora visual del panel con `references/diseños`, y lo legal (conservación, consentimiento, registro de la base) a confirmar con Inés. Agenda, turnos, WhatsApp y sitio: fuera de alcance. Fase 1 (auth+2FA, cifrado, auditoría, backups); datos de Inés (matrículas, horarios, teléfono).

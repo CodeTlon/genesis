@@ -13,3 +13,11 @@
 - [x] Lighthouse móvil (perf 96-98, a11y 100) + axe + 14 E2E verdes + docs/guion-demo.md
 - [x] Sitio editable desde el panel (CMS sobre Postgres): 7 E2E + axe verdes
 - [ ] Deploy demo (manual de Mateo: Vercel x2 + Postgres administrado + variables de .env.example)
+## Historias clínicas reales (SDD, 2026-10-22)
+- [x] Specs y deltas (specs/) + ficha de Inés como base
+- [x] Pacientes, atenciones y adendas en Postgres (migración 0003; 25 E2E verdes)
+- [x] Plantilla F «Ficha podológica inicial», conclusión/sugerencias, forma de pie, alertas desde antecedentes, alta y edición de pacientes
+- [ ] Fotos de primera consulta y evolución con consentimiento (delta fotos-y-seguridad)
+- [ ] Usuarios por profesional + 2FA, cifrado, auditoría, backups (delta fotos-y-seguridad)
+- [ ] Mejora visual del panel con references/diseños
+- [ ] Confirmar con Inés y su asesor legal: conservación, consentimiento, registro de la base

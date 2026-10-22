@@ -5,6 +5,7 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
   workers: 1,
+  globalSetup: './e2e/global-setup.ts',
   reporter: 'list',
   use: { trace: 'retain-on-failure' },
   webServer: [
