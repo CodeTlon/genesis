@@ -10,7 +10,7 @@ async function login(page: Page) {
   await expect(page).toHaveURL(/\/hoy/)
 }
 
-test('acceso protegido: sin sesión redirige y la clave incorrecta avisa', async ({ page }) => {
+test('[REQ-SEG-001] acceso protegido: sin sesión redirige y la clave incorrecta avisa', async ({ page }) => {
   await page.goto(PANEL + '/pacientes')
   await expect(page).toHaveURL(/\/login/)
   await page.getByLabel('Contraseña de la demo').fill('mala')
@@ -18,14 +18,14 @@ test('acceso protegido: sin sesión redirige y la clave incorrecta avisa', async
   await expect(page.locator('p[role=alert]')).toContainText('no es correcta')
 })
 
-test('Hoy: turnos, cumpleaños y alertas visibles con texto', async ({ page }) => {
+test('[REQ-PAC-003] Hoy: turnos, cumpleaños y alertas visibles con texto', async ({ page }) => {
   await login(page)
   await expect(page.getByText('turnos hoy')).toBeVisible()
   await expect(page.getByText('Hoy cumple años')).toBeVisible()
   await expect(page.getByText('Anticoagulantes').first()).toBeVisible()
 })
 
-test('búsqueda tolera tildes y errores de tipeo', async ({ page }) => {
+test('[REQ-PAC-002] búsqueda tolera tildes y errores de tipeo', async ({ page }) => {
   await login(page)
   await page.goto(PANEL + '/pacientes')
   await page.getByLabel(/Buscar/).fill('sanchez')
@@ -36,7 +36,7 @@ test('búsqueda tolera tildes y errores de tipeo', async ({ page }) => {
   await expect(page.getByText('No encontramos pacientes')).toBeVisible()
 })
 
-test('atención de seguimiento: chart by exception, mapa de pies, firma, próximo turno y adenda', async ({ page }) => {
+test('[REQ-HC-002][REQ-HC-003][REQ-HC-004][REQ-HC-005][REQ-MAP-001] atención de seguimiento: chart by exception, mapa de pies, firma, próximo turno y adenda', async ({ page }) => {
   await login(page)
   await page.goto(PANEL + '/pacientes/p2/atencion?plantilla=B')
   await expect(page.getByText('Cargamos los valores de la última visita')).toBeVisible()
