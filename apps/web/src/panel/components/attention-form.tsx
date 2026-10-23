@@ -8,7 +8,7 @@ import type { Field, Template } from '@/panel/lib/templates'
 import type { EntryPayload, FootMarker, FootType } from '@/panel/lib/types'
 
 type Values = EntryPayload
-const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4'
+const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4 placeholder:text-tinta/60'
 
 export function AttentionForm({ patientId, patientName, caseId, caseTitle, template, initial }: {
   patientId: string; patientName: string; caseId: string; caseTitle: string; template: Template; initial: Values
@@ -56,7 +56,7 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
   const hasAdvanced = template.fields.some((f) => f.advanced)
   return (
     <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-      <p role="note" className="rounded-card bg-lila/50 p-3 text-sm">Caso: <strong>{caseTitle}</strong>. Los campos son una propuesta a validar con la profesional.</p>
+      <p role="note" className="rounded-card bg-lila/50 p-3">Caso: <strong>{caseTitle}</strong>. Escribí solo lo que haga falta: se guarda solo y firmás al final.</p>
       {fields.map((f) => (
         <div key={f.id}>
           <FieldInput field={f} value={values[f.id]} onChange={(v) => set(f.id, v)}
@@ -66,13 +66,13 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
       ))}
       {hasAdvanced && (
         <button type="button" onClick={() => setAdvanced((a) => !a)} aria-expanded={advanced} className="min-h-touch rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro">
-          {advanced ? 'Ver menos' : 'Ver más campos'}
+          {advanced ? 'Ver menos campos' : 'Ver más campos (examen completo)'}
         </button>
       )}
-      <div className="sticky bottom-0 -mx-4 border-t border-lila/50 bg-marmol/95 px-4 py-4 backdrop-blur">
+      <p className="text-sm">Una evolución firmada ya no se puede editar: se corrige con una adenda.</p>
+      <div className="sticky bottom-[3.75rem] z-20 -mx-4 border-t border-lila/50 bg-marmol/95 px-4 py-3 backdrop-blur md:bottom-0">
         <p className="mb-2 text-sm" aria-live="polite">{error ? <span role="alert" className="text-red-800">{error}</span> : savedAt ? `Borrador guardado a las ${savedAt}.` : 'Se guarda solo mientras escribís.'}</p>
         <HoldButton onHold={sign} doneLabel="Firmada" holdTime={900} size="lg">Mantené presionado para firmar</HoldButton>
-        <p className="mt-2 text-sm">Una evolución firmada ya no se puede editar: se corrige con una adenda.</p>
       </div>
     </form>
   )
@@ -83,11 +83,12 @@ function FieldInput({ field: f, value, onChange, footType, onFootType, markers, 
   footType: FootType | undefined; onFootType: (t: FootType) => void; markers: FootMarker[]; onMarkers: (m: FootMarker[]) => void
 }) {
   const id = `f-${f.id}`
-  const label = <span className="font-semibold">{f.label}{f.unit ? ` (${f.unit})` : ''}</span>
+  const label = <span className="text-lg font-semibold">{f.label}{f.unit ? ` (${f.unit})` : ''}</span>
   const hint = f.hint ? <span className="block text-sm">{f.hint}</span> : null
+  const ph = f.placeholder
   switch (f.type) {
     case 'footmap':
-      return <div><p className="font-semibold">{f.label}</p>{hint}<div className="mt-2"><FootMap footType={footType} onFootType={onFootType} markers={markers} onChange={onMarkers} /></div></div>
+      return <div><p className="text-lg font-semibold">{f.label}</p>{hint}<div className="mt-2"><FootMap footType={footType} onFootType={onFootType} markers={markers} onChange={onMarkers} /></div></div>
     case 'digits': {
       const rec = ((value as Record<string, string[]>) ?? {})
       const setDigit = (side: 'der' | 'izq', i: number, t: string) => {
@@ -113,9 +114,9 @@ function FieldInput({ field: f, value, onChange, footType, onFootType, markers, 
       )
     }
     case 'longtext':
-      return <div><label htmlFor={id}>{label}</label>{hint}<textarea id={id} rows={3} maxLength={4000} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={`${input} py-3`} /></div>
+      return <div><label htmlFor={id}>{label}</label>{hint}<textarea id={id} rows={3} maxLength={4000} placeholder={ph} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={`${input} py-3`} /></div>
     case 'number':
-      return <div><label htmlFor={id}>{label}</label><input id={id} type="number" inputMode="decimal" value={(value as number | string) ?? ''} onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))} className={`${input} max-w-48`} /></div>
+      return <div><label htmlFor={id}>{label}</label><input id={id} type="number" inputMode="decimal" placeholder={ph} value={(value as number | string) ?? ''} onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))} className={`${input} max-w-48`} /></div>
     case 'date':
       return <div><label htmlFor={id}>{label}</label><input id={id} type="date" value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={`${input} max-w-60`} /></div>
     case 'bool':
@@ -157,6 +158,6 @@ function FieldInput({ field: f, value, onChange, footType, onFootType, markers, 
       )
     }
     default:
-      return <div><label htmlFor={id}>{label}</label>{hint}<input id={id} maxLength={4000} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={input} /></div>
+      return <div><label htmlFor={id}>{label}</label>{hint}<input id={id} maxLength={4000} placeholder={ph} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={input} /></div>
   }
 }

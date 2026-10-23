@@ -6,6 +6,8 @@ export type Field = {
   type: FieldType
   options?: string[]
   hint?: string
+  /** Ejemplo gris dentro del campo vacío. */
+  placeholder?: string
   unit?: string
   /** Solo se muestra en "modo completo". El modo simple muestra pocos campos. */
   advanced?: boolean
@@ -38,13 +40,13 @@ const PATOLOGIAS: [string, string][] = [
 export const TEMPLATE: Template = {
   code: 'B', name: 'Podología — evolución', version: 1, status: 'propuesta',
   fields: [
-    { id: 'motivo', label: 'Motivo de la visita', type: 'text' },
+    { id: 'motivo', label: 'Motivo de la visita', type: 'text', placeholder: 'Ej: control de rutina, dolor en el dedo gordo' },
     { id: 'mapa', label: 'Mapa de pies', type: 'footmap', hint: 'Elegí el tipo de pie y tocá una zona para marcar un hallazgo' },
     { id: 'hallazgos', label: 'Hallazgos', type: 'multi', options: ['Heloma', 'Hiperqueratosis', 'Onicolisis', 'Onicocriptosis (uña encarnada)', 'Micosis', 'Verrugas plantares', 'Fisuras', 'Deformidades'] },
-    { id: 'procedimiento', label: 'Procedimiento realizado', type: 'longtext' },
-    { id: 'indicaciones', label: 'Indicaciones', type: 'longtext' },
-    { id: 'tratamiento_preventivo', label: 'Tratamiento preventivo', type: 'longtext' },
-    { id: 'control', label: 'Control (próxima visita)', type: 'text', hint: 'Ej: en 45 días' },
+    { id: 'procedimiento', label: 'Procedimiento realizado', type: 'longtext', placeholder: 'Ej: quiropodia, enucleación de heloma, fresado de uña' },
+    { id: 'indicaciones', label: 'Indicaciones', type: 'longtext', placeholder: 'Ej: crema hidratante dos veces al día, calzado amplio' },
+    { id: 'tratamiento_preventivo', label: 'Tratamiento preventivo', type: 'longtext', placeholder: 'Ej: plantillas, controles cada 60 días' },
+    { id: 'control', label: 'Control (próxima visita)', type: 'text', placeholder: 'Ej: en 45 días' },
     ...EXAMEN.flatMap(([id, label, options]) => [
       { id: `${id}_der`, label: `${label} (pie derecho)`, type: 'select' as const, options, advanced: true },
       { id: `${id}_izq`, label: `${label} (pie izquierdo)`, type: 'select' as const, options, advanced: true },
@@ -52,8 +54,8 @@ export const TEMPLATE: Template = {
     ...PATOLOGIAS.map(([id, label]) => ({ id, label, type: 'digits' as const, hint: 'Anotá lo que corresponda en cada dedo', advanced: true })),
     { id: 'sensibilidad', label: 'Screening pie diabético: sensibilidad', type: 'select', options: ['Conservada', 'Disminuida', 'Ausente'], advanced: true },
     { id: 'pulsos', label: 'Pulsos pedios', type: 'select', options: ['Presentes', 'Disminuidos', 'Ausentes'], advanced: true },
-    { id: 'materiales', label: 'Materiales e instrumental (ciclo de esterilización)', type: 'text', advanced: true },
-    { id: 'plantillasIndicadas', label: 'Plantillas indicadas / confeccionadas', type: 'text', advanced: true },
+    { id: 'materiales', label: 'Materiales e instrumental (ciclo de esterilización)', type: 'text', placeholder: 'Ej: kit 3, autoclave del 22/10', advanced: true },
+    { id: 'plantillasIndicadas', label: 'Plantillas indicadas / confeccionadas', type: 'text', placeholder: 'Ej: plantillas de descarga para antepié', advanced: true },
   ],
 }
 

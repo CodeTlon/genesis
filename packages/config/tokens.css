@@ -21,6 +21,8 @@
 
 html { font-size: 112.5%; }          /* base 18px (requisito de accesibilidad) */
 body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
+input, select, textarea { font-size: 1rem; } /* evita el zoom automático en iPhone y mantiene el texto legible */
+label { line-height: 1.35; }
 :focus-visible { outline: 3px solid var(--color-violeta-oscuro); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 
