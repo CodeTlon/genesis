@@ -16,7 +16,7 @@ export default async function Caso({ params }: { params: Promise<{ id: string; c
   const { id, caseId } = await params
   const [p, c] = await Promise.all([repo.getPatient(id), repo.getCase(caseId)])
   if (!p || !c || c.patientId !== id) notFound() // el caso tiene que ser de ESE paciente (evita acceder por IDs cruzados)
-  const [entries, photos, consent] = await Promise.all([repo.listEntries(id, caseId), repo.listPhotos(id, caseId), repo.activeConsent(id, 'fotos')])
+  const [entries, photos] = await Promise.all([repo.listEntries(id, caseId), repo.listPhotos(id, caseId)])
   const open = c.status === 'open'
   return (
     <div className="space-y-8">
@@ -32,7 +32,7 @@ export default async function Caso({ params }: { params: Promise<{ id: string; c
 
       <section aria-labelledby="fotos" className="space-y-3">
         <h2 id="fotos" className="text-xl uppercase tracking-[0.06em]">Fotos</h2>
-        {open && <PhotoUpload patientId={id} caseId={caseId} hasConsent={!!consent} />}
+        {open && <PhotoUpload patientId={id} caseId={caseId} />}
         <PhotoGrid photos={photos} deletable={photos.filter((ph) => user.role === 'admin' || ph.createdBy === user.id).map((ph) => ph.id)} />
       </section>
 

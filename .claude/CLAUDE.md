@@ -23,4 +23,4 @@ Next 16.4.2 + React 19.3.1 + Tailwind v4 + Better Auth + Drizzle (consultas) + P
 Perfil **S2** (`sdd: v1`): `specs/<capacidad>/spec.md` con REQ-CAP-NNN, validador `npm run spec:lint` (corre en CI). Cada test E2E lleva `[REQ-XXX-NNN]` en el título. Un cambio de comportamiento abre un delta en `specs/changes/` antes de implementarse. Brecha abierta: REQ-SEG-005 (simulacro de restauración real).
 
 ## Pendiente
-Validar con Inés antecedentes, lesiones y zonas del mapa; 2FA y rotación de clave de cifrado; simulacro de restauración contra B2 real; deploy en Coolify (`docker-compose.coolify.yml`); inscripción AAIP y texto de consentimiento revisado por una persona con matrícula.
+Validar con Inés antecedentes, lesiones y zonas del mapa; 2FA y rotación de clave de cifrado; simulacro de restauración contra B2 real; deploy en Coolify (`docker-compose.coolify.yml`); inscripción AAIP y consentimiento de fotos gestionado por fuera del sistema (ADR-019, texto revisado por una persona con matrícula).

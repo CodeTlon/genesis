@@ -114,8 +114,6 @@ export type Entry = {
   addenda: Addendum[]
 }
 
-export type Consent = { id: string; kind: 'tratamiento' | 'fotos' | 'datos'; grantedAt: string; revokedAt?: string; documentRef?: string }
-export const CONSENT_LABEL: Record<Consent['kind'], string> = { tratamiento: 'Tratamiento', fotos: 'Uso de fotos clínicas', datos: 'Tratamiento de datos personales' }
 
 export type PhotoKind = 'inicial' | 'evolucion' | 'final'
 export type Photo = { id: string; createdBy: string; patientId: string; caseId?: string; entryId?: string; kind: PhotoKind; takenAt: string; createdAt: string }

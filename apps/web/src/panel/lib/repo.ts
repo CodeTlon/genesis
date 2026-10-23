@@ -5,9 +5,9 @@ import { createHash } from 'node:crypto'
 import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { db, schema, TENANT_ID } from '@genesis/db/client'
 import { decOpt, decryptJson, encOpt, encryptJson } from './crypto'
-import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type DiabetesInfo, type Addendum, type Alert, type Antecedentes, type Case, type Consent, type Entry, type EntryPayload, type Patient, type Photo, type PhotoKind } from './types'
+import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type DiabetesInfo, type Addendum, type Alert, type Antecedentes, type Case, type Entry, type EntryPayload, type Patient, type Photo, type PhotoKind } from './types'
 
-const { patients: P, antecedentes: A, cases: C, entries: E, addenda: AD, consents: CO, photos: PH, user: U } = schema
+const { patients: P, antecedentes: A, cases: C, entries: E, addenda: AD, photos: PH, user: U } = schema
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export const isUuid = (s: string) => UUID.test(s)
@@ -219,30 +219,6 @@ export async function addAddendum(entryId: string, userId: string, reason: strin
   return { ok: true }
 }
 
-// ───────── Consentimientos ─────────
-export async function listConsents(patientId: string): Promise<Consent[]> {
-  if (!isUuid(patientId)) return []
-  const rows = await db().select().from(CO).where(eq(CO.patientId, patientId)).orderBy(desc(CO.grantedAt))
-  return rows.map((r) => ({ id: r.id, kind: r.kind, grantedAt: r.grantedAt.toISOString(), revokedAt: iso(r.revokedAt), documentRef: r.documentRef ?? undefined }))
-}
-
-export async function activeConsent(patientId: string, kind: Consent['kind']): Promise<Consent | null> {
-  return (await listConsents(patientId)).find((c) => c.kind === kind && !c.revokedAt) ?? null
-}
-
-export async function grantConsent(patientId: string, kind: Consent['kind'], documentRef: string, userId: string): Promise<boolean> {
-  if (!(await getPatient(patientId))) return false
-  if (await activeConsent(patientId, kind)) return true
-  await db().insert(CO).values({ patientId, kind, documentRef: documentRef || null, createdBy: userId })
-  return true
-}
-
-export async function revokeConsent(patientId: string, id: string): Promise<boolean> {
-  if (!isUuid(id)) return false
-  const r = await db().update(CO).set({ revokedAt: new Date() }).where(and(eq(CO.id, id), eq(CO.patientId, patientId), isNull(CO.revokedAt))).returning({ id: CO.id })
-  return r.length > 0
-}
-
 // ───────── Fotos (metadatos; el archivo vive en el volumen privado, ver photos.ts) ─────────
 const toPhoto = (r: typeof PH.$inferSelect): Photo => ({
   id: r.id, createdBy: r.createdBy, patientId: r.patientId, caseId: r.caseId ?? undefined, entryId: r.entryId ?? undefined, kind: r.kind,
@@ -261,18 +237,15 @@ export async function getPhotoRow(id: string) {
   return r ?? null
 }
 
-/** Sin consentimiento vigente de fotos no se puede subir (lo exige también la base: consent_id NOT NULL). */
 export async function addPhotoRow(i: { patientId: string; caseId?: string; entryId?: string; kind: PhotoKind; storageKey: string; thumbKey: string; takenAt?: string; userId: string }): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
   if (!(await getPatient(i.patientId))) return { ok: false, message: 'No encontramos al paciente.' }
-  const consent = await activeConsent(i.patientId, 'fotos')
-  if (!consent) return { ok: false, message: 'Falta el consentimiento de fotos de este paciente. Registralo en su ficha antes de subir fotos.' }
   if (i.caseId) {
     const c = await getCase(i.caseId)
     if (!c || c.patientId !== i.patientId) return { ok: false, message: 'El caso no corresponde a este paciente.' }
   }
   const [r] = await db().insert(PH).values({
     patientId: i.patientId, caseId: i.caseId ?? null, entryId: i.entryId ?? null, kind: i.kind, storageKey: i.storageKey, thumbKey: i.thumbKey,
-    consentId: consent.id, takenAt: i.takenAt || null, createdBy: i.userId,
+    takenAt: i.takenAt || null, createdBy: i.userId,
   }).returning({ id: PH.id })
   return { ok: true, id: r.id }
 }

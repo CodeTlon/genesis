@@ -4,7 +4,7 @@
 - [x] Base real: Postgres, login (Better Auth), cifrado de campos clínicos, auditoría, inmutabilidad en la base
 - [x] Pacientes, antecedentes con alertas, casos (conclusión y sugerencias), evoluciones firmadas + adendas
 - [x] Mapa de pies v2 (egipcio / griego / romano, a tratar / tratado)
-- [x] Fotos clínicas privadas + consentimientos; historia imprimible / PDF
+- [x] Fotos clínicas privadas (sin módulo de consentimientos, ADR-019); historia imprimible / PDF
 - [x] Docker + compose de Coolify, backup y simulacro (scripts), health
 - [x] Sin sitio público ni CMS (ADR-016)
 
