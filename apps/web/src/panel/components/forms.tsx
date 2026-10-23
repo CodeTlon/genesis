@@ -1,7 +1,7 @@
 'use client'
 import { useActionState } from 'react'
 import { closeCase, openCase, saveAntecedentes, updatePatient, createPatient, type Res } from '@/panel/lib/actions'
-import { ANTECEDENTE_ITEMS, type Antecedentes, type Case, type Patient } from '@/panel/lib/types'
+import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type Antecedentes, type Case, type Patient } from '@/panel/lib/types'
 
 const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4'
 const primary = 'min-h-touch rounded-control bg-violeta-oscuro px-6 text-white transition-colors hover:bg-tinta disabled:opacity-60'
@@ -33,6 +33,15 @@ export function PatientForm({ patient }: { patient?: Patient }) {
         <Field label="Obra social / prepaga" name="insurance" defaultValue={patient?.insurance} max={100} />
         <Field label="Contacto de emergencia" name="emergencyContact" defaultValue={patient?.emergencyContact} />
         <Field label="Responsable (si es menor de 18)" name="guardian" defaultValue={patient?.guardian} max={120} />
+        <Field label="Fecha de primera consulta" name="firstVisit" type="date" defaultValue={patient?.firstVisit} />
+        <Field label="Nacionalidad" name="nationality" defaultValue={patient?.nationality} max={60} />
+        <label className="block">Sexo (opcional)
+          <select name="sex" defaultValue={patient?.sex ?? ''} className={input}><option value="">Sin indicar</option><option>Femenino</option><option>Masculino</option><option>Otro</option></select>
+        </label>
+        <Field label="Estatura en cm" name="heightCm" defaultValue={patient?.heightCm} max={6} />
+        <Field label="Peso en kg" name="weightKg" defaultValue={patient?.weightKg} max={6} />
+        <Field label="Grupo sanguíneo" name="bloodGroup" defaultValue={patient?.bloodGroup} max={5} />
+        <Field label="Otras actividades" name="otherActivities" defaultValue={patient?.otherActivities} max={200} />
       </div>
       <Status state={state} />
       <button disabled={pending} className={primary}>{patient ? 'Guardar datos' : 'Crear paciente'}</button>
@@ -55,6 +64,17 @@ export function AntecedentesForm({ patientId, current }: { patientId: string; cu
           ))}
         </div>
       </fieldset>
+      <fieldset className="rounded-card border border-tinta/20 p-4">
+        <legend className="px-2 font-semibold">Diabetes (completar si corresponde)</legend>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Tipo de diabetes" name="diab_tipo" defaultValue={(current?.diabetes ?? EMPTY_DIABETES).tipo} max={60} />
+          <Field label="Tiempo de evolución" name="diab_evolucion" defaultValue={(current?.diabetes ?? EMPTY_DIABETES).evolucion} max={60} />
+          <Field label="Úlceras previas" name="diab_ulceras" defaultValue={(current?.diabetes ?? EMPTY_DIABETES).ulceras} max={200} />
+          <Field label="Complicaciones" name="diab_complicaciones" defaultValue={(current?.diabetes ?? EMPTY_DIABETES).complicaciones} max={300} />
+          <Field label="Tratamiento de la diabetes" name="diab_tratamiento" defaultValue={(current?.diabetes ?? EMPTY_DIABETES).tratamiento} max={300} />
+        </div>
+      </fieldset>
+      <Field label="Antecedentes familiares" name="familiares" defaultValue={current?.familiares} max={1000} />
       <label className="block">Medicación actual (opcional)<textarea name="medication" defaultValue={current?.medication} rows={2} maxLength={1000} className={`${input} py-3`} /></label>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Calzado habitual" name="footwear" defaultValue={current?.footwear} max={500} />

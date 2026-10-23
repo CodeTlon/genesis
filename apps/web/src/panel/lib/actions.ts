@@ -20,6 +20,11 @@ const patientSchema = z.object({
   birthDate: z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha de nacimiento no es válida.')]),
   phone: txt(30).regex(/^[0-9 +()-]*$/, 'El teléfono no es válido.'),
   address: txt(200), occupation: txt(100), insurance: txt(100), emergencyContact: txt(200), guardian: txt(120),
+  firstVisit: z.union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha de primera consulta no es válida.')]),
+  nationality: txt(60), sex: z.enum(['', 'Femenino', 'Masculino', 'Otro']),
+  heightCm: z.string().trim().regex(/^(\d{2,3}([.,]\d)?)?$/, 'La estatura va en centímetros (ej: 165).'),
+  weightKg: z.string().trim().regex(/^(\d{1,3}([.,]\d)?)?$/, 'El peso va en kilos (ej: 67).'),
+  bloodGroup: txt(5), otherActivities: txt(200),
 })
 
 const fromForm = (fd: FormData) => Object.fromEntries(Object.keys(patientSchema.shape).map((k) => [k, String(fd.get(k) ?? '')]))
@@ -62,8 +67,9 @@ export async function saveAntecedentes(patientId: string, _: unknown, fd: FormDa
   if (!uuid.safeParse(patientId).success) return fail('Paciente no válido.')
   const flags: Record<string, boolean> = {}
   for (const it of ANTECEDENTE_ITEMS) flags[it.id] = fd.get(`f_${it.id}`) === 'on'
-  const d = z.object({ notes: txt(4000), medication: txt(1000), footwear: txt(500), activity: txt(500) })
-    .safeParse({ notes: String(fd.get('notes') ?? ''), medication: String(fd.get('medication') ?? ''), footwear: String(fd.get('footwear') ?? ''), activity: String(fd.get('activity') ?? '') })
+  const g = (k: string) => String(fd.get(k) ?? '')
+  const d = z.object({ notes: txt(4000), medication: txt(1000), footwear: txt(500), activity: txt(500), familiares: txt(1000), diabetes: z.object({ tipo: txt(60), evolucion: txt(60), ulceras: txt(200), complicaciones: txt(300), tratamiento: txt(300) }) })
+    .safeParse({ notes: g('notes'), medication: g('medication'), footwear: g('footwear'), activity: g('activity'), familiares: g('familiares'), diabetes: { tipo: g('diab_tipo'), evolucion: g('diab_evolucion'), ulceras: g('diab_ulceras'), complicaciones: g('diab_complicaciones'), tratamiento: g('diab_tratamiento') } })
   if (!d.success) return fail('Alguno de los textos es demasiado largo.')
   if (!(await repo.saveAntecedentes(patientId, { flags, ...d.data }, u.id))) return fail('No encontramos al paciente.')
   await audit(u.id, 'save_antecedentes', 'patient', patientId)
@@ -110,7 +116,7 @@ const marker = z.object({
   zone: z.string().max(40), finding: z.string().max(40), severity: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   state: z.enum(['a_tratar', 'tratado']), note: z.string().max(300).optional(),
 })
-const payloadSchema = z.object({ footType: z.enum(['egipcio', 'griego', 'romano']).optional(), markers: z.array(marker).max(60).optional() }).catchall(z.union([z.string().max(4000), z.number(), z.boolean(), z.array(z.string().max(100)).max(30)]))
+const payloadSchema = z.object({ footType: z.enum(['egipcio', 'griego', 'romano']).optional(), markers: z.array(marker).max(60).optional() }).catchall(z.union([z.string().max(4000), z.number(), z.boolean(), z.array(z.string().max(100)).max(30), z.record(z.string().max(10), z.array(z.string().max(100)).max(5))]))
 
 export async function saveAttention(input: { id?: string; patientId: string; caseId?: string; payload: EntryPayload; sign: boolean }): Promise<{ ok: true; entryId: string; status: 'draft' | 'signed' } | { ok: false; message: string }> {
   const u = await requireUser()

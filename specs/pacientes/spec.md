@@ -1,0 +1,28 @@
+---
+capacidad: PAC
+perfil: S2
+rutas: apps/web/src/panel/lib/repo.ts, apps/web/src/panel/lib/actions.ts, apps/web/src/panel/components/forms.tsx, apps/web/src/app/(panel)/panel/(app)/pacientes
+---
+# Pacientes: ficha base
+
+La profesional da de alta y edita pacientes con los datos de la ficha en papel de Inés. Las alertas de precaución se derivan de los antecedentes (ver ANT).
+
+## Requisitos
+
+### REQ-PAC-001 [must] Alta y datos básicos
+El sistema DEBE permitir crear un paciente con nombre y apellido obligatorios, y guardar DNI, fecha de nacimiento, teléfono, domicilio, ocupación, obra social y contacto de emergencia.
+- Escenario: Dado el formulario de alta, Cuando se completa nombre y apellido y se crea, Entonces se abre la ficha del paciente.
+- verify: e2e e2e/panel.spec.ts
+- confianza: confirmado
+
+### REQ-PAC-004 [must] Responsable obligatorio si es menor
+El sistema DEBE exigir el nombre del responsable cuando el paciente es menor de 18 años.
+- Escenario: Dado un paciente nacido hace 10 años, Cuando se guarda sin responsable, Entonces se rechaza con un aviso.
+- verify: e2e e2e/ficha.spec.ts
+- confianza: confirmado
+
+### REQ-PAC-005 [must] Datos de la ficha de Inés
+El sistema DEBE guardar de cada paciente fecha de primera consulta, nacionalidad, sexo, estatura, peso, grupo sanguíneo y otras actividades, además de la ocupación.
+- Escenario: Dado un paciente nuevo, Cuando se cargan esos datos y se recarga la ficha, Entonces los campos conservan lo guardado.
+- verify: e2e e2e/ficha.spec.ts
+- confianza: confirmado

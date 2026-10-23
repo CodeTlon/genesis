@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto'
 import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { db, schema, TENANT_ID } from '@genesis/db/client'
 import { decOpt, decryptJson, encOpt, encryptJson } from './crypto'
-import { ANTECEDENTE_ITEMS, type Addendum, type Alert, type Antecedentes, type Case, type Consent, type Entry, type EntryPayload, type Patient, type Photo, type PhotoKind } from './types'
+import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type DiabetesInfo, type Addendum, type Alert, type Antecedentes, type Case, type Consent, type Entry, type EntryPayload, type Patient, type Photo, type PhotoKind } from './types'
 
 const { patients: P, antecedentes: A, cases: C, entries: E, addenda: AD, consents: CO, photos: PH, user: U } = schema
 
@@ -18,6 +18,8 @@ const toPatient = (r: typeof P.$inferSelect): Patient => ({
   id: r.id, firstName: r.firstName, lastName: r.lastName, dni: r.dni ?? '', birthDate: r.birthDate ?? '', phone: r.phone ?? '',
   address: r.address ?? '', occupation: r.occupation ?? '', insurance: r.insurance ?? '', emergencyContact: r.emergencyContact ?? '',
   guardian: r.guardianName ?? '', alerts: r.alerts as Alert[],
+  firstVisit: r.firstVisit ?? '', nationality: r.nationality ?? '', sex: r.sex ?? '', heightCm: r.heightCm ?? '', weightKg: r.weightKg ?? '',
+  bloodGroup: r.bloodGroup ?? '', otherActivities: r.otherActivities ?? '',
 })
 
 const notDeleted = and(eq(P.tenantId, TENANT_ID), isNull(P.deletedAt))
@@ -42,6 +44,8 @@ const patientCols = (i: PatientInput) => ({
   firstName: i.firstName, lastName: i.lastName, dni: i.dni || null, birthDate: i.birthDate || null, phone: i.phone || null,
   address: i.address || null, occupation: i.occupation || null, insurance: i.insurance || null,
   emergencyContact: i.emergencyContact || null, guardianName: i.guardian || null,
+  firstVisit: i.firstVisit || null, nationality: i.nationality || null, sex: i.sex || null, heightCm: i.heightCm ? i.heightCm.replace(',', '.') : null,
+  weightKg: i.weightKg ? i.weightKg.replace(',', '.') : null, bloodGroup: i.bloodGroup || null, otherActivities: i.otherActivities || null,
 })
 
 export const isMinor = (birthDate: string, now = new Date()) => {
@@ -78,25 +82,25 @@ export async function archivePatient(id: string): Promise<boolean> {
 }
 
 // ───────── Antecedentes ─────────
-type AntPayload = { notes: string; medication: string; footwear: string; activity: string }
+type AntPayload = { notes: string; medication: string; footwear: string; activity: string; familiares?: string; diabetes?: DiabetesInfo }
 
 export async function latestAntecedentes(patientId: string): Promise<Antecedentes | null> {
   if (!isUuid(patientId)) return null
   const [r] = await db().select().from(A).where(eq(A.patientId, patientId)).orderBy(desc(A.version)).limit(1)
   if (!r) return null
   const extra: AntPayload = r.notesEnc ? JSON.parse(decOpt(r.notesEnc)) : { notes: '', medication: '', footwear: '', activity: '' }
-  return { version: r.version, flags: r.flags as Record<string, boolean>, createdAt: r.createdAt.toISOString(), ...extra }
+  return { version: r.version, flags: r.flags as Record<string, boolean>, createdAt: r.createdAt.toISOString(), ...extra, familiares: extra.familiares ?? '', diabetes: { ...EMPTY_DIABETES, ...extra.diabetes } }
 }
 
 /** Cada guardado crea una versión nueva (historial); las alertas del paciente se recalculan. */
-export async function saveAntecedentes(patientId: string, d: { flags: Record<string, boolean>; notes: string; medication: string; footwear: string; activity: string }, userId: string): Promise<boolean> {
+export async function saveAntecedentes(patientId: string, d: { flags: Record<string, boolean>; notes: string; medication: string; footwear: string; activity: string; familiares: string; diabetes: DiabetesInfo }, userId: string): Promise<boolean> {
   const p = await getPatient(patientId)
   if (!p) return false
   await db().transaction(async (tx) => {
     const [{ v }] = await tx.select({ v: sql<number>`coalesce(max(${A.version}), 0)::int` }).from(A).where(eq(A.patientId, patientId))
     await tx.insert(A).values({
       patientId, version: v + 1, flags: d.flags, createdBy: userId,
-      notesEnc: encOpt(JSON.stringify({ notes: d.notes, medication: d.medication, footwear: d.footwear, activity: d.activity } satisfies AntPayload)),
+      notesEnc: encOpt(JSON.stringify({ notes: d.notes, medication: d.medication, footwear: d.footwear, activity: d.activity, familiares: d.familiares, diabetes: d.diabetes } satisfies AntPayload)),
     })
     await tx.update(P).set({ alerts: alertsFrom(d.flags, p.birthDate) }).where(eq(P.id, patientId))
   })

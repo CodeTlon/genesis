@@ -5,6 +5,7 @@ import { IconDrop, IconHeart, IconPerson, IconPlus, IconPulse, IconWarning } fro
 const ICON: Record<Alert, ReactNode> = {
   diabetes: <IconDrop className="size-4" />,
   anticoagulantes: <IconPlus className="size-4" />,
+  antiagregados: <IconPlus className="size-4" />,
   embarazo: <IconHeart className="size-4" />,
   marcapasos: <IconPulse className="size-4" />,
   alergia: <IconWarning className="size-4" />,
@@ -15,6 +16,7 @@ const ICON: Record<Alert, ReactNode> = {
 /** Nivel de precaución: alto (rojo), medio (ámbar) e informativo (celeste). Siempre acompañado de ícono y texto, nunca solo color. */
 const TONE: Record<Alert, string> = {
   anticoagulantes: 'bg-rose-100 text-rose-950 ring-rose-700/50',
+  antiagregados: 'bg-rose-100 text-rose-950 ring-rose-700/50',
   marcapasos: 'bg-rose-100 text-rose-950 ring-rose-700/50',
   circulacion: 'bg-amber-100 text-amber-950 ring-amber-700/50',
   diabetes: 'bg-amber-100 text-amber-950 ring-amber-700/50',

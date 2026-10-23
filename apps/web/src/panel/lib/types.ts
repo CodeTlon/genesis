@@ -1,8 +1,9 @@
-export type Alert = 'diabetes' | 'anticoagulantes' | 'embarazo' | 'marcapasos' | 'alergia' | 'circulacion' | 'menor'
+export type Alert = 'diabetes' | 'anticoagulantes' | 'antiagregados' | 'embarazo' | 'marcapasos' | 'alergia' | 'circulacion' | 'menor'
 
 export const ALERT_LABEL: Record<Alert, string> = {
   diabetes: 'Diabetes',
   anticoagulantes: 'Anticoagulantes',
+  antiagregados: 'Antiagregados',
   embarazo: 'Embarazo/lactancia',
   marcapasos: 'Marcapasos/implantes',
   alergia: 'Alergia',
@@ -22,6 +23,13 @@ export type Patient = {
   insurance: string
   emergencyContact: string
   guardian: string
+  firstVisit: string
+  nationality: string
+  sex: string
+  heightCm: string
+  weightKg: string
+  bloodGroup: string
+  otherActivities: string
   alerts: Alert[]
 }
 
@@ -39,9 +47,23 @@ export const ANTECEDENTE_ITEMS: { id: string; label: string; alert?: Alert }[] =
   { id: 'inmunosupresion', label: 'Inmunosupresión' },
   { id: 'infecciosas', label: 'Enfermedades infecciosas' },
   { id: 'cirugias', label: 'Cirugías previas en pies' },
+  // Resto de los antecedentes de la ficha en papel de Inés
+  { id: 'antiagregados', label: 'Antiagregados', alert: 'antiagregados' },
+  { id: 'artritis', label: 'Artritis' },
+  { id: 'artrosis', label: 'Artrosis' },
+  { id: 'dermatologicos', label: 'Dermatológicos' },
+  { id: 'respiratorio', label: 'Problema respiratorio' },
+  { id: 'traumatologicos', label: 'Traumatológicos' },
+  { id: 'reumatologicos', label: 'Reumatológicos' },
+  { id: 'colesterol', label: 'Colesterol' },
+  { id: 'trigliceridos', label: 'Triglicéridos' },
 ]
 
-export type Antecedentes = { version: number; flags: Record<string, boolean>; notes: string; medication: string; footwear: string; activity: string; createdAt: string }
+/** Bloque de diabetes de la ficha (solo se completa si corresponde). */
+export type DiabetesInfo = { tipo: string; evolucion: string; ulceras: string; complicaciones: string; tratamiento: string }
+export const EMPTY_DIABETES: DiabetesInfo = { tipo: '', evolucion: '', ulceras: '', complicaciones: '', tratamiento: '' }
+
+export type Antecedentes = { version: number; flags: Record<string, boolean>; notes: string; medication: string; footwear: string; activity: string; familiares: string; diabetes: DiabetesInfo; createdAt: string }
 
 export type CaseStatus = 'open' | 'closed'
 export type Case = {

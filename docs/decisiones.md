@@ -116,3 +116,10 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **Base de datos:** la migración `0004_solo_historias.sql` borra las tablas del sitio, la agenda y la simulación de WhatsApp (`media`, `service_groups`, `site_services`, `gallery_items`, `site_content`, `appointment_requests`, `appointments`, `resources`, `services`, `whatsapp_threads_demo`) y `foot_markers` (sin uso: las marcas van en el payload cifrado). **Es irreversible** para esas tablas; no había datos reales.
 - **Quedan** `areas`, `professionals`, `form_templates` y `form_template_versions` solo porque `clinical_entries` tiene FK hacia ellas (nullable). Se pueden soltar más adelante.
 - **Recuperación:** todo el código eliminado sigue en el historial de git (commit `8e78e50` es el último con sitio y CMS).
+
+## ADR-017 SDD y ficha completa de Inés (23/10/2026)
+- **SDD (perfil S2):** `specs/` con 20 REQ en 6 capacidades (PAC, ANT, CAS, EVO, FOT, SEG), `scripts/spec-lint.mjs` y un paso de CI. Cada test E2E lleva `[REQ-XXX-NNN]`. La brecha conocida es REQ-SEG-005 (simulacro de restauración real contra B2).
+- **Ficha en papel de Inés** (fotos del 20/10, sin copiarlas al repo por tener datos de una paciente real): migración `0005_ficha_ines.sql` con primera consulta, nacionalidad, sexo, estatura, peso, grupo sanguíneo y otras actividades; los 18 antecedentes con la alerta nueva de **antiagregados**; bloque de diabetes y antecedentes familiares (cifrados con las notas); y en la evolución el examen por pie, las patologías por dedo (campo `digits`), el tratamiento preventivo y el control.
+- **"Romano" = cuadrado/polinesio** es una suposición a confirmar con Inés.
+- **Sin 2FA por ahora** (decisión de Mateo, 22/10): sigue en Pendiente junto con la rotación de la clave de cifrado.
+- La rama `feature/sdd-historias-clinicas` conserva una implementación paralela (modelo `hc_*`, mejora visual) hecha sobre una base anterior; queda como referencia, no se mergea.

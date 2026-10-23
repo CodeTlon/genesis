@@ -88,6 +88,30 @@ function FieldInput({ field: f, value, onChange, footType, onFootType, markers, 
   switch (f.type) {
     case 'footmap':
       return <div><p className="font-semibold">{f.label}</p>{hint}<div className="mt-2"><FootMap footType={footType} onFootType={onFootType} markers={markers} onChange={onMarkers} /></div></div>
+    case 'digits': {
+      const rec = ((value as Record<string, string[]>) ?? {})
+      const setDigit = (side: 'der' | 'izq', i: number, t: string) => {
+        const cur = [...(rec[side] ?? ['', '', '', '', ''])]
+        cur[i] = t
+        onChange({ ...rec, [side]: cur })
+      }
+      return (
+        <fieldset><legend>{label}</legend>{hint}
+          <div className="mt-1 grid gap-3 sm:grid-cols-2">
+            {([['der', 'Pie derecho'], ['izq', 'Pie izquierdo']] as const).map(([side, name]) => (
+              <div key={side} className="rounded-control border border-tinta/30 p-3">
+                <p className="font-semibold">{name}</p>
+                <div className="mt-1 grid grid-cols-5 gap-2">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <input key={i} aria-label={`${f.label}, ${name}, dedo ${i + 1}`} placeholder={`${i + 1}°`} maxLength={100} value={rec[side]?.[i] ?? ''} onChange={(e) => setDigit(side, i, e.target.value)} className="min-h-touch w-full rounded-control border border-tinta/60 bg-white px-2" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </fieldset>
+      )
+    }
     case 'longtext':
       return <div><label htmlFor={id}>{label}</label>{hint}<textarea id={id} rows={3} maxLength={4000} value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={`${input} py-3`} /></div>
     case 'number':

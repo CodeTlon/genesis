@@ -1,0 +1,90 @@
+import { test, expect, type Page } from '@playwright/test'
+import { ensureUser, login } from './helpers'
+
+test.describe.configure({ mode: 'serial' })
+test.beforeAll(() => ensureUser())
+
+const RUN = Date.now().toString(36)
+let patientUrl = ''
+
+async function firmar(page: Page) {
+  const hold = page.getByRole('button', { name: /Mantené presionado para firmar/ })
+  const box = (await hold.boundingBox())!
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down(); await page.waitForTimeout(1400); await page.mouse.up()
+  await expect(page.getByRole('status')).toContainText('Evolución firmada')
+}
+
+test('[REQ-PAC-005] la ficha guarda nacionalidad, medidas, grupo sanguíneo, actividades y primera consulta', async ({ page }) => {
+  await login(page)
+  await page.goto('/panel/pacientes/nuevo')
+  await page.getByLabel('Nombre', { exact: true }).fill('Ficha')
+  await page.getByLabel('Apellido', { exact: true }).fill(`Completa ${RUN}`)
+  await page.getByLabel('Fecha de primera consulta').fill('2026-10-20')
+  await page.getByLabel('Nacionalidad').fill('Argentina')
+  await page.getByLabel('Sexo').selectOption('Femenino')
+  await page.getByLabel('Estatura en cm').fill('165')
+  await page.getByLabel('Peso en kg').fill('67,5')
+  await page.getByLabel('Grupo sanguíneo').fill('0+')
+  await page.getByLabel('Otras actividades').fill('Natación')
+  await page.getByRole('button', { name: 'Crear paciente' }).click()
+  await expect(page).toHaveURL(/\/panel\/pacientes\/[0-9a-f-]{36}$/)
+  patientUrl = page.url()
+  await page.reload()
+  await expect(page.getByLabel('Nacionalidad')).toHaveValue('Argentina')
+  await expect(page.getByLabel('Estatura en cm')).toHaveValue('165.0')
+  await expect(page.getByLabel('Peso en kg')).toHaveValue('67.5')
+  await expect(page.getByLabel('Grupo sanguíneo')).toHaveValue('0+')
+  await expect(page.getByLabel('Otras actividades')).toHaveValue('Natación')
+})
+
+test('[REQ-PAC-004] un menor de 18 no se guarda sin responsable legal', async ({ page }) => {
+  await login(page)
+  await page.goto('/panel/pacientes/nuevo')
+  await page.getByLabel('Nombre', { exact: true }).fill('Menor')
+  await page.getByLabel('Apellido', { exact: true }).fill(`Prueba ${RUN}`)
+  await page.getByLabel('Fecha de nacimiento').fill(`${new Date().getFullYear() - 10}-05-05`)
+  await page.getByRole('button', { name: 'Crear paciente' }).click()
+  await expect(page.locator('p[role=alert]')).toContainText('responsable')
+})
+
+test('[REQ-ANT-002][REQ-ANT-003] antecedentes de la ficha, alerta de antiagregados y bloque de diabetes', async ({ page }) => {
+  await login(page)
+  await page.goto(patientUrl)
+  for (const a of ['Antiagregados', 'Artritis', 'Artrosis', 'Dermatológicos', 'Problema respiratorio', 'Traumatológicos', 'Reumatológicos', 'Colesterol', 'Triglicéridos', 'Diabetes', 'Anticoagulantes', 'Marcapasos'])
+    await expect(page.getByLabel(new RegExp(`^${a}`))).toBeVisible()
+  await page.getByLabel(/^Antiagregados/).check()
+  await page.getByLabel(/^Diabetes/).check()
+  await page.getByLabel('Tipo de diabetes').fill('Tipo 2')
+  await page.getByLabel('Tiempo de evolución').fill('8 años')
+  await page.getByLabel('Antecedentes familiares').fill('Madre diabética')
+  await page.getByRole('button', { name: 'Guardar antecedentes' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Guardado' })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('list', { name: /Alertas clínicas/ }).getByText('Antiagregados')).toBeVisible()
+  await expect(page.getByLabel('Tipo de diabetes')).toHaveValue('Tipo 2')
+  await expect(page.getByLabel('Antecedentes familiares')).toHaveValue('Madre diabética')
+})
+
+test('[REQ-EVO-005] evolución con examen por pie, patologías por dedo, tratamiento preventivo y control', async ({ page }) => {
+  await login(page)
+  await page.goto(patientUrl)
+  await page.getByText('Abrir un caso nuevo').click()
+  await page.getByLabel(/Título del caso/).fill('Control general')
+  await page.getByRole('button', { name: 'Abrir caso' }).click()
+  await expect(page).toHaveURL(/\/casos\/[0-9a-f-]{36}$/)
+  await page.getByRole('link', { name: 'Nueva evolución' }).click()
+  await page.getByRole('button', { name: 'Ver más campos' }).click()
+  await page.getByLabel('Temperatura (pie derecho)').selectOption('Frío')
+  await page.getByLabel('Edema (pie izquierdo)').selectOption('Leve')
+  await page.getByLabel('Helomas, Pie derecho, dedo 2').fill('Heloma dorsal')
+  await page.getByLabel('Tratamiento preventivo').fill('Higiene diaria y secado entre dedos.')
+  await page.getByLabel('Control (próxima visita)').fill('En 45 días')
+  await expect(page.getByText(/Borrador guardado a las/)).toBeVisible({ timeout: 10_000 })
+  await firmar(page)
+  await page.getByRole('link', { name: 'Volver al caso' }).click()
+  await expect(page.getByText('Der.: 2° Heloma dorsal')).toBeVisible()
+  await expect(page.getByText('Higiene diaria y secado entre dedos.')).toBeVisible()
+  await expect(page.getByText('En 45 días')).toBeVisible()
+  await expect(page.getByText('Frío')).toBeVisible()
+})

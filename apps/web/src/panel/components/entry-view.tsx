@@ -1,12 +1,12 @@
 'use client'
 import { useState } from 'react'
 import { addendum } from '@/panel/lib/actions'
-import { TEMPLATE } from '@/panel/lib/templates'
+import { formatDigits, TEMPLATE } from '@/panel/lib/templates'
 import type { Entry, FootMarker } from '@/panel/lib/types'
 import { MarkersSummary } from './foot-map'
 
 const fmt = (iso: string) => new Date(iso).toLocaleString('es-AR', { timeZone: 'America/Argentina/Cordoba', dateStyle: 'short', timeStyle: 'short' })
-const show = (v: unknown) => (Array.isArray(v) ? v.join(', ') : v === true ? 'Sí' : v === false ? 'No' : v === undefined || v === '' ? '—' : String(v))
+const show = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v) ? formatDigits(v) : Array.isArray(v) ? v.join(', ') : v === true ? 'Sí' : v === false ? 'No' : v === undefined || v === '' ? '—' : String(v))
 
 export function EntryView({ entry }: { entry: Entry }) {
   const [open, setOpen] = useState(false)
@@ -15,7 +15,7 @@ export function EntryView({ entry }: { entry: Entry }) {
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
   const signed = entry.status === 'signed'
-  const fields = TEMPLATE.fields.filter((f) => f.type !== 'footmap' && entry.payload[f.id] !== undefined && entry.payload[f.id] !== '' && !(Array.isArray(entry.payload[f.id]) && (entry.payload[f.id] as unknown[]).length === 0))
+  const fields = TEMPLATE.fields.filter((f) => f.type !== 'footmap' && entry.payload[f.id] !== undefined && entry.payload[f.id] !== '' && (f.type !== 'digits' || formatDigits(entry.payload[f.id]) !== '—') && !(Array.isArray(entry.payload[f.id]) && (entry.payload[f.id] as unknown[]).length === 0))
 
   async function submit() {
     setBusy(true)

@@ -28,7 +28,7 @@ async function newPatient(page: Page, first: string, last: string) {
   return page.url()
 }
 
-test('flujo clínico completo: paciente, antecedentes con alerta, consentimiento, caso, foto, evolución firmada, adenda, cierre e historia', async ({ page }) => {
+test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-004][REQ-FOT-001] flujo clínico completo: paciente, antecedentes con alerta, consentimiento, caso, foto, evolución firmada, adenda, cierre e historia', async ({ page }) => {
   await login(page)
   patientUrl = await newPatient(page, 'Paciente', `Ficticia ${RUN}`)
 
@@ -103,7 +103,7 @@ test('flujo clínico completo: paciente, antecedentes con alerta, consentimiento
   await expect(page.getByText(/Der\. · planta · Dedo 1: Callo/)).toBeVisible()
 })
 
-test('los datos clínicos libres se guardan cifrados y las firmadas no se pueden alterar', async () => {
+test('[REQ-EVO-003][REQ-SEG-003] los datos clínicos libres se guardan cifrados y las firmadas no se pueden alterar', async () => {
   const id = patientUrl.split('/').pop()!
   const [ent] = await sql<{ id: string; payload: Record<string, unknown>; status: string }>('select id, payload, status from clinical_entries where patient_id=$1', [id])
   expect(ent.status).toBe('signed')
@@ -126,7 +126,7 @@ test('los datos clínicos libres se guardan cifrados y las firmadas no se pueden
   expect(ph.storage_key).toMatch(/^[0-9a-f-]{36}\.webp$/)
 })
 
-test('seguridad: sin sesión nada se lee ni se escribe, y los datos de un paciente no se alcanzan con IDs de otro', async ({ page, request, playwright }) => {
+test('[REQ-SEG-001][REQ-FOT-003] seguridad: sin sesión nada se lee ni se escribe, y los datos de un paciente no se alcanzan con IDs de otro', async ({ page, request, playwright }) => {
   const anon = await playwright.request.newContext({ baseURL: 'http://localhost:3000', maxRedirects: 0 })
   const [photo] = await sql<{ id: string }>('select id from clinical_photos limit 1')
   expect((await anon.get(`/panel-media/${photo.id}`)).status()).toBe(401)
@@ -158,7 +158,7 @@ test('seguridad: sin sesión nada se lee ni se escribe, y los datos de un pacien
   expect((await sql('select 1 from audit_log where action=$1 and entity_id=$2', ['view_photo', photo.id])).length).toBeGreaterThan(0)
 })
 
-test('la subida rechaza archivos que no son fotos aunque digan serlo, y los EXIF no sobreviven', async ({ page }) => {
+test('[REQ-FOT-002] la subida rechaza archivos que no son fotos aunque digan serlo, y los EXIF no sobreviven', async ({ page }) => {
   await login(page)
   await page.goto(caseUrl)
   // el caso está cerrado: reabrir para probar la subida
@@ -172,7 +172,7 @@ test('la subida rechaza archivos que no son fotos aunque digan serlo, y los EXIF
   expect([413, 422]).toContain(big.status())
 })
 
-test('login: clave incorrecta no entra y los intentos repetidos se bloquean', async ({ page }) => {
+test('[REQ-SEG-002] login: clave incorrecta no entra y los intentos repetidos se bloquean', async ({ page }) => {
   const email = `bloqueo-${RUN}@example.test`
   for (let i = 0; i < 6; i++) {
     await page.goto('/panel/login')
@@ -186,7 +186,7 @@ test('login: clave incorrecta no entra y los intentos repetidos se bloquean', as
   await login(page)
 })
 
-test('no hay sitio público: la raíz lleva al login y el CMS ya no existe', async ({ page, playwright }) => {
+test('[REQ-SEG-004] no hay sitio público: la raíz lleva al login y el CMS ya no existe', async ({ page, playwright }) => {
   await page.goto('/')
   await expect(page).toHaveURL(/\/panel\/login/)
   const anon = await playwright.request.newContext({ baseURL: 'http://localhost:3000', maxRedirects: 0 })

@@ -1,7 +1,7 @@
 // Esquema Drizzle (tipos para consultar). La fuente de verdad de la estructura son las migraciones SQL (migrations/*.sql):
 // se aplican al arrancar y fallan cerrado; este archivo las refleja y no genera migraciones por su cuenta.
 import { sql } from 'drizzle-orm'
-import { bigserial, boolean, date, index, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { bigserial, boolean, date, index, integer, jsonb, numeric, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: 'date' })
 
@@ -64,6 +64,13 @@ export const patients = pgTable('patients', {
   emergencyContact: text('emergency_contact'),
   insurance: text('insurance'),
   occupation: text('occupation'),
+  firstVisit: date('first_visit'),
+  nationality: text('nationality'),
+  sex: text('sex'),
+  heightCm: numeric('height_cm'),
+  weightKg: numeric('weight_kg'),
+  bloodGroup: text('blood_group'),
+  otherActivities: text('other_activities'),
   guardianName: text('guardian_name'),
   alerts: text('alerts').array().notNull().default(sql`'{}'`),
   deletedAt: ts('deleted_at'),

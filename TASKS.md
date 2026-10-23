@@ -17,3 +17,10 @@
 ## Después
 - [ ] 2FA y rotación de la clave de cifrado
 - [ ] Limpiar tablas heredadas sin uso (`areas`, `professionals`, `form_templates*`) cuando se pueda soltar su FK en `clinical_entries`
+
+## 23/10 — SDD y ficha de Inés
+- [x] Specs (S2, 20 REQ), spec-lint y CI con E2E
+- [x] Ficha: datos del paciente, 18 antecedentes + diabetes, examen por pie, patologías por dedo, tratamiento preventivo y control
+- [ ] Confirmar con Inés que "romano" = "cuadrado/polinesio" y validar los campos nuevos
+- [ ] Simulacro de restauración contra B2 (REQ-SEG-005) antes de cargar pacientes reales
+- [ ] Legal: conservación de la historia, texto del consentimiento revisado por matriculado, inscripción AAIP

@@ -27,3 +27,4 @@ npm run dev -w @genesis/web
 ## Cambios
 - **2026-10-21** — Se elimina el sitio público y el CMS (ADR-016): el producto es solo historias clínicas.
 - **2026-10-21** — Pasa de demo a proyecto real: Postgres, login real, cifrado de campos clínicos, antecedentes, casos, mapa de pies v2, fotos privadas, consentimientos, auditoría, Docker/Coolify y backups.
+- 23/10: specs SDD (S2) + CI; ficha completa de Inés (datos, 18 antecedentes, diabetes, examen por pie, patologías por dedo, control).
