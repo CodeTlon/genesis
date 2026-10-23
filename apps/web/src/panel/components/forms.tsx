@@ -1,6 +1,7 @@
 'use client'
 import { useActionState, useEffect, useRef } from 'react'
 import { useResultToast } from './toast'
+import { useEditDone } from './editable'
 import { closeCase, openCase, saveAntecedentes, updatePatient, createPatient, type Res } from '@/panel/lib/actions'
 import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type Antecedentes, type Case, type Patient } from '@/panel/lib/types'
 
@@ -12,6 +13,8 @@ const choice = 'flex min-h-touch cursor-pointer items-center gap-3 rounded-contr
 /** Éxito: toast breve. Error: aviso fijo que recibe el foco para que se lea de inmediato (el servidor devuelve un solo mensaje, no uno por campo). */
 function Status({ state }: { state: Res | null }) {
   useResultToast(state && state.ok ? state : null)
+  const done = useEditDone()
+  useEffect(() => { if (state?.ok) done() }, [state, done])
   const ref = useRef<HTMLParagraphElement>(null)
   useEffect(() => { if (state && !state.ok) ref.current?.focus() }, [state])
   if (!state || state.ok) return null
