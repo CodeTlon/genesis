@@ -5,13 +5,13 @@ rutas: apps/web/src/panel/lib/photos.ts, apps/web/src/panel/components/photos.ts
 ---
 # Fotos clínicas
 
-Fotos de la primera consulta, la evolución y el final. Son dato de salud: con consentimiento, validadas y solo con sesión.
+Fotos de la primera consulta, la evolución y el final. Son dato de salud: validadas y solo con sesión.
 
 ## Requisitos
 
-### REQ-FOT-001 [must] Consentimiento antes de fotografiar
-El sistema NO DEBE permitir subir fotos de un paciente sin un consentimiento de fotos vigente; la base también lo exige (`consent_id` obligatorio).
-- Escenario: Dado un caso de un paciente sin consentimiento de fotos, Cuando se intenta subir una foto, Entonces se avisa que primero hay que registrarlo; con consentimiento la foto inicial se guarda.
+### REQ-FOT-001 [must] Subir fotos al caso
+El sistema DEBE permitir subir una foto al caso de un paciente desde la sesión de una profesional y mostrarla en el caso.
+- Escenario: Dado un caso abierto, Cuando se sube una foto inicial válida, Entonces la foto se guarda y aparece en el caso.
 - verify: e2e e2e/panel.spec.ts
 - confianza: confirmado
 

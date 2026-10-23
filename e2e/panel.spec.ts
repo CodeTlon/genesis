@@ -28,7 +28,7 @@ async function newPatient(page: Page, first: string, last: string) {
   return page.url()
 }
 
-test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-004][REQ-FOT-001] flujo clínico completo: paciente, antecedentes con alerta, consentimiento, caso, foto, evolución firmada, adenda, cierre e historia', async ({ page }) => {
+test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-004][REQ-FOT-001] flujo clínico completo: paciente, antecedentes con alerta, caso, foto, evolución firmada, adenda, cierre e historia', async ({ page }) => {
   await login(page)
   patientUrl = await newPatient(page, 'Paciente', `Ficticia ${RUN}`)
 
@@ -42,7 +42,7 @@ test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-
   await page.reload()
   await expect(page.getByRole('list', { name: /Alertas clínicas/ }).getByText('Diabetes')).toBeVisible()
 
-  // Sin consentimiento de fotos no se puede subir
+  // Caso abierto y foto inicial
   await page.goto(patientUrl)
   await page.getByText('Abrir un caso nuevo').click()
   await page.getByLabel(/Título del caso/).fill('Uñero pie derecho')
@@ -50,14 +50,7 @@ test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-
   await page.getByRole('button', { name: 'Abrir caso' }).click()
   await expect(page).toHaveURL(/\/casos\/[0-9a-f-]{36}$/)
   caseUrl = page.url()
-  await expect(page.getByText(/primero registrá el consentimiento de fotos/)).toBeVisible()
 
-  // Registrar consentimiento de fotos y subir la foto inicial
-  await page.goto(`${patientUrl}?tab=consentimientos`)
-  await page.locator('li', { hasText: 'Uso de fotos clínicas' }).getByLabel(/Referencia del documento/).fill('Ficha en papel')
-  await page.locator('li', { hasText: 'Uso de fotos clínicas' }).getByRole('button', { name: 'Registrar consentimiento' }).click()
-  await expect(page.locator('li', { hasText: 'Uso de fotos clínicas' })).toContainText('vigente')
-  await page.goto(caseUrl)
   await page.getByLabel(/^Foto \(JPG/).setInputFiles(FOTO)
   await page.getByLabel('Tipo').selectOption('inicial')
   await page.getByRole('button', { name: 'Subir foto' }).click()

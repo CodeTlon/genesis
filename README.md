@@ -33,6 +33,7 @@ npm run dev -w @genesis/web
 `feature/<origen>-<tarea>` → PR a `dev` → `test` → `main`. Producción en Coolify con `docker-compose.coolify.yml`; variables en `.env.example`.
 
 ## Cambios
+- **2026-10-23** — Se elimina el módulo de consentimientos (ADR-019): sin pestaña, sin bloqueo de fotos y sin sección en la historia imprimible; migración 0006.
 - **2026-10-21** — Se elimina el sitio público y el CMS (ADR-016): el producto es solo historias clínicas.
 - **2026-10-21** — Pasa de demo a proyecto real: Postgres, login real, cifrado de campos clínicos, antecedentes, casos, mapa de pies v2, fotos privadas, consentimientos, auditoría, Docker/Coolify y backups.
 - 23/10: specs SDD (S2) + CI; ficha completa de Inés (datos, 18 antecedentes, diabetes, examen por pie, patologías por dedo, control).

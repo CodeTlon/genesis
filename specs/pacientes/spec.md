@@ -28,7 +28,7 @@ El sistema DEBE guardar de cada paciente fecha de primera consulta, nacionalidad
 - confianza: confirmado
 
 ### REQ-PAC-006 [must] Ficha organizada en pestañas
-El sistema DEBE mostrar la ficha del paciente en pestañas (Casos, Antecedentes, Datos, Consentimientos), una por vez, y DEBE conservar la pestaña activa en el parámetro `tab` de la URL.
+El sistema DEBE mostrar la ficha del paciente en pestañas (Casos, Antecedentes, Datos), una por vez, y DEBE conservar la pestaña activa en el parámetro `tab` de la URL.
 - Escenario: Dado un paciente, Cuando se abre `?tab=antecedentes`, Entonces se muestra solo el panel de Antecedentes.
 - verify: e2e e2e/ux.spec.ts
 - confianza: confirmado

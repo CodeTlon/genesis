@@ -1,17 +1,16 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { deletePhoto, grantConsent, revokeConsent } from '@/panel/lib/actions'
-import { CONSENT_LABEL, PHOTO_KIND_LABEL, type Consent, type Photo, type PhotoKind } from '@/panel/lib/types'
+import { deletePhoto } from '@/panel/lib/actions'
+import { PHOTO_KIND_LABEL, type Photo, type PhotoKind } from '@/panel/lib/types'
 
 const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4'
 const day = (iso: string) => iso.slice(0, 10).split('-').reverse().join('/')
 
-export function PhotoUpload({ patientId, caseId, hasConsent }: { patientId: string; caseId?: string; hasConsent: boolean }) {
+export function PhotoUpload({ patientId, caseId }: { patientId: string; caseId?: string }) {
   const router = useRouter()
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
-  if (!hasConsent) return <p role="note" className="rounded-card bg-amber-100 p-4 text-amber-950">Para subir fotos primero registrá el consentimiento de fotos del paciente (sección Consentimientos).</p>
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -81,36 +80,5 @@ export function PhotoGrid({ photos, deletable }: { photos: Photo[]; deletable: s
         ))}
       </ul>
     </div>
-  )
-}
-
-export function Consents({ patientId, consents }: { patientId: string; consents: Consent[] }) {
-  const router = useRouter()
-  const [err, setErr] = useState('')
-  const [refs, setRefs] = useState<Record<string, string>>({})
-  const kinds = Object.keys(CONSENT_LABEL) as Consent['kind'][]
-  return (
-    <ul className="space-y-3">
-      {kinds.map((k) => {
-        const active = consents.find((c) => c.kind === k && !c.revokedAt)
-        return (
-          <li key={k} className="rounded-card bg-white p-4 shadow-soft">
-            <p className="font-semibold">{CONSENT_LABEL[k]}: {active ? <span className="text-emerald-900">vigente desde {day(active.grantedAt)}</span> : <span className="text-amber-900">pendiente</span>}</p>
-            {active?.documentRef && <p className="text-base">Documento: {active.documentRef}</p>}
-            {active ? (
-              <button onClick={async () => { if (!confirm('¿Revocar este consentimiento?')) return; const r = await revokeConsent(patientId, active.id); if (r.ok) router.refresh(); else setErr(r.message) }} className="mt-2 min-h-touch rounded-control border border-red-800 px-4 text-red-900">Revocar</button>
-            ) : (
-              <div className="mt-2 flex flex-wrap items-end gap-2">
-                <label className="block text-base">Referencia del documento firmado (ej: ficha en papel, escaneo)
-                  <input value={refs[k] ?? ''} maxLength={200} onChange={(e) => setRefs((p) => ({ ...p, [k]: e.target.value }))} className="mt-1 block min-h-touch w-64 max-w-full rounded-control border border-tinta/60 px-3" />
-                </label>
-                <button onClick={async () => { const r = await grantConsent(patientId, k, refs[k] ?? ''); if (r.ok) router.refresh(); else setErr(r.message) }} className="min-h-touch rounded-control bg-violeta-oscuro px-5 text-white">Registrar consentimiento</button>
-              </div>
-            )}
-          </li>
-        )
-      })}
-      {err && <li role="alert" className="text-red-800">{err}</li>}
-    </ul>
   )
 }

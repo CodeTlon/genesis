@@ -14,7 +14,7 @@ export default async function Historia({ params }: { params: Promise<{ id: strin
   const { id } = await params
   const p = await repo.getPatient(id)
   if (!p) notFound()
-  const [ant, cases, entries, consents] = await Promise.all([repo.latestAntecedentes(id), repo.listCases(id), repo.listEntries(id), repo.listConsents(id)])
+  const [ant, cases, entries] = await Promise.all([repo.latestAntecedentes(id), repo.listCases(id), repo.listEntries(id)])
   await audit(user.id, 'export', 'patient', id)
   return (
     <article className="space-y-8">
@@ -34,9 +34,6 @@ export default async function Historia({ params }: { params: Promise<{ id: strin
           {ant.medication && <p>Medicación: {ant.medication}</p>}{ant.footwear && <p>Calzado: {ant.footwear}</p>}{ant.activity && <p>Actividad: {ant.activity}</p>}{ant.notes && <p>{ant.notes}</p>}
         </>) : <p>Sin antecedentes registrados.</p>}
         {p.alerts.length > 0 && <p className="mt-1 font-semibold">Alertas: {p.alerts.map((a) => ALERT_LABEL[a]).join(', ')}</p>}
-      </section>
-      <section><h2 className="text-xl">Consentimientos</h2>
-        <ul>{consents.map((c) => <li key={c.id}>{c.kind}: otorgado {day(c.grantedAt)}{c.revokedAt ? `, revocado ${day(c.revokedAt)}` : ''}</li>)}{!consents.length && <li>Ninguno registrado.</li>}</ul>
       </section>
       {cases.map((c) => (
         <section key={c.id} className="space-y-3 break-inside-avoid-page">

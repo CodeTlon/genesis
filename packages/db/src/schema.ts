@@ -127,16 +127,6 @@ export const addenda = pgTable('clinical_addenda', {
   createdAt: ts('created_at').notNull().defaultNow(),
 })
 
-export const consents = pgTable('consents', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  patientId: uuid('patient_id').notNull().references(() => patients.id),
-  kind: text('kind').$type<'tratamiento' | 'fotos' | 'datos'>().notNull(),
-  grantedAt: ts('granted_at').notNull().defaultNow(),
-  revokedAt: ts('revoked_at'),
-  documentRef: text('document_ref'),
-  createdBy: text('created_by').notNull(),
-})
-
 export const photos = pgTable('clinical_photos', {
   id: uuid('id').primaryKey().defaultRandom(),
   patientId: uuid('patient_id').notNull().references(() => patients.id),
@@ -146,7 +136,6 @@ export const photos = pgTable('clinical_photos', {
   storageKey: text('storage_key').notNull(),
   thumbKey: text('thumb_key'),
   mime: text('mime').notNull().default('image/webp'),
-  consentId: uuid('consent_id').notNull().references(() => consents.id),
   takenAt: date('taken_at'),
   deletedAt: ts('deleted_at'),
   createdBy: text('created_by').notNull(),
