@@ -71,3 +71,11 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 
 ## ADR-010 Historias clínicas en Postgres y ficha de Inés como base (2026-10-22)
 Decisión de Inés (18/10): por ahora solo historias clínicas. El panel pasa pacientes, atenciones y adendas de memoria a Postgres (`hc_patients`, `hc_entries`, `hc_addenda`, migración 0003) con ids de texto para conservar los de la demo; las tablas `patients`/`clinical_entries` de 0001 (modelo uuid) quedan sin uso. Una atención firmada no se edita: lo impone un trigger (`forbid_signed_change`) además del chequeo en la app. La agenda y el WhatsApp simulado siguen en memoria y no se desarrollan (fuera de alcance). La ficha de papel de Inés («Historia clínica podológica», Instituto García Lorca) es la base: plantilla F «Ficha podológica inicial» con antecedentes Sí/No, calzado, examen por pie, patologías por dedo, mapa plantar/dorsal y fórmula digital. «Romano» = «cuadrado/polinesio» de la ficha. Las fotos de la ficha traen datos de una paciente real: no se versionan. Specs en `specs/` (SDD, perfil S1); los E2E reinician los datos con `GENESIS_ALLOW_RESET=1` (`e2e/global-setup.ts`).
+
+## ADR-011 — Seguridad de la historia clínica (22/10/2026)
+- **Sin 2FA por ahora** (decisión de Mateo): usuario y contraseña por profesional (scrypt), sesión firmada con HMAC y bloqueo de 5 min tras 5 intentos. El segundo factor queda como mejora futura.
+- **Cifrado en la app** (AES-256-GCM, IV por valor, id de fila como dato autenticado) para atenciones, adendas y fotos. La clave `GENESIS_DATA_KEY` va fuera del repo. Quedan en claro los datos de la ficha del paciente (nombre, DNI, alertas) porque se buscan por la base; si hace falta, se cifra en una fase siguiente.
+- **Accesos append-only** por trigger (no UPDATE/DELETE/TRUNCATE). Quien sea dueño de la base podría quitar el trigger: en producción la app debe conectarse con un rol sin ese permiso.
+- **Fotos en la base**, cifradas, servidas por `/fotos/[id]` solo con sesión; la subida las reduce y las pasa a WebP (borra EXIF). El consentimiento de imagen se exige en la app y por trigger.
+- **Backups**: un dump cubre historias y fotos. Pendiente en producción: cron a B2 y restauración de prueba allá (Regla 16b).
+- **Pendiente legal** (con Inés y su asesor): conservación de la historia, texto del consentimiento y registro de la base de datos.

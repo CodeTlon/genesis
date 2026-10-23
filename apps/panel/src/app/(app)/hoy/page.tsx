@@ -49,7 +49,7 @@ export default async function Hoy() {
           const pr = professional(a.professionalId)!
           const s = service(a.serviceId)!
           return (
-            <li key={a.id} className="rounded-card bg-white p-4 shadow-soft">
+            <li key={a.id} className="card-lift rounded-card bg-white p-4 shadow-soft">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-start gap-4">
                   <p className="min-w-16 text-2xl font-light">{fmtTime(a.start)}</p>
@@ -78,8 +78,9 @@ export default async function Hoy() {
 
 function Stat({ n, label, tone }: { n: number; label: string; tone?: 'warn' }) {
   return (
-    <div className={`rounded-card p-5 shadow-soft ${tone === 'warn' && n > 0 ? 'bg-amber-100 text-amber-950' : 'bg-white'}`}>
-      <p className="text-4xl font-light">{n}</p>
+    <div className={`card-lift relative overflow-hidden rounded-card p-5 shadow-soft ${tone === 'warn' && n > 0 ? 'bg-amber-100 text-amber-950' : 'bg-white'}`}>
+      <span aria-hidden className={`absolute inset-y-0 left-0 w-1.5 ${tone === 'warn' && n > 0 ? 'bg-amber-600' : 'bg-violeta'}`} />
+      <p className="text-4xl font-light tabular-nums">{n}</p>
       <p>{label}</p>
     </div>
   )

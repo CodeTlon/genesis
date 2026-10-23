@@ -4,7 +4,9 @@ import { AlertBadges } from '@/components/alert-badges'
 import { EntryView } from '@/components/entry-view'
 import { StatusBadge } from '@/components/status-actions'
 import { age, fmtDate, fmtTime, isoToLocal } from '@/lib/dates'
-import { apptsOfPatient, entriesOf, patient, service } from '@/lib/store'
+import { PhotoSection } from '@/components/photo-section'
+import { audit } from '@/lib/auth'
+import { apptsOfPatient, entriesOf, patient, photosOf, service } from '@/lib/store'
 import { TEMPLATES } from '@/lib/templates'
 
 export const dynamic = 'force-dynamic'
@@ -13,9 +15,12 @@ const Consent = ({ label, v }: { label: string; v: 'vigente' | 'pendiente' }) =>
   <li className={`rounded-full px-3 py-1 text-sm ${v === 'vigente' ? 'bg-emerald-100 text-emerald-950' : 'bg-amber-100 text-amber-950'}`}>{label}: {v}</li>
 )
 
-export default async function Ficha({ params }: { params: Promise<{ id: string }> }) {
+export default async function Ficha({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ foto?: string; foto_error?: string }> }) {
   const p = await patient((await params).id)
   if (!p) notFound()
+  const q = await searchParams
+  await audit('abrir_historia', { patientId: p.id })
+  const photos = await photosOf(p.id)
   const entries = await entriesOf(p.id)
   const appts = apptsOfPatient(p.id).sort((a, b) => b.start.localeCompare(a.start))
   const a = age(p.birthDate)
@@ -71,6 +76,8 @@ export default async function Ficha({ params }: { params: Promise<{ id: string }
         ))}
         {!appts.length && <li>Sin turnos.</li>}
       </ul>
+
+      <PhotoSection patient={p} photos={photos} entries={entries} status={{ ok: q.foto === 'ok', error: q.foto_error }} />
 
       <h2 className="mt-10 text-xl font-light uppercase tracking-[0.12em]">Línea de tiempo clínica</h2>
       <div className="mt-3 space-y-4">

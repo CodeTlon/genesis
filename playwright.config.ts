@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test'
+import { TEST_ENV } from './e2e/env'
 
 // Requiere `npm run build` previo. Levanta web (3000) y panel (3001) en modo producción.
 export default defineConfig({
@@ -10,6 +11,6 @@ export default defineConfig({
   use: { trace: 'retain-on-failure' },
   webServer: [
     { command: 'npm run start -w @genesis/web', port: 3000, reuseExistingServer: true, timeout: 60_000 },
-    { command: 'npm run start -w @genesis/panel', port: 3001, reuseExistingServer: true, timeout: 60_000, env: { DEMO_PASSWORD: 'demo123' } },
+    { command: 'npm run start -w @genesis/panel', port: 3001, reuseExistingServer: true, timeout: 60_000, env: TEST_ENV },
   ],
 })

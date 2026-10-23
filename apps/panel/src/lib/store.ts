@@ -1,4 +1,5 @@
 import { query, TENANT_ID } from '@genesis/db/client'
+import { open, openJson, openText, seal, sealJson, sealText } from './crypto'
 import { addDays, isoToLocal, localToIso, todayKey } from './dates'
 import type { Addendum, Alert, Appointment, ApptStatus, Entry, EntryPayload, Patient, Professional, Service, TemplateCode } from './types'
 
@@ -163,7 +164,7 @@ const toPatient = (r: PRow): Patient => ({
 })
 
 const toEntry = (r: PRow, addenda: Addendum[]): Entry => ({
-  id: r.id, patientId: r.patient_id, templateCode: r.template_code, templateVersion: r.template_version, payload: r.payload, status: r.status, author: r.author,
+  id: r.id, patientId: r.patient_id, templateCode: r.template_code, templateVersion: r.template_version, payload: openJson<EntryPayload>(r.payload, r.id), status: r.status, author: r.author,
   createdAt: new Date(r.created_at).toISOString(), signedAt: r.signed_at ? new Date(r.signed_at).toISOString() : undefined, addenda,
 })
 
@@ -188,7 +189,7 @@ function ensureSeed(): Promise<void> {
     for (const e of ENTRIES_SEED) {
       await query(
         `INSERT INTO hc_entries (id, tenant_id, patient_id, template_code, template_version, payload, status, author, signed_at, created_at) VALUES ($1,$2,$3,$4,$5,$6,'signed',$7,$8,$9)`,
-        [e.id, TENANT_ID, e.patientId, e.templateCode, e.templateVersion, JSON.stringify(e.payload), e.author, e.signedAt, e.createdAt])
+        [e.id, TENANT_ID, e.patientId, e.templateCode, e.templateVersion, JSON.stringify(sealJson(e.payload, e.id)), e.author, e.signedAt, e.createdAt])
     }
   })().catch((err) => { seeded = undefined; throw err }))
 }
@@ -206,7 +207,7 @@ export async function patient(id: string): Promise<Patient | undefined> {
 async function withAddenda(rows: PRow[]): Promise<Entry[]> {
   if (!rows.length) return []
   const ad = await query('SELECT * FROM hc_addenda WHERE entry_id = ANY($1) ORDER BY created_at', [rows.map((r) => r.id)])
-  return rows.map((r) => toEntry(r, ad.filter((a) => a.entry_id === r.id).map((a) => ({ id: a.id, author: a.author, reason: a.reason, text: a.text, at: new Date(a.created_at).toISOString() }))))
+  return rows.map((r) => toEntry(r, ad.filter((a) => a.entry_id === r.id).map((a) => ({ id: a.id, author: a.author, reason: openText(a.reason, a.id), text: openText(a.text, a.id), at: new Date(a.created_at).toISOString() }))))
 }
 export async function entriesOf(pid: string): Promise<Entry[]> {
   await ensureSeed()
@@ -242,12 +243,12 @@ export async function saveEntry(input: { id?: string; patientId: string; templat
     if (!e) return { ok: false, message: 'No encontramos esa atención.' }
     // Inmutabilidad: además del chequeo, la base lo impone con un trigger (hc_entries_immutable).
     if (e.status === 'signed') return { ok: false, message: 'Esta atención ya está firmada. Para corregirla, agregá una adenda.' }
-    await query(`UPDATE hc_entries SET payload=$2, status=$3, signed_at=$4 WHERE id=$1`, [id, JSON.stringify(input.payload), input.sign ? 'signed' : 'draft', input.sign ? new Date().toISOString() : null])
+    await query(`UPDATE hc_entries SET payload=$2, status=$3, signed_at=$4 WHERE id=$1`, [id, JSON.stringify(sealJson(input.payload, id)), input.sign ? 'signed' : 'draft', input.sign ? new Date().toISOString() : null])
   } else {
     id = `${nextId('e')}-${Date.now().toString(36)}`
     await query(
       `INSERT INTO hc_entries (id, tenant_id, patient_id, template_code, payload, status, author, signed_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [id, TENANT_ID, input.patientId, input.templateCode, JSON.stringify(input.payload), input.sign ? 'signed' : 'draft', input.author, input.sign ? new Date().toISOString() : null])
+      [id, TENANT_ID, input.patientId, input.templateCode, JSON.stringify(sealJson(input.payload, id)), input.sign ? 'signed' : 'draft', input.author, input.sign ? new Date().toISOString() : null])
   }
   if (input.sign && (input.templateCode === 'A' || input.templateCode === 'F')) {
     const add = alertsFromPayload(input.payload)
@@ -259,7 +260,8 @@ export async function saveEntry(input: { id?: string; patientId: string; templat
 export async function addAddendum(entryId: string, author: string, reason: string, text: string): Promise<{ ok: boolean; message?: string }> {
   const e = await entry(entryId)
   if (!e || e.status !== 'signed') return { ok: false, message: 'Solo se pueden agregar adendas a atenciones firmadas.' }
-  await query('INSERT INTO hc_addenda (id, entry_id, author, reason, text) VALUES ($1,$2,$3,$4,$5)', [`ad-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, entryId, author, reason, text])
+  const id = `ad-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+  await query('INSERT INTO hc_addenda (id, entry_id, author, reason, text) VALUES ($1,$2,$3,$4,$5)', [id, entryId, author, sealText(reason, id), sealText(text, id)])
   return { ok: true }
 }
 
@@ -299,7 +301,36 @@ export async function markMinor(id: string): Promise<void> {
 /** Solo para pruebas: vacía las historias y vuelve a cargar los datos ficticios. Exige GENESIS_ALLOW_RESET=1 para que no corra por error. */
 export async function resetDemo(): Promise<void> {
   if (process.env.GENESIS_ALLOW_RESET !== '1') throw new Error('resetDemo requiere GENESIS_ALLOW_RESET=1')
-  await query('TRUNCATE hc_addenda, hc_entries, hc_patients CASCADE')
+  await query('TRUNCATE hc_photos, hc_addenda, hc_entries, hc_patients CASCADE')
   seeded = undefined
   await ensureSeed()
+}
+
+// ---------- Fotos clínicas (REQ-FOT-001..003) ----------
+export type PhotoKind = 'primera_consulta' | 'evolucion'
+export type PhotoMeta = { id: string; patientId: string; entryId?: string; kind: PhotoKind; note?: string; author: string; createdAt: string }
+
+/** Guarda la foto cifrada. Si falta el consentimiento de imagen clínica la rechaza (y la base también, por trigger). */
+export async function savePhoto(i: { patientId: string; entryId?: string; kind: PhotoKind; bytes: Buffer; mime: string; note?: string; author: string }): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
+  const p = await patient(i.patientId)
+  if (!p) return { ok: false, message: 'No encontramos al paciente.' }
+  if (p.consent.imageClinical !== 'vigente') return { ok: false, message: 'Falta el consentimiento de imagen clínica de este paciente. Registralo antes de subir fotos.' }
+  const id = `f-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+  await query('INSERT INTO hc_photos (id, tenant_id, patient_id, entry_id, kind, mime, bytes, note, author) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+    [id, TENANT_ID, i.patientId, i.entryId || null, i.kind, i.mime, seal(i.bytes, id), i.note || null, i.author])
+  return { ok: true, id }
+}
+
+export async function photosOf(pid: string): Promise<PhotoMeta[]> {
+  const rows = await query('SELECT id, patient_id, entry_id, kind, note, author, created_at FROM hc_photos WHERE tenant_id=$1 AND patient_id=$2 ORDER BY created_at', [TENANT_ID, pid])
+  return rows.map((r) => ({ id: r.id, patientId: r.patient_id, entryId: r.entry_id ?? undefined, kind: r.kind, note: r.note ?? undefined, author: r.author, createdAt: new Date(r.created_at).toISOString() }))
+}
+
+export async function photo(id: string): Promise<{ bytes: Buffer; mime: string; patientId: string } | undefined> {
+  const [r] = await query('SELECT bytes, mime, patient_id FROM hc_photos WHERE tenant_id=$1 AND id=$2', [TENANT_ID, id])
+  return r ? { bytes: open(r.bytes, id), mime: r.mime, patientId: r.patient_id } : undefined
+}
+
+export async function grantImageConsent(pid: string): Promise<void> {
+  await query(`UPDATE hc_patients SET consent = jsonb_set(consent, '{imageClinical}', '"vigente"') WHERE id=$1`, [pid])
 }

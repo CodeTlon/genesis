@@ -1,18 +1,12 @@
 import { test, expect, type Page } from '@playwright/test'
 import pg from 'pg'
+import { login, PANEL } from './helpers'
 
-const PANEL = 'http://localhost:3001'
 const DB = process.env.DATABASE_URL ?? 'postgres://genesis:genesis@localhost:5432/genesis'
 const sufijo = Date.now().toString(36)
 
 test.describe.configure({ mode: 'serial' })
 
-async function login(page: Page) {
-  await page.goto(PANEL + '/login')
-  await page.getByLabel('Contraseña de la demo').fill('demo123')
-  await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/hoy/)
-}
 
 async function firmar(page: Page) {
   const hold = page.getByRole('button', { name: /Mantené apretado/ })
@@ -93,10 +87,11 @@ test('[REQ-HC-012] la atención firmada está guardada en Postgres y la base imp
   const c = new pg.Client({ connectionString: DB })
   await c.connect()
   try {
-    const { rows } = await c.query(`SELECT id, status, payload->>'conclusion' AS conclusion FROM hc_entries WHERE patient_id=$1`, [id])
+    const { rows } = await c.query(`SELECT id, status, payload::text AS raw FROM hc_entries WHERE patient_id=$1`, [id])
     expect(rows).toHaveLength(1)
     expect(rows[0].status).toBe('signed')
-    expect(rows[0].conclusion).toBe('Pie de atleta en tratamiento.')
+    expect(rows[0].raw).toContain('enc:v1:') // REQ-SEG-004: en la base el contenido va cifrado
+    expect(rows[0].raw).not.toContain('atleta')
     await expect(c.query(`UPDATE hc_entries SET payload='{}' WHERE id=$1`, [rows[0].id])).rejects.toThrow(/adenda/)
   } finally {
     await c.end()

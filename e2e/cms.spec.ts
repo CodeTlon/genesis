@@ -1,19 +1,13 @@
 import { test, expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import path from 'node:path'
+import { login, PANEL } from './helpers'
 
 const WEB = 'http://localhost:3000'
-const PANEL = 'http://localhost:3001'
 const PHOTO = path.join(__dirname, '..', 'apps', 'web', 'public', 'img', 'img-10.webp')
 
 test.describe.configure({ mode: 'serial' })
 
-async function login(page: Page) {
-  await page.goto(PANEL + '/login')
-  await page.getByLabel('Contraseña de la demo').fill('demo123')
-  await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/hoy/)
-}
 
 test('editar el título de Inicio desde el panel actualiza el sitio', async ({ page }) => {
   await login(page)

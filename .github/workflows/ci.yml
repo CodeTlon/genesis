@@ -1,0 +1,27 @@
+name: ci
+on: { pull_request: {}, push: { branches: [dev, test, main] } }
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16
+        env: { POSTGRES_USER: genesis, POSTGRES_PASSWORD: genesis, POSTGRES_DB: genesis }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U genesis" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://genesis:genesis@localhost:5432/genesis
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm run spec:lint
+      - run: npm run db:migrate
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:contract
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test

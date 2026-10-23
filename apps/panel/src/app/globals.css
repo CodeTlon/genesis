@@ -1,2 +1,17 @@
 @import "tailwindcss";
 @import "@genesis/config/tokens.css";
+
+/* Detalles de interfaz (referencias: motion-primitives, tablecn, kibo-ui), sin librerías nuevas y respetando prefers-reduced-motion. */
+::selection { background: var(--color-lila); color: var(--color-tinta); }
+@keyframes page-in { from { transform: translateY(6px); } to { transform: none; } }
+.page-in { animation: page-in 0.28s ease-out both; }
+.card-lift { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+.card-lift:hover { transform: translateY(-2px); box-shadow: 0 14px 34px -14px rgb(123 63 184 / 0.4); }
+table { border-collapse: separate; border-spacing: 0; }
+tbody tr:nth-child(even) { background: color-mix(in srgb, var(--color-lila) 12%, transparent); }
+tbody tr { transition: background-color 0.15s; }
+tbody tr:hover { background: color-mix(in srgb, var(--color-lila) 28%, transparent); }
+thead th { position: sticky; top: 0; font-family: var(--font-label); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; font-weight: 600; }
+input:not([type=checkbox]):not([type=radio]):not([type=file]), select, textarea { transition: border-color 0.15s, box-shadow 0.15s; }
+input:not([type=checkbox]):not([type=radio]):focus, select:focus, textarea:focus { border-color: var(--color-violeta-oscuro); box-shadow: 0 0 0 3px rgb(162 89 224 / 0.25); }
+@media print { .page-in { animation: none; } }

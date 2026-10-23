@@ -16,6 +16,9 @@
     "db:migrate": "npm run migrate -w @genesis/db",
     "db:seed": "npm run seed -w @genesis/db",
     "db:verify": "npm run verify -w @genesis/db",
+    "test:contract": "node --test tests/*.test.ts",
+    "user:add": "node scripts/crear-usuario.ts",
+    "backup": "node scripts/backup.mjs",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

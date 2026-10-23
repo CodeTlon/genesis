@@ -21,3 +21,11 @@
 - [ ] Usuarios por profesional + 2FA, cifrado, auditoría, backups (delta fotos-y-seguridad)
 - [ ] Mejora visual del panel con references/diseños
 - [ ] Confirmar con Inés y su asesor legal: conservación, consentimiento, registro de la base
+
+## 22/10 — fotos y seguridad (sin 2FA)
+- [x] Usuarios por profesional, sesión firmada, bloqueo por intentos (SEG-003, SEG-007)
+- [x] Cifrado del contenido clínico (SEG-004), registro de accesos (SEG-005), fotos con consentimiento (FOT-001..003)
+- [x] Backup y restauración de prueba local (SEG-006); falta el cron a B2 en producción
+- [x] Mejora visual del panel: navegación activa, tarjetas, tablas, foco y transiciones sobrias (referencias: motion-primitives, tablecn, kibo-ui)
+- [ ] Legal con Inés: conservación, consentimiento, registro de la base
+- [ ] Confirmar con Inés que "romano" = "cuadrado/polinesio"

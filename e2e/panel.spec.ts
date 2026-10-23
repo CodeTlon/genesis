@@ -1,21 +1,16 @@
 import { test, expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { login, PANEL } from './helpers'
 
-const PANEL = 'http://localhost:3001'
 
-async function login(page: Page) {
-  await page.goto(PANEL + '/login')
-  await page.getByLabel('Contraseña de la demo').fill('demo123')
-  await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/hoy/)
-}
 
 test('[REQ-SEG-001] acceso protegido: sin sesión redirige y la clave incorrecta avisa', async ({ page }) => {
   await page.goto(PANEL + '/pacientes')
   await expect(page).toHaveURL(/\/login/)
-  await page.getByLabel('Contraseña de la demo').fill('mala')
+  await page.getByLabel('Usuario').fill('ines')
+  await page.getByLabel('Contraseña').fill('mala')
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page.locator('p[role=alert]')).toContainText('no es correcta')
+  await expect(page.locator('p[role=alert]')).toContainText('no son correctos')
 })
 
 test('[REQ-PAC-003] Hoy: turnos, cumpleaños y alertas visibles con texto', async ({ page }) => {
@@ -102,4 +97,23 @@ test('accesibilidad (axe) del panel: sin errores críticos ni serios', async ({ 
     const bad = r.violations.filter((x) => x.impact === 'critical' || x.impact === 'serious')
     expect(bad.map((b) => `${p}: ${b.id} ${b.nodes.slice(0, 3).map((n) => n.html.slice(0, 160) + ' => ' + n.any[0]?.message).join(' || ')}`), `axe en ${p}`).toEqual([])
   }
+})
+
+test('[REQ-PAC-001] la ficha muestra los datos básicos del paciente', async ({ page }) => {
+  await login(page)
+  await page.goto(PANEL + '/pacientes/p2')
+  for (const t of ['Edad', 'DNI (ficticio)', 'Teléfono']) await expect(page.getByText(t, { exact: true })).toBeVisible()
+})
+
+test('[REQ-HC-001] la anamnesis ofrece el checklist de antecedentes, alergias y medicación', async ({ page }) => {
+  await login(page)
+  await page.goto(PANEL + '/pacientes/p2/atencion?plantilla=A')
+  for (const t of ['Antecedentes', 'Alergias', 'Medicación actual']) await expect(page.getByText(t, { exact: true }).first()).toBeVisible()
+  await expect(page.getByLabel('Diabetes')).toBeVisible()
+})
+
+test('[REQ-MAP-002] las marcas del mapa quedan en la atención firmada', async ({ page }) => {
+  await login(page)
+  await page.goto(PANEL + '/pacientes/p2')
+  await expect(page.getByText(/Fisura/).first()).toBeVisible()
 })
