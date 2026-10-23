@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import HoldButton from '@genesis/ui/vendor/HoldButton'
 import { FootMap } from './foot-map'
 import { saveAttention } from '@/panel/lib/actions'
@@ -18,19 +18,31 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
   const [savedAt, setSavedAt] = useState('')
   const [error, setError] = useState('')
   const [signed, setSigned] = useState(false)
+  const [unsaved, setUnsaved] = useState(false)
+  const [signing, setSigning] = useState(false)
+  const confirmRef = useRef<HTMLDialogElement>(null)
+  const confirmTitle = useId()
   const dirty = useRef(false)
   const idRef = useRef<string | undefined>(undefined)
   // Cola de guardados: firmar espera al autoguardado en vuelo, así no se duplica la evolución.
   const queue = useRef<Promise<unknown>>(Promise.resolve())
 
-  const set = (id: string, v: unknown) => { dirty.current = true; setValues((p) => ({ ...p, [id]: v })) }
+  const set = (id: string, v: unknown) => { dirty.current = true; setUnsaved(true); setValues((p) => ({ ...p, [id]: v })) }
+
+  // Si se intenta cerrar la pestaña con cambios que todavía no se guardaron, el navegador avisa.
+  useEffect(() => {
+    if (!unsaved || signed) return
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault() }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [unsaved, signed])
 
   useEffect(() => {
     if (!dirty.current || signed) return
     const t = setTimeout(() => {
       queue.current = queue.current.then(async () => {
         const r = await saveAttention({ id: idRef.current, patientId, caseId, payload: values, sign: false })
-        if (r.ok) { idRef.current = r.entryId; setSavedAt(new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Cordoba' })); setError('') }
+        if (r.ok) { idRef.current = r.entryId; setUnsaved(false); setSavedAt(new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Argentina/Cordoba' })); setError('') }
         else setError(r.message)
       })
     }, 1500)
@@ -38,16 +50,19 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
   }, [values, signed, patientId, caseId])
 
   async function sign() {
+    setSigning(true)
     await queue.current
     const r = await saveAttention({ id: idRef.current, patientId, caseId, payload: values, sign: true })
-    if (r.ok) { setSigned(true); setError('') } else setError(r.message)
+    setSigning(false)
+    confirmRef.current?.close()
+    if (r.ok) { setSigned(true); setUnsaved(false); setError('') } else setError(r.message)
   }
 
   if (signed) {
     return (
       <div className="space-y-6">
-        <p role="status" className="rounded-card bg-emerald-100 p-5 text-lg text-emerald-950">Evolución firmada y guardada en la historia clínica de {patientName}.</p>
-        <Link href={`/panel/pacientes/${patientId}/casos/${caseId}`} className="inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro">Volver al caso</Link>
+        <p role="status" className="rounded-card bg-ok-fondo p-5 text-lg text-ok-texto">Evolución firmada y guardada en la historia clínica de {patientName}.</p>
+        <Link href={`/panel/pacientes/${patientId}/casos/${caseId}`} className="inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-5 font-semibold text-violeta-oscuro hover:bg-lila/40">Volver al caso</Link>
       </div>
     )
   }
@@ -71,9 +86,20 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
       )}
       <p className="text-base">Una evolución firmada ya no se puede editar: se corrige con una adenda.</p>
       <div className="sticky bottom-[var(--tabbar-h)] z-20 -mx-4 border-t border-lila/50 bg-marmol/95 px-4 py-3 backdrop-blur md:bottom-0">
-        <p className="mb-2 text-base" aria-live="polite">{error ? <span role="alert" className="text-red-800">{error}</span> : savedAt ? `Borrador guardado a las ${savedAt}.` : 'Se guarda solo mientras escribís.'}</p>
-        <HoldButton onHold={sign} doneLabel="Firmada" holdTime={900} size="lg">Mantené presionado para firmar</HoldButton>
+        <p className="mb-2 text-base" aria-live="polite">{error ? <span role="alert" className="font-semibold text-error-texto">{error}</span> : savedAt ? `Borrador guardado a las ${savedAt}.` : 'Se guarda solo mientras escribís.'}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <HoldButton onHold={sign} doneLabel="Firmada" holdTime={900} size="lg">Mantené presionado para firmar</HoldButton>
+          <button type="button" onClick={() => confirmRef.current?.showModal()} className="min-h-touch rounded-control border border-violeta-oscuro px-6 font-semibold text-violeta-oscuro hover:bg-lila/40">Firmar</button>
+        </div>
       </div>
+      <dialog ref={confirmRef} className="g-modal" aria-labelledby={confirmTitle} onClick={(e) => { if (e.target === confirmRef.current) confirmRef.current?.close() }}>
+        <h2 id={confirmTitle} className="text-xl font-semibold">¿Firmar esta evolución?</h2>
+        <p className="mt-2">Una vez firmada ya no se puede editar: cualquier corrección se hace con una adenda.</p>
+        <div className="mt-6 flex justify-end gap-2">
+          <button type="button" autoFocus onClick={() => confirmRef.current?.close()} className="min-h-touch rounded-control border border-tinta/60 px-5 hover:bg-lila/40">Seguir editando</button>
+          <button type="button" disabled={signing} onClick={sign} className="min-h-touch rounded-control bg-violeta-oscuro px-5 font-semibold text-white hover:bg-tinta">{signing ? 'Firmando...' : 'Firmar y cerrar'}</button>
+        </div>
+      </dialog>
     </form>
   )
 }
@@ -100,7 +126,7 @@ function FieldInput({ field: f, value, onChange, footType, onFootType, markers, 
         <fieldset><legend>{label}</legend>{hint}
           <div className="mt-1 grid gap-3 sm:grid-cols-2">
             {([['der', 'Pie derecho'], ['izq', 'Pie izquierdo']] as const).map(([side, name]) => (
-              <div key={side} className="rounded-control border border-tinta/30 p-3">
+              <div key={side} className="rounded-control border border-tinta/50 p-3">
                 <p className="font-semibold">{name}</p>
                 <div className="mt-1 grid grid-cols-5 gap-2">
                   {[0, 1, 2, 3, 4].map((i) => (
@@ -124,7 +150,7 @@ function FieldInput({ field: f, value, onChange, footType, onFootType, markers, 
         <fieldset><legend>{label}</legend>
           <div className="mt-1 flex gap-2">
             {([['Sí', true], ['No', false]] as const).map(([t, v]) => (
-              <label key={t} className={`flex min-h-touch cursor-pointer items-center gap-2 rounded-control border px-5 ${value === v ? 'border-violeta-oscuro bg-lila/50' : 'border-tinta/30'}`}>
+              <label key={t} className={`flex min-h-touch cursor-pointer items-center gap-2 rounded-control border px-5 ${value === v ? 'border-violeta-oscuro bg-lila/50' : 'border-tinta/50'}`}>
                 <input type="radio" name={id} checked={value === v} onChange={() => onChange(v)} />{t}
               </label>
             ))}
@@ -148,7 +174,7 @@ function FieldInput({ field: f, value, onChange, footType, onFootType, markers, 
             {f.options?.map((o) => {
               const on = cur.includes(o)
               return (
-                <label key={o} className={`flex min-h-touch cursor-pointer items-center gap-3 rounded-control border px-4 ${on ? 'border-violeta-oscuro bg-lila/50' : 'border-tinta/30'}`}>
+                <label key={o} className={`flex min-h-touch cursor-pointer items-center gap-3 rounded-control border px-4 ${on ? 'border-violeta-oscuro bg-lila/50' : 'border-tinta/50'}`}>
                   <input type="checkbox" className="size-5" checked={on} onChange={() => onChange(on ? cur.filter((x) => x !== o) : [...cur, o])} />{o}
                 </label>
               )
