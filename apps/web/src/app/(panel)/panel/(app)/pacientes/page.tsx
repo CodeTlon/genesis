@@ -17,7 +17,7 @@ export default async function Pacientes({ searchParams }: { searchParams: Promis
       </div>
       <form role="search" className="flex gap-2">
         <label className="sr-only" htmlFor="q">Buscar por nombre, DNI o teléfono</label>
-        <input id="q" name="q" defaultValue={q} placeholder="Buscar: nombre, apellido, DNI o teléfono" className="min-h-touch w-full max-w-xl flex-1 rounded-control border border-tinta/60 bg-white px-4 placeholder:text-tinta/60" />
+        <input id="q" name="q" defaultValue={q} placeholder="Buscar: nombre, apellido, DNI o teléfono" className="min-h-touch w-full max-w-xl flex-1 rounded-control border border-tinta/60 bg-white px-4 placeholder:text-tinta-suave" />
         <button className="min-h-touch rounded-control bg-violeta-oscuro px-5 font-semibold text-white">Buscar</button>
       </form>
       {rows.length === 0 ? (
@@ -27,7 +27,7 @@ export default async function Pacientes({ searchParams }: { searchParams: Promis
           {rows.map((p) => (
             <li key={p.id}>
               <Link href={`/panel/pacientes/${p.id}`} className="flex min-h-16 items-center justify-between gap-3 px-4 py-3 hover:bg-lila/30">
-                <span className="min-w-0"><span className="block text-lg font-semibold">{p.lastName}, {p.firstName}</span>{p.dni && <span className="block text-sm text-tinta/70">DNI {p.dni}</span>}</span>
+                <span className="min-w-0"><span className="block text-lg font-semibold">{p.lastName}, {p.firstName}</span>{p.dni && <span className="block text-base text-tinta-suave">DNI {p.dni}</span>}</span>
                 <AlertBadges alerts={p.alerts} compact max={3} />
               </Link>
             </li>

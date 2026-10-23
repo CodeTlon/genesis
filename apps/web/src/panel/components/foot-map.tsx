@@ -127,7 +127,7 @@ export function FootMap({ footType, onFootType, markers, onChange }: {
             </label>
           ))}
         </div>
-        <p className="mt-1 text-sm">{FOOT_TYPE_HINT[type]}</p>
+        <p className="mt-1 text-base">{FOOT_TYPE_HINT[type]}</p>
       </fieldset>
 
       <p className="mb-2 font-semibold">2. Tocá el pie donde quieras anotar algo</p>
@@ -142,9 +142,9 @@ export function FootMap({ footType, onFootType, markers, onChange }: {
         ))}
       </div>
       <div className="grid gap-2 md:grid-cols-2">{foot('left')}{foot('right')}</div>
-      <p className="mt-1 text-center text-sm">Con teclado: Tab para moverte y Enter para elegir una zona.</p>
+      <p className="mt-1 text-center text-base">Con teclado: Tab para moverte y Enter para elegir una zona.</p>
 
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm" aria-label="Referencias de color">
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-base" aria-label="Referencias de color">
         {([1, 2, 3] as const).map((s) => <li key={s} className="flex items-center gap-1"><span aria-hidden className="size-4 rounded-full border border-tinta/40" style={{ background: SEV_FILL[s] }} />{SEV_LABEL[s]} (a tratar)</li>)}
         <li className="flex items-center gap-1"><span aria-hidden className="size-4 rounded-full border border-tinta/40" style={{ background: TREATED_FILL }} />Tratado</li>
       </ul>
@@ -178,7 +178,7 @@ export function FootMap({ footType, onFootType, markers, onChange }: {
               ))}
             </div>
           </fieldset>
-          <label className="block font-semibold">Nota <span className="font-normal text-tinta/70">(opcional)</span>
+          <label className="block font-semibold">Nota <span className="font-normal text-tinta-suave">(opcional)</span>
             <input value={note} maxLength={300} placeholder="Ej: núcleo central, duele al apoyar" onChange={(e) => setNote(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 px-3 font-normal" />
           </label>
           <div className="flex flex-wrap gap-2">

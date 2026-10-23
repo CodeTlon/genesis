@@ -73,9 +73,9 @@ export function PhotoGrid({ photos, deletable }: { photos: Photo[]; deletable: s
               {/* eslint-disable-next-line @next/next/no-img-element -- ver arriba */}
               <img src={`/panel-media/${p.id}?t=thumb`} alt={`${PHOTO_KIND_LABEL[p.kind]}, ${day(p.takenAt)}`} loading="lazy" className="aspect-square w-full rounded-control object-cover" />
             </a>
-            <p className="mt-1 text-sm">{PHOTO_KIND_LABEL[p.kind]} · {day(p.takenAt)}</p>
+            <p className="mt-1 text-base">{PHOTO_KIND_LABEL[p.kind]} · {day(p.takenAt)}</p>
             {deletable.includes(p.id) && (
-              <button onClick={async () => { if (!confirm('¿Borrar esta foto?')) return; const r = await deletePhoto(p.id); if (r.ok) router.refresh(); else setErr(r.message) }} className="mt-1 min-h-touch text-sm text-red-900 underline">Borrar</button>
+              <button onClick={async () => { if (!confirm('¿Borrar esta foto?')) return; const r = await deletePhoto(p.id); if (r.ok) router.refresh(); else setErr(r.message) }} className="mt-1 min-h-touch text-base text-red-900 underline">Borrar</button>
             )}
           </li>
         ))}
@@ -96,12 +96,12 @@ export function Consents({ patientId, consents }: { patientId: string; consents:
         return (
           <li key={k} className="rounded-card bg-white p-4 shadow-soft">
             <p className="font-semibold">{CONSENT_LABEL[k]}: {active ? <span className="text-emerald-900">vigente desde {day(active.grantedAt)}</span> : <span className="text-amber-900">pendiente</span>}</p>
-            {active?.documentRef && <p className="text-sm">Documento: {active.documentRef}</p>}
+            {active?.documentRef && <p className="text-base">Documento: {active.documentRef}</p>}
             {active ? (
               <button onClick={async () => { if (!confirm('¿Revocar este consentimiento?')) return; const r = await revokeConsent(patientId, active.id); if (r.ok) router.refresh(); else setErr(r.message) }} className="mt-2 min-h-touch rounded-control border border-red-800 px-4 text-red-900">Revocar</button>
             ) : (
               <div className="mt-2 flex flex-wrap items-end gap-2">
-                <label className="block text-sm">Referencia del documento firmado (ej: ficha en papel, escaneo)
+                <label className="block text-base">Referencia del documento firmado (ej: ficha en papel, escaneo)
                   <input value={refs[k] ?? ''} maxLength={200} onChange={(e) => setRefs((p) => ({ ...p, [k]: e.target.value }))} className="mt-1 block min-h-touch w-64 max-w-full rounded-control border border-tinta/60 px-3" />
                 </label>
                 <button onClick={async () => { const r = await grantConsent(patientId, k, refs[k] ?? ''); if (r.ok) router.refresh(); else setErr(r.message) }} className="min-h-touch rounded-control bg-violeta-oscuro px-5 text-white">Registrar consentimiento</button>

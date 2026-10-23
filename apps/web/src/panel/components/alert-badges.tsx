@@ -47,7 +47,7 @@ export function AlertBadges({ alerts, compact = false, max = 2 }: { alerts: Aler
   return (
     <ul className="flex flex-wrap gap-1" aria-label="Alertas clínicas: requiere precaución">
       {alerts.map((a) => (
-        <li key={a} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-sm font-medium ring-1 ${TONE[a]}`}>
+        <li key={a} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-base font-medium ring-1 ${TONE[a]}`}>
           {ICON[a]}
           <span>{ALERT_LABEL[a]}</span>
         </li>

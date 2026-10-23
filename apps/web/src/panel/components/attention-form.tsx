@@ -8,7 +8,7 @@ import type { Field, Template } from '@/panel/lib/templates'
 import type { EntryPayload, FootMarker, FootType } from '@/panel/lib/types'
 
 type Values = EntryPayload
-const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4 placeholder:text-tinta/60'
+const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4 placeholder:text-tinta-suave'
 
 export function AttentionForm({ patientId, patientName, caseId, caseTitle, template, initial }: {
   patientId: string; patientName: string; caseId: string; caseTitle: string; template: Template; initial: Values
@@ -69,9 +69,9 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
           {advanced ? 'Ver menos campos' : 'Ver más campos (examen completo)'}
         </button>
       )}
-      <p className="text-sm">Una evolución firmada ya no se puede editar: se corrige con una adenda.</p>
-      <div className="sticky bottom-[3.75rem] z-20 -mx-4 border-t border-lila/50 bg-marmol/95 px-4 py-3 backdrop-blur md:bottom-0">
-        <p className="mb-2 text-sm" aria-live="polite">{error ? <span role="alert" className="text-red-800">{error}</span> : savedAt ? `Borrador guardado a las ${savedAt}.` : 'Se guarda solo mientras escribís.'}</p>
+      <p className="text-base">Una evolución firmada ya no se puede editar: se corrige con una adenda.</p>
+      <div className="sticky bottom-[var(--tabbar-h)] z-20 -mx-4 border-t border-lila/50 bg-marmol/95 px-4 py-3 backdrop-blur md:bottom-0">
+        <p className="mb-2 text-base" aria-live="polite">{error ? <span role="alert" className="text-red-800">{error}</span> : savedAt ? `Borrador guardado a las ${savedAt}.` : 'Se guarda solo mientras escribís.'}</p>
         <HoldButton onHold={sign} doneLabel="Firmada" holdTime={900} size="lg">Mantené presionado para firmar</HoldButton>
       </div>
     </form>
@@ -84,7 +84,7 @@ function FieldInput({ field: f, value, onChange, footType, onFootType, markers, 
 }) {
   const id = `f-${f.id}`
   const label = <span className="text-lg font-semibold">{f.label}{f.unit ? ` (${f.unit})` : ''}</span>
-  const hint = f.hint ? <span className="block text-sm">{f.hint}</span> : null
+  const hint = f.hint ? <span className="block text-base">{f.hint}</span> : null
   const ph = f.placeholder
   switch (f.type) {
     case 'footmap':

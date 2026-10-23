@@ -42,7 +42,7 @@ export default async function Ficha({ params }: { params: Promise<{ id: string }
               <li key={c.id}>
                 <Link href={`/panel/pacientes/${id}/casos/${c.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-lila/30">
                   <span className="text-lg font-semibold">{c.title}</span>
-                  <span className="text-sm">{c.status === 'open' ? 'Abierto' : 'Cerrado'} · desde {day(c.openedAt)}</span>
+                  <span className="text-base">{c.status === 'open' ? 'Abierto' : 'Cerrado'} · desde {day(c.openedAt)}</span>
                 </Link>
               </li>
             ))}
