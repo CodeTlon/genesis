@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { BackBar } from '@/panel/components/back-link'
 import { notFound, redirect } from 'next/navigation'
 import { AlertBadges } from '@/panel/components/alert-badges'
 import { AttentionForm } from '@/panel/components/attention-form'
@@ -16,7 +16,7 @@ export default async function Atencion({ params }: { params: Promise<{ id: strin
   if (c.status === 'closed') redirect(`/panel/pacientes/${id}/casos/${caseId}`)
   return (
     <div className="space-y-6">
-      <Link href={`/panel/pacientes/${id}/casos/${caseId}`} className="underline">← {c.title}</Link>
+      <BackBar trail={[{ href: '/panel/pacientes', label: 'Pacientes' }, { href: `/panel/pacientes/${id}`, label: `${p.firstName} ${p.lastName}` }, { href: `/panel/pacientes/${id}/casos/${caseId}`, label: c.title }]} />
       <h1 className="text-3xl">Nueva evolución · {p.firstName} {p.lastName}</h1>
       <AlertBadges alerts={p.alerts} />
       <AttentionForm patientId={id} patientName={`${p.firstName} ${p.lastName}`} caseId={caseId} caseTitle={c.title} template={TEMPLATE} initial={{}} />

@@ -1,70 +1,127 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { AlertBadges } from '@/panel/components/alert-badges'
+import { BackBar } from '@/panel/components/back-link'
+import { Editable } from '@/panel/components/editable'
 import { AntecedentesForm, OpenCaseForm, PatientForm } from '@/panel/components/forms'
 import { Consents } from '@/panel/components/photos'
+import { Tabs } from '@/panel/components/tabs'
 import { audit, requireUser } from '@/panel/lib/auth-server'
 import * as repo from '@/panel/lib/repo'
+import { ANTECEDENTE_ITEMS, type Antecedentes, type Patient } from '@/panel/lib/types'
 
 export const dynamic = 'force-dynamic'
 
 const day = (iso: string) => iso.slice(0, 10).split('-').reverse().join('/')
+const TABS = ['casos', 'antecedentes', 'datos', 'consentimientos'] as const
+type Tab = (typeof TABS)[number]
 
-export default async function Ficha({ params }: { params: Promise<{ id: string }> }) {
+const ageOf = (birth: string) => {
+  if (!birth) return ''
+  const b = new Date(birth)
+  const n = new Date()
+  let a = n.getFullYear() - b.getFullYear()
+  if (n.getMonth() < b.getMonth() || (n.getMonth() === b.getMonth() && n.getDate() < b.getDate())) a--
+  return a >= 0 ? `${a} años` : ''
+}
+
+function Row({ label, value }: { label: string; value?: string }) {
+  return <div><dt className="text-base text-tinta-suave">{label}</dt><dd className="text-lg">{value || <span className="text-tinta-suave">Sin dato</span>}</dd></div>
+}
+
+function PatientSummary({ p }: { p: Patient }) {
+  return (
+    <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+      <Row label="DNI" value={p.dni} />
+      <Row label="Fecha de nacimiento" value={p.birthDate && `${day(p.birthDate)} (${ageOf(p.birthDate)})`} />
+      <Row label="Teléfono" value={p.phone} />
+      <Row label="Domicilio" value={p.address} />
+      <Row label="Obra social / prepaga" value={p.insurance} />
+      <Row label="Contacto de emergencia" value={p.emergencyContact} />
+      {p.guardian && <Row label="Responsable" value={p.guardian} />}
+      <Row label="Ocupación" value={p.occupation} />
+    </dl>
+  )
+}
+
+function AntecedentesSummary({ a }: { a: Antecedentes | null }) {
+  if (!a) return <p className="text-lg">Todavía no se cargaron antecedentes.</p>
+  const marked = ANTECEDENTE_ITEMS.filter((i) => a.flags[i.id])
+  return (
+    <div className="space-y-3">
+      {marked.length === 0 ? <p className="text-lg">Sin antecedentes marcados.</p> : (
+        <ul className="flex flex-wrap gap-2">
+          {marked.map((i) => <li key={i.id} className={`rounded-full px-4 py-1.5 text-base font-semibold ring-1 ${i.alert ? 'bg-aviso-fondo text-aviso-texto ring-aviso-texto/30' : 'bg-white ring-tinta/30'}`}>{i.label}</li>)}
+        </ul>
+      )}
+      {a.medication && <p><span className="text-tinta-suave">Medicación:</span> {a.medication}</p>}
+      <p className="text-base text-tinta-suave">Versión {a.version}, guardada el {new Date(a.createdAt).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Cordoba' })}.</p>
+    </div>
+  )
+}
+
+export default async function Ficha({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string }> }) {
   const user = await requireUser()
   const { id } = await params
+  const { tab: rawTab } = await searchParams
+  const tab: Tab = TABS.includes(rawTab as Tab) ? (rawTab as Tab) : 'casos'
   const p = await repo.getPatient(id)
   if (!p) notFound()
   const [ant, cases, consents] = await Promise.all([repo.latestAntecedentes(id), repo.listCases(id), repo.listConsents(id)])
   await audit(user.id, 'view_patient', 'patient', id)
+  const openCase = cases.find((c) => c.status === 'open')
+  const base = `/panel/pacientes/${id}`
+  const meta = [ageOf(p.birthDate), p.phone].filter(Boolean).join(' · ')
   return (
-    <div className="space-y-8">
-      <div>
-        <Link href="/panel/pacientes" className="underline">← Pacientes</Link>
-        <h1 className="mt-2 text-3xl">{p.firstName} {p.lastName}</h1>
-        <div className="mt-2"><AlertBadges alerts={p.alerts} /></div>
-        <div className="mt-3 flex flex-wrap gap-3">
-          <Link href={`/panel/pacientes/${id}/historia`} className="inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro">Historia clínica completa (imprimir / PDF)</Link>
+    <div className="space-y-6">
+      <BackBar trail={[{ href: '/panel/pacientes', label: 'Pacientes' }]} />
+      <header className="space-y-3">
+        <h1 className="text-3xl">{p.firstName} {p.lastName}</h1>
+        {meta && <p className="text-lg text-tinta-suave">{meta}</p>}
+        <AlertBadges alerts={p.alerts} />
+        <div className="flex flex-wrap gap-3 pt-1">
+          {openCase
+            ? <Link href={`${base}/casos/${openCase.id}/atencion`} className="inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-6 font-semibold text-white hover:bg-tinta">Nueva atención</Link>
+            : <Link href={`${base}?tab=casos`} className="inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-6 font-semibold text-white hover:bg-tinta">Abrir un caso</Link>}
+          <Link href={`${base}/historia`} className="inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-5 font-semibold text-violeta-oscuro hover:bg-lila/40">Historia clínica (imprimir / PDF)</Link>
         </div>
-      </div>
+      </header>
 
-      <nav aria-label="Secciones de la ficha" className="sticky top-0 z-20 -mx-4 flex gap-2 overflow-x-auto bg-marmol/95 px-4 py-2 backdrop-blur print:hidden">
-        {[['casos', 'Casos'], ['ant', 'Antecedentes'], ['cons', 'Consentimientos'], ['datos', 'Datos personales']].map(([a, t]) => (
-          <a key={a} href={`#${a}`} className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-violeta-oscuro bg-white px-4 font-semibold text-violeta-oscuro">{t}</a>
-        ))}
-      </nav>
+      <Tabs base={base} current={tab} items={[{ id: 'casos', label: 'Casos', badge: cases.length }, { id: 'antecedentes', label: 'Antecedentes' }, { id: 'datos', label: 'Datos' }, { id: 'consentimientos', label: 'Consentimientos' }]} />
 
-      <section aria-labelledby="casos" className="space-y-3">
-        <h2 id="casos" className="scroll-mt-20 text-2xl font-semibold">Casos y tratamientos</h2>
-        {cases.length === 0 ? <p>Todavía no hay casos. Abrí el primero (por ejemplo: uñero pie derecho) para empezar a registrar evoluciones.</p> : (
-          <ul className="divide-y divide-lila/50 rounded-card bg-white shadow-soft">
-            {cases.map((c) => (
-              <li key={c.id}>
-                <Link href={`/panel/pacientes/${id}/casos/${c.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-lila/30">
-                  <span className="text-lg font-semibold">{c.title}</span>
-                  <span className="text-sm">{c.status === 'open' ? 'Abierto' : 'Cerrado'} · desde {day(c.openedAt)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+      <div key={tab} role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} tabIndex={0} className="g-enter space-y-4 outline-offset-4">
+        {tab === 'casos' && (
+          <>
+            {cases.length === 0 ? <p className="rounded-card bg-white p-6 text-lg shadow-soft">Todavía no hay casos. Abrí el primero (por ejemplo: uñero pie derecho) para empezar a registrar evoluciones.</p> : (
+              <ul className="g-stagger divide-y divide-lila/50 rounded-card bg-white shadow-soft">
+                {cases.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`${base}/casos/${c.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-lila/30">
+                      <span className="text-lg font-semibold">{c.title}</span>
+                      <span className={`rounded-full px-3 py-0.5 text-base font-semibold ${c.status === 'open' ? 'bg-ok-fondo text-ok-texto' : 'bg-white text-tinta-suave ring-1 ring-tinta/30'}`}>{c.status === 'open' ? 'Abierto' : 'Cerrado'} · desde {day(c.openedAt)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <details className="g-acc rounded-card bg-white p-4 shadow-soft">
+              <summary className="flex min-h-touch items-center justify-between text-lg font-semibold text-violeta-oscuro">Abrir un caso nuevo<svg aria-hidden viewBox="0 0 24 24" className="g-chev size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg></summary>
+              <div className="mt-3"><OpenCaseForm patientId={id} /></div>
+            </details>
+          </>
         )}
-        <details className="rounded-card bg-white p-4 shadow-soft"><summary className="flex min-h-touch cursor-pointer items-center text-lg font-semibold text-violeta-oscuro">+ Abrir un caso nuevo</summary><div className="mt-3"><OpenCaseForm patientId={id} /></div></details>
-      </section>
-
-      <section aria-labelledby="ant" className="space-y-3">
-        <h2 id="ant" className="scroll-mt-20 text-2xl font-semibold">Antecedentes</h2>
-        <div className="rounded-card bg-white p-5 shadow-soft"><AntecedentesForm patientId={id} current={ant} /></div>
-      </section>
-
-      <section aria-labelledby="cons" className="space-y-3">
-        <h2 id="cons" className="scroll-mt-20 text-2xl font-semibold">Consentimientos</h2>
-        <Consents patientId={id} consents={consents} />
-      </section>
-
-      <section aria-labelledby="datos" className="space-y-3">
-        <h2 id="datos" className="scroll-mt-20 text-2xl font-semibold">Datos personales</h2>
-        <div className="rounded-card bg-white p-5 shadow-soft"><PatientForm patient={p} /></div>
-      </section>
+        {tab === 'antecedentes' && (
+          <div className="rounded-card bg-white p-5 shadow-soft">
+            <Editable summary={<AntecedentesSummary a={ant} />} editLabel="Editar antecedentes"><AntecedentesForm patientId={id} current={ant} /></Editable>
+          </div>
+        )}
+        {tab === 'datos' && (
+          <div className="rounded-card bg-white p-5 shadow-soft">
+            <Editable summary={<PatientSummary p={p} />} editLabel="Editar datos"><PatientForm patient={p} /></Editable>
+          </div>
+        )}
+        {tab === 'consentimientos' && <Consents patientId={id} consents={consents} />}
+      </div>
     </div>
   )
 }

@@ -1,19 +1,31 @@
 'use client'
-import { useActionState } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
+import { useResultToast } from './toast'
+import { useEditDone } from './editable'
 import { closeCase, openCase, saveAntecedentes, updatePatient, createPatient, type Res } from '@/panel/lib/actions'
 import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type Antecedentes, type Case, type Patient } from '@/panel/lib/types'
 
-const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4 font-normal placeholder:text-tinta/60'
+const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4 font-normal placeholder:text-tinta-suave'
 const primary = 'min-h-touch w-full rounded-control bg-violeta-oscuro px-8 text-lg font-semibold text-white transition-colors hover:bg-tinta disabled:opacity-60 sm:w-auto'
 const legend = 'text-lg font-semibold text-violeta-oscuro'
-const choice = 'flex min-h-touch cursor-pointer items-center gap-3 rounded-control border border-tinta/30 bg-white px-4 has-[:checked]:border-violeta-oscuro has-[:checked]:bg-lila/50'
+const choice = 'flex min-h-touch cursor-pointer items-center gap-3 rounded-control border border-tinta/50 bg-white px-4 has-[:checked]:border-violeta-oscuro has-[:checked]:bg-lila/50'
 
+/** Éxito: toast breve. Error: aviso fijo que recibe el foco para que se lea de inmediato (el servidor devuelve un solo mensaje, no uno por campo). */
 function Status({ state }: { state: Res | null }) {
-  if (!state) return null
-  return state.ok ? <p role="status" className="rounded-control bg-emerald-100 p-3 text-emerald-950">Guardado.</p> : <p role="alert" className="rounded-control bg-red-100 p-3 text-red-950">{state.message}</p>
+  useResultToast(state && state.ok ? state : null)
+  const done = useEditDone()
+  useEffect(() => { if (state?.ok) done() }, [state, done])
+  const ref = useRef<HTMLParagraphElement>(null)
+  useEffect(() => { if (state && !state.ok) ref.current?.focus() }, [state])
+  if (!state || state.ok) return null
+  return <p ref={ref} tabIndex={-1} role="alert" className="rounded-control bg-error-fondo p-3 font-semibold text-error-texto outline-offset-2">{state.message}</p>
 }
 
-const Optional = () => <span className="font-normal text-tinta/70"> (opcional)</span>
+function Submit({ pending, children, pendingText = 'Guardando...' }: { pending: boolean; children: React.ReactNode; pendingText?: string }) {
+  return <button disabled={pending} className={primary}>{pending ? <><span className="g-spinner mr-2" aria-hidden />{pendingText}</> : children}</button>
+}
+
+const Optional = () => <span className="font-normal text-tinta-suave"> (opcional)</span>
 
 type FieldProps = { label: string; name: string; defaultValue?: string; type?: string; required?: boolean; autoComplete?: string; max?: number; placeholder?: string; inputMode?: 'text' | 'decimal' | 'tel' | 'numeric' }
 const Field = ({ label, name, defaultValue, type = 'text', required, autoComplete, max, placeholder, inputMode }: FieldProps) => (
@@ -68,7 +80,7 @@ export function PatientForm({ patient }: { patient?: Patient }) {
         </div>
       </fieldset>
       <Status state={state} />
-      <button disabled={pending} className={primary}>{patient ? 'Guardar datos' : 'Crear paciente'}</button>
+      <Submit pending={pending}>{patient ? 'Guardar datos' : 'Crear paciente'}</Submit>
     </form>
   )
 }
@@ -79,7 +91,7 @@ export function AntecedentesForm({ patientId, current }: { patientId: string; cu
   const group = (title: string, hint: string, items: typeof ANTECEDENTE_ITEMS) => (
     <fieldset>
       <legend className={legend}>{title}</legend>
-      <p className="text-sm">{hint}</p>
+      <p className="text-base text-tinta-suave">{hint}</p>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         {items.map((it) => (
           <label key={it.id} className={choice}>
@@ -115,8 +127,8 @@ export function AntecedentesForm({ patientId, current }: { patientId: string; cu
         <Area label="Otros antecedentes y notas" name="notes" defaultValue={current?.notes} rows={3} max={4000} placeholder="Cualquier dato que quieras recordar" />
       </fieldset>
       <Status state={state} />
-      <button disabled={pending} className={primary}>Guardar antecedentes</button>
-      {current && <p className="text-sm">Versión {current.version}, guardada el {new Date(current.createdAt).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Cordoba' })}. Cada guardado crea una versión nueva.</p>}
+      <Submit pending={pending}>Guardar antecedentes</Submit>
+      {current && <p className="text-base text-tinta-suave">Versión {current.version}, guardada el {new Date(current.createdAt).toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Cordoba' })}. Cada guardado crea una versión nueva.</p>}
     </form>
   )
 }
@@ -128,7 +140,7 @@ export function OpenCaseForm({ patientId }: { patientId: string }) {
       <Field label="Título del caso" name="title" required max={120} placeholder="Ej: uñero pie derecho" />
       <Area label="Motivo de consulta" name="reason" max={2000} placeholder="Qué le molesta al paciente, desde cuándo y qué hizo hasta ahora" />
       <Status state={state} />
-      <button disabled={pending} className={primary}>Abrir caso</button>
+      <Submit pending={pending}>Abrir caso</Submit>
     </form>
   )
 }
@@ -140,7 +152,7 @@ export function CloseCaseForm({ c }: { c: Case }) {
       <Area label="Conclusión" name="conclusion" rows={3} required max={4000} placeholder="Cómo terminó el tratamiento y cómo quedó el paciente" />
       <Area label="Sugerencias para el paciente" name="suggestions" rows={3} max={4000} placeholder="Cuidados para hacer en casa, cuándo volver" />
       <Status state={state} />
-      <button disabled={pending} className={primary}>Cerrar caso</button>
+      <Submit pending={pending}>Cerrar caso</Submit>
     </form>
   )
 }

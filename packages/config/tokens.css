@@ -6,6 +6,13 @@
   --color-malva: #ac9bb0;            /* usar texto tinta encima (6.69:1) */
   --color-tinta: #1a1a1a;
   --color-marmol: #f4f3f5;
+  --color-tinta-suave: #4a4650;      /* texto secundario: 8.4:1 sobre blanco, 7.6:1 sobre marmol */
+
+  /* Estados semánticos (fondo claro + texto oscuro, AA) */
+  --color-ok-fondo: #dcf3e4;   --color-ok-texto: #0f4a27;
+  --color-aviso-fondo: #fdf0cf; --color-aviso-texto: #5c3d00;
+  --color-error-fondo: #fde2e2; --color-error-texto: #7a1414;
+  --color-info-fondo: #dff0fb;  --color-info-texto: #0b4262;
 
   --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-cormorant), Georgia, 'Times New Roman', serif;
@@ -15,7 +22,11 @@
   --radius-control: 0.875rem;
   --shadow-soft: 0 8px 30px -12px rgb(123 63 184 / 0.25);
   --spacing-touch: 3rem;             /* botones >= 48px */
+  --ease-out: cubic-bezier(.22, .8, .24, 1);
 }
+
+/* Alto del tab bar móvil: lo usan el layout y las barras fijas (firma) para apilarse sin valores mágicos. */
+:root { --tabbar-h: calc(3.75rem + env(safe-area-inset-bottom, 0px)); color-scheme: light; }
 
 :root { --background: var(--color-marmol); --foreground: var(--color-tinta); }
 
@@ -24,12 +35,51 @@ body { background: var(--background); color: var(--foreground); font-family: var
 input, select, textarea { font-size: 1rem; } /* evita el zoom automático en iPhone y mantiene el texto legible */
 label { line-height: 1.35; }
 :focus-visible { outline: 3px solid var(--color-violeta-oscuro); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+/* Reduced motion: se quita el desplazamiento y el escalado, pero se conserva un fundido corto como feedback de estado. */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  .g-skeleton { animation: none !important; }
+  html { interpolate-size: initial; }
+}
+html { interpolate-size: allow-keywords; }
 
 /* Movimiento: transiciones suaves en controles y entrada de página. Se anulan con prefers-reduced-motion (regla de arriba). */
 a, button, summary, input, select, textarea { transition: color .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .2s ease, opacity .15s ease, transform .15s ease; }
 button:not(:disabled):active, a[class*="bg-"]:active { transform: scale(0.98); }
 button:disabled { cursor: not-allowed; opacity: .6; }
+
+/* Toasts: aparecen abajo (arriba del tab bar en móvil), sin bloquear la pantalla. */
+.g-toasts { position: fixed; z-index: 60; left: 1rem; right: 1rem; bottom: calc(var(--tabbar-h) + .75rem); display: flex; flex-direction: column; gap: .5rem; align-items: center; pointer-events: none; }
+@media (min-width: 768px) { .g-toasts { bottom: 1.5rem; align-items: flex-end; } }
+.g-toast { pointer-events: auto; display: flex; align-items: center; gap: .75rem; max-width: 28rem; width: 100%; border-radius: var(--radius-control); padding: .875rem 1rem; box-shadow: 0 10px 30px rgb(0 0 0 / .18); animation: g-toast-in .25s var(--ease-out) both; }
+.g-toast[data-leaving] { animation: g-toast-out .2s ease-in both; }
+@keyframes g-toast-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes g-toast-out { to { opacity: 0; transform: translateY(8px); } }
+
+/* Acordeón nativo (<details>) con apertura animada. */
+details.g-acc::details-content { block-size: 0; overflow: clip; transition: block-size .25s var(--ease-out), content-visibility .25s allow-discrete; }
+details.g-acc[open]::details-content { block-size: auto; }
+details.g-acc > summary { list-style: none; cursor: pointer; }
+details.g-acc > summary::-webkit-details-marker { display: none; }
+details.g-acc > summary .g-chev { transition: transform .2s var(--ease-out); }
+details.g-acc[open] > summary .g-chev { transform: rotate(180deg); }
+
+/* Hoja inferior (mapa de pies en móvil) y panel lateral en escritorio. */
+@keyframes g-sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes g-pop-in { from { opacity: 0; transform: scale(.97) translateY(6px); } to { opacity: 1; transform: none; } }
+.g-sheet { animation: g-sheet-in .28s var(--ease-out) both; }
+@media (min-width: 768px) { .g-sheet { animation: g-pop-in .2s var(--ease-out) both; } }
+
+/* Transición entre páginas (View Transitions API, solo si el navegador la soporta). */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: .15s ease-in both g-vt-out; }
+::view-transition-new(root) { animation: .25s var(--ease-out) both g-vt-in; }
+@keyframes g-vt-out { to { opacity: 0; } }
+@keyframes g-vt-in { from { opacity: 0; } }
+
+/* Botón en espera: spinner chico */
+@keyframes g-spin { to { transform: rotate(360deg); } }
+.g-spinner { display: inline-block; width: 1rem; height: 1rem; border: 2px solid currentColor; border-right-color: transparent; border-radius: 9999px; animation: g-spin .7s linear infinite; vertical-align: -.15em; }
 @keyframes g-fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 /* Entrada de página: solo movimiento (sin opacidad), así el contraste del texto nunca queda a medias. */
 @keyframes g-rise { from { transform: translateY(8px); } to { transform: none; } }

@@ -123,3 +123,12 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **"Romano" = cuadrado/polinesio** es una suposición a confirmar con Inés.
 - **Sin 2FA por ahora** (decisión de Mateo, 22/10): sigue en Pendiente junto con la rotación de la clave de cifrado.
 - La rama `feature/sdd-historias-clinicas` conserva una implementación paralela (modelo `hc_*`, mejora visual) hecha sobre una base anterior; queda como referencia, no se mergea.
+
+## ADR-018 UX para usuarias +35: ficha en pestañas, toasts y mapa en hoja modal (23/10/2026)
+- **Qué:** la ficha pasa de una página larga a pestañas (Casos, Antecedentes, Datos, Consentimientos) con la pestaña en `?tab=`; antecedentes y datos se leen primero y se editan con un botón "Editar". La lista filtra en vivo (debounce 250 ms, con fallback GET sin JS) y pagina de a 25. Los avisos de "Guardado" son toasts; los errores quedan fijos y reciben el foco.
+- **Mapa de pies:** zonas con área de toque ampliada (>= 44 px), la edición de la zona abre un `<dialog>` modal (hoja inferior en celular, ventana centrada en escritorio) con Escape y foco que vuelve a la zona; la gravedad se ve también como número o tilde, no solo por color; miniatura de solo lectura en evoluciones firmadas e historia.
+- **Firma:** se mantiene "mantener presionado" y se suma un botón "Firmar" con confirmación explícita (alternativa para temblor o movilidad reducida). Aviso del navegador si se cierra con cambios sin guardar.
+- **Movimiento:** solo CSS nativo (sin librería): View Transitions entre páginas, acordeón con `::details-content`, entrada de hoja/toast. `prefers-reduced-motion` quita el movimiento y conserva los cambios de color.
+- **Tokens:** estados semánticos (`ok`, `aviso`, `error`, `info`) y `tinta-suave` (8.4:1) para texto secundario; mínimo 16 px en texto de datos.
+- **Despliegue:** Dockerfile en Node 24 (igual que el CI) y job de CI que construye la imagen.
+- **Pendiente de validar con Inés:** si prefiere la firma de un toque como principal, y el orden de las pestañas.

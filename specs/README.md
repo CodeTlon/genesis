@@ -8,10 +8,10 @@ Método: SDD CodeTlon (`sdd: v1`). Validador: `node scripts/spec-lint.mjs` (corr
 
 | Capacidad | Archivo | REQ | Estado |
 |-----------|---------|-----|--------|
-| PAC pacientes | `pacientes/spec.md` | 3 | vigente |
+| PAC pacientes | `pacientes/spec.md` | 5 | vigente |
 | ANT antecedentes y alertas | `antecedentes/spec.md` | 3 | vigente |
 | CAS casos | `casos/spec.md` | 1 | vigente |
-| EVO evoluciones | `evoluciones/spec.md` | 5 | vigente |
+| EVO evoluciones | `evoluciones/spec.md` | 7 | vigente |
 | FOT fotos clínicas | `fotos/spec.md` | 3 | vigente |
 | SEG seguridad | `seguridad/spec.md` | 5 | vigente (1 gap) |
 

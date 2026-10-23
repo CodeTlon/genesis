@@ -21,6 +21,14 @@ npm run dev -w @genesis/web
 ```
 `npm run build` y luego `npm run test:e2e` (levanta la app en :3000 con secretos de prueba; necesita la base migrada).
 
+## Despliegue en Coolify
+1. Recurso **Docker Compose** apuntando a `docker-compose.coolify.yml` (la rama `main`; `test` para pruebas).
+2. En el servicio `app` asignar el dominio (puerto 3000) con HTTPS (Let's Encrypt). El proxy debe pasar `x-forwarded-for` (el bloqueo de intentos de login depende de eso, ADR-014).
+3. Variables (ver `.env.example`; **nunca** al repo): `DATABASE_URL`, `POSTGRES_PASSWORD`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL=https://<dominio>`, `CLINICAL_DATA_ENCRYPTION_KEY`. Guardar la clave de cifrado **aparte** del backup: si se pierde, los datos son irrecuperables.
+4. Crear el primer usuario con `scripts/crear-usuario.mjs` desde la terminal del contenedor.
+5. Programar `scripts/backup.sh` (cron del host) y hacer el simulacro de `scripts/restaurar.sh`; registrarlo en `docs/restauraciones.md`.
+6. Prueba de humo: `/api/health`, login, crear un paciente ficticio.
+
 ## Ramas y entornos
 `feature/<origen>-<tarea>` → PR a `dev` → `test` → `main`. Producción en Coolify con `docker-compose.coolify.yml`; variables en `.env.example`.
 
@@ -28,3 +36,4 @@ npm run dev -w @genesis/web
 - **2026-10-21** — Se elimina el sitio público y el CMS (ADR-016): el producto es solo historias clínicas.
 - **2026-10-21** — Pasa de demo a proyecto real: Postgres, login real, cifrado de campos clínicos, antecedentes, casos, mapa de pies v2, fotos privadas, consentimientos, auditoría, Docker/Coolify y backups.
 - 23/10: specs SDD (S2) + CI; ficha completa de Inés (datos, 18 antecedentes, diabetes, examen por pie, patologías por dedo, control).
+- 23/10: UX para usuarias +35 (ADR-018): ficha en pestañas con lectura/edición, lista con búsqueda en vivo, toasts, mapa de pies en hoja modal con insignias de gravedad, firma de un toque, transiciones CSS y esqueletos por pantalla. Dockerfile en Node 24 y CI construye la imagen.

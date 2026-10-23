@@ -26,7 +26,7 @@ export default async function Historia({ params }: { params: Promise<{ id: strin
         <p>{p.address || '—'} · {p.occupation || '—'} · {p.insurance || 'Sin cobertura informada'}</p>
         <p>Contacto de emergencia: {p.emergencyContact || '—'}</p>
         <p>{[p.nationality, p.sex, p.heightCm && `${p.heightCm} cm`, p.weightKg && `${p.weightKg} kg`, p.bloodGroup && `Grupo ${p.bloodGroup}`, p.firstVisit && `Primera consulta ${p.firstVisit.split('-').reverse().join('/')}`].filter(Boolean).join(' · ') || '—'}</p>
-        <p className="text-sm">Emitida el {day(new Date().toISOString())} por {user.name}{user.licenseNo ? ` (M.P. ${user.licenseNo})` : ''}.</p>
+        <p className="text-base">Emitida el {day(new Date().toISOString())} por {user.name}{user.licenseNo ? ` (M.P. ${user.licenseNo})` : ''}.</p>
       </header>
       <section><h2 className="text-xl">Antecedentes</h2>
         {ant ? (<>

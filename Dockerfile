@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM node:20-alpine AS deps
+FROM node:24-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/web/package.json apps/web/
@@ -8,14 +8,14 @@ COPY packages/db/package.json packages/db/
 COPY packages/ui/package.json packages/ui/
 RUN npm ci --legacy-peer-deps
 
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/ ./
 COPY . .
 # El build NO necesita la base ni los secretos (las páginas con datos son dinámicas).
 RUN npm run build
 
-FROM node:20-alpine AS run
+FROM node:24-alpine AS run
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 PHOTOS_DIR=/data/storage/clinico NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
 RUN apk add --no-cache tini && addgroup -S app && adduser -S app -G app && mkdir -p /data/storage/clinico && chown -R app:app /data

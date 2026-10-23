@@ -33,6 +33,8 @@ test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-
   patientUrl = await newPatient(page, 'Paciente', `Ficticia ${RUN}`)
 
   // Antecedentes: marcar diabetes genera una alerta visible en la cabecera
+  await page.goto(`${patientUrl}?tab=antecedentes`)
+  await page.getByRole('button', { name: 'Editar antecedentes' }).click()
   await page.getByLabel(/^Diabetes/).check()
   await page.getByLabel('Otros antecedentes y notas (opcional)').fill(`Nota-antecedente-${RUN}`)
   await page.getByRole('button', { name: 'Guardar antecedentes' }).click()
@@ -41,6 +43,7 @@ test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-
   await expect(page.getByRole('list', { name: /Alertas clínicas/ }).getByText('Diabetes')).toBeVisible()
 
   // Sin consentimiento de fotos no se puede subir
+  await page.goto(patientUrl)
   await page.getByText('Abrir un caso nuevo').click()
   await page.getByLabel(/Título del caso/).fill('Uñero pie derecho')
   await page.getByLabel(/Motivo de consulta/).fill(MOTIVO)
@@ -50,7 +53,7 @@ test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-
   await expect(page.getByText(/primero registrá el consentimiento de fotos/)).toBeVisible()
 
   // Registrar consentimiento de fotos y subir la foto inicial
-  await page.goto(patientUrl)
+  await page.goto(`${patientUrl}?tab=consentimientos`)
   await page.locator('li', { hasText: 'Uso de fotos clínicas' }).getByLabel(/Referencia del documento/).fill('Ficha en papel')
   await page.locator('li', { hasText: 'Uso de fotos clínicas' }).getByRole('button', { name: 'Registrar consentimiento' }).click()
   await expect(page.locator('li', { hasText: 'Uso de fotos clínicas' })).toContainText('vigente')

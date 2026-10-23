@@ -28,17 +28,17 @@ export function EntryView({ entry }: { entry: Entry }) {
     <article className="rounded-card bg-white p-5 shadow-soft">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-lg">{fmt(entry.createdAt)} · {entry.author}</h3>
-        <span className={`rounded-full px-3 py-0.5 text-sm ring-1 ${signed ? 'bg-emerald-100 text-emerald-950 ring-emerald-700/40' : 'bg-amber-100 text-amber-950 ring-amber-700/40'}`}>{signed ? `Firmada ${fmt(entry.signedAt!)}` : 'Borrador'}</span>
+        <span className={`rounded-full px-3 py-0.5 text-base ring-1 ${signed ? 'bg-emerald-100 text-emerald-950 ring-emerald-700/40' : 'bg-amber-100 text-amber-950 ring-amber-700/40'}`}>{signed ? `Firmada ${fmt(entry.signedAt!)}` : 'Borrador'}</span>
       </header>
       <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
-        {fields.map((f) => <div key={f.id}><dt className="text-sm text-tinta/70">{f.label}</dt><dd>{show(entry.payload[f.id])}{f.unit ? ` ${f.unit}` : ''}</dd></div>)}
+        {fields.map((f) => <div key={f.id}><dt className="text-base text-tinta-suave">{f.label}</dt><dd>{show(entry.payload[f.id])}{f.unit ? ` ${f.unit}` : ''}</dd></div>)}
       </dl>
       <div className="mt-3"><MarkersSummary footType={entry.payload.footType} markers={(entry.payload.markers ?? []) as FootMarker[]} /></div>
 
       {entry.addenda.length > 0 && (
         <section className="mt-4 space-y-2 border-t border-lila/50 pt-3" aria-label="Adendas">
           <h4 className="font-semibold">Adendas</h4>
-          {entry.addenda.map((a) => <p key={a.id} className="rounded-control bg-lila/30 p-3"><span className="block text-sm text-tinta/70">{fmt(a.at)} · {a.author} · {a.reason}</span>{a.text}</p>)}
+          {entry.addenda.map((a) => <p key={a.id} className="rounded-control bg-lila/30 p-3"><span className="block text-base text-tinta-suave">{fmt(a.at)} · {a.author} · {a.reason}</span>{a.text}</p>)}
         </section>
       )}
 
