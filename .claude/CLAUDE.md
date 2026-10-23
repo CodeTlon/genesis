@@ -11,10 +11,11 @@ Sistema de historias clínicas de podología para Inés (Genesis Estética Integ
 - `CLINICAL_DATA_ENCRYPTION_KEY` jamás en el repo ni en el backup de la base; si se pierde, los datos son irrecuperables.
 
 ## Stack y comandos
-Next 16.4.2 + React 19.3.1 + Tailwind v4 + Better Auth + Drizzle (consultas) + Postgres 17, Turborepo (npm, instalar con `--legacy-peer-deps`). Postgres local en **:5433**. `npm run build`, `npm run test:e2e` (requiere build y base migrada). Usuarios: `scripts/crear-usuario.mjs`. Decisiones en `docs/decisiones.md` (ADR-012…016).
+Next 16.4.2 + React 19.3.1 + Tailwind v4 + Better Auth + Drizzle (consultas) + Postgres 17, Turborepo (npm, instalar con `--legacy-peer-deps`). Postgres local en **:5433**. `npm run build`, `npm run test:e2e` (requiere build y base migrada; en la VPS usar `CHROMIUM_PATH=/opt/playwright/chromium-*/chrome-linux-arm64/chrome` y una base en el rango de puertos propio). Capturas: `CAPTURAS=1 npx playwright test capturas` -> `screenshots/`. Usuarios: `scripts/crear-usuario.mjs`. Decisiones en `docs/decisiones.md` (ADR-012…018).
 
 ## Mapa
 - `apps/web/src/panel/lib`: `repo.ts` (datos, cifra y descifra), `actions.ts` (Server Actions: sesión + zod + auditoría), `crypto.ts`, `photos.ts`, `auth-server.ts` (`requireUser`, `audit`), `types.ts`, `templates.ts`.
+- `panel/components`: `tabs.tsx` (pestañas por `?tab=`), `editable.tsx` (lectura/edición), `toast.tsx`, `back-link.tsx` (BackBar), `patient-search.tsx`; el mapa edita zonas en un `<dialog>` (hoja en móvil).
 - `apps/web/src/app/(panel)/panel/(app)/pacientes/**`: lista, ficha, casos, evolución, historia imprimible. `app/panel-media/[photoId]` y `app/api/clinico/fotos`: fotos privadas.
 - `packages/db`: `migrations/*.sql` (fuente de verdad) y `src/schema.ts` (Drizzle, **debe reflejar el SQL**).
 

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Sistema interno de gestión',
   robots: { index: false, follow: false },
 }
-export const viewport: Viewport = { width: 'device-width', initialScale: 1 }
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#f4f3f5', colorScheme: 'light' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

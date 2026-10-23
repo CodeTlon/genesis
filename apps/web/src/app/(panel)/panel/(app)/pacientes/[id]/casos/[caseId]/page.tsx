@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { BackBar } from '@/panel/components/back-link'
 import { notFound } from 'next/navigation'
 import { AlertBadges } from '@/panel/components/alert-badges'
 import { CloseCaseForm } from '@/panel/components/forms'
@@ -20,8 +21,8 @@ export default async function Caso({ params }: { params: Promise<{ id: string; c
   return (
     <div className="space-y-8">
       <div>
-        <Link href={`/panel/pacientes/${id}`} className="underline">← {p.firstName} {p.lastName}</Link>
-        <h1 className="mt-2 text-3xl">{c.title}</h1>
+        <BackBar trail={[{ href: '/panel/pacientes', label: 'Pacientes' }, { href: `/panel/pacientes/${id}`, label: `${p.firstName} ${p.lastName}` }]} />
+        <h1 className="mt-4 text-3xl">{c.title}</h1>
         <p>{open ? 'Caso abierto' : 'Caso cerrado'}</p>
         <div className="mt-2"><AlertBadges alerts={p.alerts} /></div>
         {c.reason && <p className="mt-2"><strong>Motivo:</strong> {c.reason}</p>}

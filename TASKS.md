@@ -24,3 +24,11 @@
 - [ ] Confirmar con Inés que "romano" = "cuadrado/polinesio" y validar los campos nuevos
 - [ ] Simulacro de restauración contra B2 (REQ-SEG-005) antes de cargar pacientes reales
 - [ ] Legal: conservación de la historia, texto del consentimiento revisado por matriculado, inscripción AAIP
+
+## 23/10 — UX fluida (ADR-018)
+- [x] Tokens semánticos, toasts, errores enfocados, nav móvil con safe-area, esqueletos por pantalla
+- [x] Ficha en pestañas, lectura/edición, lista con búsqueda en vivo
+- [x] Mapa de pies: hoja modal, área de toque >= 44 px, insignias de gravedad, miniatura de solo lectura
+- [x] Firma de un toque con confirmación; aviso de cambios sin guardar
+- [ ] Probar en un celular real y con Inés (tamaños, firma, mapa); ajustar según lo que diga
+- [ ] Deploy real en Coolify con dominio (no verificado desde acá)
