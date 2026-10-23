@@ -11,7 +11,7 @@ export default defineConfig({
   timeout: 60_000,
   workers: 1,
   reporter: 'list',
-  use: { baseURL: 'http://localhost:3000', trace: 'retain-on-failure' },
+  use: { baseURL: 'http://localhost:3000', trace: 'retain-on-failure', launchOptions: process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {} },
   webServer: [
     {
       command: 'npm run start -w @genesis/web', port: 3000, reuseExistingServer: false, timeout: 60_000,

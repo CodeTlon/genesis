@@ -30,7 +30,8 @@ test('[REQ-PAC-005] la ficha guarda nacionalidad, medidas, grupo sanguíneo, act
   await page.getByRole('button', { name: 'Crear paciente' }).click()
   await expect(page).toHaveURL(/\/panel\/pacientes\/[0-9a-f-]{36}$/)
   patientUrl = page.url()
-  await page.reload()
+  await page.goto(`${patientUrl}?tab=datos`)
+  await page.getByRole('button', { name: 'Editar datos' }).click()
   await expect(page.getByLabel('Nacionalidad')).toHaveValue('Argentina')
   await expect(page.getByLabel('Estatura en cm')).toHaveValue('165.0')
   await expect(page.getByLabel('Peso en kg')).toHaveValue('67.5')
@@ -50,7 +51,8 @@ test('[REQ-PAC-004] un menor de 18 no se guarda sin responsable legal', async ({
 
 test('[REQ-ANT-002][REQ-ANT-003] antecedentes de la ficha, alerta de antiagregados y bloque de diabetes', async ({ page }) => {
   await login(page)
-  await page.goto(patientUrl)
+  await page.goto(`${patientUrl}?tab=antecedentes`)
+  await page.getByRole('button', { name: 'Editar antecedentes' }).click()
   for (const a of ['Antiagregados', 'Artritis', 'Artrosis', 'Dermatológicos', 'Problema respiratorio', 'Traumatológicos', 'Reumatológicos', 'Colesterol', 'Triglicéridos', 'Diabetes', 'Anticoagulantes', 'Marcapasos'])
     await expect(page.getByLabel(new RegExp(`^${a}`))).toBeVisible()
   await page.getByLabel(/^Antiagregados/).check()
@@ -60,8 +62,10 @@ test('[REQ-ANT-002][REQ-ANT-003] antecedentes de la ficha, alerta de antiagregad
   await page.getByLabel('Antecedentes familiares').fill('Madre diabética')
   await page.getByRole('button', { name: 'Guardar antecedentes' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Guardado' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Editar antecedentes' })).toBeVisible() // al guardar vuelve a la vista de lectura
   await page.reload()
   await expect(page.getByRole('list', { name: /Alertas clínicas/ }).getByText('Antiagregados')).toBeVisible()
+  await page.getByRole('button', { name: 'Editar antecedentes' }).click()
   await expect(page.getByLabel('Tipo de diabetes')).toHaveValue('Tipo 2')
   await expect(page.getByLabel('Antecedentes familiares')).toHaveValue('Madre diabética')
 })
