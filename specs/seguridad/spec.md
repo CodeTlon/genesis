@@ -38,3 +38,9 @@ El sistema DEBE tener backup diario de la base y las fotos en B2 y un simulacro 
 - Escenario: Dado el último backup en B2, Cuando se restaura en una base descartable, Entonces se lee una evolución cifrada con la misma clave.
 - verify: manual MANUAL-PRUEBAS.md#REQ-SEG-005
 - confianza: gap
+
+### REQ-SEG-006 [should] Ver la contraseña al escribirla
+El login DEBE ofrecer un botón para mostrar u ocultar la contraseña escrita, oculta por defecto.
+- Escenario: Dado el formulario de login con una contraseña escrita, Cuando se pulsa el botón de mostrar, Entonces el campo muestra el texto, y al pulsarlo de nuevo vuelve a ocultarlo.
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado

@@ -66,3 +66,14 @@ test('[REQ-EVO-006][REQ-EVO-007] mapa operable con teclado y firma de un toque c
   await page.getByRole('button', { name: 'Firmar y cerrar' }).click()
   await expect(page.getByRole('status')).toContainText('Evolución firmada')
 })
+
+test('[REQ-SEG-006] el login permite mostrar y ocultar la contraseña', async ({ page }) => {
+  await page.goto('/panel/login')
+  const clave = page.locator('#password')
+  await clave.fill('algo-secreto')
+  await expect(clave).toHaveAttribute('type', 'password')
+  await page.getByRole('button', { name: 'Mostrar clave' }).click()
+  await expect(clave).toHaveAttribute('type', 'text')
+  await page.getByRole('button', { name: 'Mostrar clave' }).click()
+  await expect(clave).toHaveAttribute('type', 'password')
+})

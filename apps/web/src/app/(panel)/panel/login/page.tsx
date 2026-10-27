@@ -1,4 +1,5 @@
 import { Wordmark } from '@genesis/ui/wordmark'
+import { PasswordField } from '@/panel/components/password-field'
 import { signIn } from '@/panel/lib/session'
 
 export default async function Login({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
@@ -17,7 +18,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         </div>
         <div>
           <label htmlFor="password" className="font-semibold">Contraseña</label>
-          <input id="password" name="password" type="password" autoComplete="current-password" placeholder="Tu contraseña" required aria-invalid={!!msg} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4 placeholder:text-tinta-suave" />
+          <PasswordField invalid={!!msg} />
           {msg && <p role="alert" className="mt-2 text-red-800">{msg}</p>}
         </div>
         <button className="min-h-touch w-full rounded-control bg-violeta-oscuro px-4 py-3 font-semibold text-white transition-colors hover:bg-tinta">Entrar</button>
