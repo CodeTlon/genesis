@@ -18,5 +18,5 @@ export async function login(page: Page, email = USER.email) {
   await page.getByLabel('Correo').fill(email)
   await page.getByLabel('Contraseña').fill(USER.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/panel\/pacientes/)
+  await expect(page).toHaveURL(/\/panel\/(inicio|pacientes)/)
 }

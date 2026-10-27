@@ -4,7 +4,6 @@ import { AlertBadges } from '@/panel/components/alert-badges'
 import { BackBar } from '@/panel/components/back-link'
 import { Editable } from '@/panel/components/editable'
 import { AntecedentesForm, OpenCaseForm, PatientForm } from '@/panel/components/forms'
-import { Consents } from '@/panel/components/photos'
 import { Tabs } from '@/panel/components/tabs'
 import { audit, requireUser } from '@/panel/lib/auth-server'
 import * as repo from '@/panel/lib/repo'
@@ -13,7 +12,7 @@ import { ANTECEDENTE_ITEMS, type Antecedentes, type Patient } from '@/panel/lib/
 export const dynamic = 'force-dynamic'
 
 const day = (iso: string) => iso.slice(0, 10).split('-').reverse().join('/')
-const TABS = ['casos', 'antecedentes', 'datos', 'consentimientos'] as const
+const TABS = ['casos', 'antecedentes', 'datos'] as const
 type Tab = (typeof TABS)[number]
 
 const ageOf = (birth: string) => {
@@ -67,7 +66,7 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
   const tab: Tab = TABS.includes(rawTab as Tab) ? (rawTab as Tab) : 'casos'
   const p = await repo.getPatient(id)
   if (!p) notFound()
-  const [ant, cases, consents] = await Promise.all([repo.latestAntecedentes(id), repo.listCases(id), repo.listConsents(id)])
+  const [ant, cases] = await Promise.all([repo.latestAntecedentes(id), repo.listCases(id)])
   await audit(user.id, 'view_patient', 'patient', id)
   const openCase = cases.find((c) => c.status === 'open')
   const base = `/panel/pacientes/${id}`
@@ -87,7 +86,7 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
         </div>
       </header>
 
-      <Tabs base={base} current={tab} items={[{ id: 'casos', label: 'Casos', badge: cases.length }, { id: 'antecedentes', label: 'Antecedentes' }, { id: 'datos', label: 'Datos' }, { id: 'consentimientos', label: 'Consentimientos' }]} />
+      <Tabs base={base} current={tab} items={[{ id: 'casos', label: 'Casos', badge: cases.length }, { id: 'antecedentes', label: 'Antecedentes' }, { id: 'datos', label: 'Datos' }]} />
 
       <div key={tab} role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} tabIndex={0} className="g-enter space-y-4 outline-offset-4">
         {tab === 'casos' && (
@@ -96,7 +95,7 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
               <ul className="g-stagger divide-y divide-lila/50 rounded-card bg-white shadow-soft">
                 {cases.map((c) => (
                   <li key={c.id}>
-                    <Link href={`${base}/casos/${c.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-lila/30">
+                    <Link href={`${base}/casos/${c.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-lila/30">
                       <span className="text-lg font-semibold">{c.title}</span>
                       <span className={`rounded-full px-3 py-0.5 text-base font-semibold ${c.status === 'open' ? 'bg-ok-fondo text-ok-texto' : 'bg-white text-tinta-suave ring-1 ring-tinta/30'}`}>{c.status === 'open' ? 'Abierto' : 'Cerrado'} · desde {day(c.openedAt)}</span>
                     </Link>
@@ -120,7 +119,6 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
             <Editable summary={<PatientSummary p={p} />} editLabel="Editar datos"><PatientForm patient={p} /></Editable>
           </div>
         )}
-        {tab === 'consentimientos' && <Consents patientId={id} consents={consents} />}
       </div>
     </div>
   )

@@ -47,7 +47,7 @@ export function EntryView({ entry }: { entry: Entry }) {
           {!open ? (
             <button onClick={() => setOpen(true)} className="min-h-touch rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro">Agregar adenda</button>
           ) : (
-            <div className="space-y-2 rounded-card border border-violeta-oscuro/40 p-4">
+            <div className="g-reveal space-y-2 rounded-card border border-violeta-oscuro/40 p-4">
               <label className="block">Motivo<input value={reason} maxLength={200} onChange={(e) => setReason(e.target.value)} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 px-3" /></label>
               <label className="block">Corrección o agregado<textarea value={text} rows={3} maxLength={4000} onChange={(e) => setText(e.target.value)} className="mt-1 block w-full rounded-control border border-tinta/60 px-3 py-2" /></label>
               {msg && <p role="alert" className="text-red-800">{msg}</p>}

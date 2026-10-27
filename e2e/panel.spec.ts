@@ -28,7 +28,7 @@ async function newPatient(page: Page, first: string, last: string) {
   return page.url()
 }
 
-test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-004][REQ-FOT-001] flujo clínico completo: paciente, antecedentes con alerta, consentimiento, caso, foto, evolución firmada, adenda, cierre e historia', async ({ page }) => {
+test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-004][REQ-FOT-001][REQ-FOT-004] flujo clínico completo: paciente, antecedentes con alerta, caso, foto, evolución firmada, adenda, cierre e historia', async ({ page }) => {
   await login(page)
   patientUrl = await newPatient(page, 'Paciente', `Ficticia ${RUN}`)
 
@@ -42,7 +42,7 @@ test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-
   await page.reload()
   await expect(page.getByRole('list', { name: /Alertas clínicas/ }).getByText('Diabetes')).toBeVisible()
 
-  // Sin consentimiento de fotos no se puede subir
+  // Caso abierto y foto inicial
   await page.goto(patientUrl)
   await page.getByText('Abrir un caso nuevo').click()
   await page.getByLabel(/Título del caso/).fill('Uñero pie derecho')
@@ -50,19 +50,17 @@ test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-
   await page.getByRole('button', { name: 'Abrir caso' }).click()
   await expect(page).toHaveURL(/\/casos\/[0-9a-f-]{36}$/)
   caseUrl = page.url()
-  await expect(page.getByText(/primero registrá el consentimiento de fotos/)).toBeVisible()
 
-  // Registrar consentimiento de fotos y subir la foto inicial
-  await page.goto(`${patientUrl}?tab=consentimientos`)
-  await page.locator('li', { hasText: 'Uso de fotos clínicas' }).getByLabel(/Referencia del documento/).fill('Ficha en papel')
-  await page.locator('li', { hasText: 'Uso de fotos clínicas' }).getByRole('button', { name: 'Registrar consentimiento' }).click()
-  await expect(page.locator('li', { hasText: 'Uso de fotos clínicas' })).toContainText('vigente')
-  await page.goto(caseUrl)
   await page.getByLabel(/^Foto \(JPG/).setInputFiles(FOTO)
   await page.getByLabel('Tipo').selectOption('inicial')
   await page.getByRole('button', { name: 'Subir foto' }).click()
   await expect(page.getByText('Foto guardada.')).toBeVisible()
-  await expect(page.getByRole('img', { name: /Inicial/ }).first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /Ampliar foto: Inicial/ })).toBeVisible()
+  // Al tocar la foto se abre una vista previa grande; Escape la cierra
+  await page.getByRole('button', { name: /Ampliar foto: Inicial/ }).click()
+  await expect(page.getByRole('dialog', { name: 'Vista previa de la foto' }).getByRole('img', { name: /Inicial/ })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
 
   // Evolución con mapa de pies v2 (tipo de pie + estado) y firma manteniendo presionado
   await page.getByRole('link', { name: 'Nueva evolución' }).click()

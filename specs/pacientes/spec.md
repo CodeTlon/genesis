@@ -28,7 +28,7 @@ El sistema DEBE guardar de cada paciente fecha de primera consulta, nacionalidad
 - confianza: confirmado
 
 ### REQ-PAC-006 [must] Ficha organizada en pestañas
-El sistema DEBE mostrar la ficha del paciente en pestañas (Casos, Antecedentes, Datos, Consentimientos), una por vez, y DEBE conservar la pestaña activa en el parámetro `tab` de la URL.
+El sistema DEBE mostrar la ficha del paciente en pestañas (Casos, Antecedentes, Datos), una por vez, y DEBE conservar la pestaña activa en el parámetro `tab` de la URL.
 - Escenario: Dado un paciente, Cuando se abre `?tab=antecedentes`, Entonces se muestra solo el panel de Antecedentes.
 - verify: e2e e2e/ux.spec.ts
 - confianza: confirmado
@@ -36,5 +36,11 @@ El sistema DEBE mostrar la ficha del paciente en pestañas (Casos, Antecedentes,
 ### REQ-PAC-007 [must] Búsqueda en vivo de pacientes
 El sistema DEBE filtrar la lista de pacientes mientras se escribe, sin pulsar un botón, y DEBERÍA seguir funcionando por envío de formulario sin JavaScript.
 - Escenario: Dado que hay dos pacientes, Cuando se escribe parte de un apellido, Entonces solo queda visible el paciente que coincide.
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado
+
+### REQ-PAC-008 [should] Pantalla de inicio con resumen
+El sistema DEBE llevar tras el login a una pantalla de inicio con el saludo, un buscador de pacientes, los totales (pacientes, casos abiertos, evoluciones sin firmar y firmadas del mes) y la lista de evoluciones sin firmar para retomar.
+- Escenario: Dado un paciente con una evolución sin firmar, Cuando se inicia sesión, Entonces se muestra el inicio y la evolución sin firmar aparece en "Para retomar".
 - verify: e2e e2e/ux.spec.ts
 - confianza: confirmado

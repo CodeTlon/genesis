@@ -148,25 +148,6 @@ export async function addendum(entryId: string, patientId: string, reason: strin
   return { ok: true }
 }
 
-// ───────── Consentimientos ─────────
-export async function grantConsent(patientId: string, kind: string, documentRef: string): Promise<Res> {
-  const u = await requireUser()
-  const k = z.enum(['tratamiento', 'fotos', 'datos']).safeParse(kind)
-  if (!k.success || !uuid.safeParse(patientId).success) return fail('Datos no válidos.')
-  if (!(await repo.grantConsent(patientId, k.data, documentRef.trim().slice(0, 200), u.id))) return fail('No encontramos al paciente.')
-  await audit(u.id, 'grant_consent', 'patient', patientId)
-  revalidatePath(`/panel/pacientes/${patientId}`)
-  return { ok: true }
-}
-
-export async function revokeConsent(patientId: string, consentId: string): Promise<Res> {
-  const u = await requireUser()
-  if (!uuid.safeParse(patientId).success || !(await repo.revokeConsent(patientId, consentId))) return fail('No se pudo revocar.')
-  await audit(u.id, 'revoke_consent', 'patient', patientId)
-  revalidatePath(`/panel/pacientes/${patientId}`)
-  return { ok: true }
-}
-
 // ───────── Fotos ─────────
 export async function deletePhoto(photoId: string): Promise<Res> {
   const u = await requireUser()

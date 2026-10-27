@@ -2,12 +2,12 @@
 // Toda función asume que el llamador ya validó la sesión (requireUser) y los datos de entrada (zod en actions.ts).
 // Los textos clínicos libres (antecedentes, motivo, conclusión, payload de evoluciones) se guardan cifrados (crypto.ts).
 import { createHash } from 'node:crypto'
-import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, isNull, sql } from 'drizzle-orm'
 import { db, schema, TENANT_ID } from '@genesis/db/client'
 import { decOpt, decryptJson, encOpt, encryptJson } from './crypto'
-import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type DiabetesInfo, type Addendum, type Alert, type Antecedentes, type Case, type Consent, type Entry, type EntryPayload, type Patient, type Photo, type PhotoKind } from './types'
+import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type DiabetesInfo, type Addendum, type Alert, type Antecedentes, type Case, type Entry, type EntryPayload, type Patient, type Photo, type PhotoKind } from './types'
 
-const { patients: P, antecedentes: A, cases: C, entries: E, addenda: AD, consents: CO, photos: PH, user: U } = schema
+const { patients: P, antecedentes: A, cases: C, entries: E, addenda: AD, photos: PH, user: U } = schema
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export const isUuid = (s: string) => UUID.test(s)
@@ -219,30 +219,6 @@ export async function addAddendum(entryId: string, userId: string, reason: strin
   return { ok: true }
 }
 
-// ───────── Consentimientos ─────────
-export async function listConsents(patientId: string): Promise<Consent[]> {
-  if (!isUuid(patientId)) return []
-  const rows = await db().select().from(CO).where(eq(CO.patientId, patientId)).orderBy(desc(CO.grantedAt))
-  return rows.map((r) => ({ id: r.id, kind: r.kind, grantedAt: r.grantedAt.toISOString(), revokedAt: iso(r.revokedAt), documentRef: r.documentRef ?? undefined }))
-}
-
-export async function activeConsent(patientId: string, kind: Consent['kind']): Promise<Consent | null> {
-  return (await listConsents(patientId)).find((c) => c.kind === kind && !c.revokedAt) ?? null
-}
-
-export async function grantConsent(patientId: string, kind: Consent['kind'], documentRef: string, userId: string): Promise<boolean> {
-  if (!(await getPatient(patientId))) return false
-  if (await activeConsent(patientId, kind)) return true
-  await db().insert(CO).values({ patientId, kind, documentRef: documentRef || null, createdBy: userId })
-  return true
-}
-
-export async function revokeConsent(patientId: string, id: string): Promise<boolean> {
-  if (!isUuid(id)) return false
-  const r = await db().update(CO).set({ revokedAt: new Date() }).where(and(eq(CO.id, id), eq(CO.patientId, patientId), isNull(CO.revokedAt))).returning({ id: CO.id })
-  return r.length > 0
-}
-
 // ───────── Fotos (metadatos; el archivo vive en el volumen privado, ver photos.ts) ─────────
 const toPhoto = (r: typeof PH.$inferSelect): Photo => ({
   id: r.id, createdBy: r.createdBy, patientId: r.patientId, caseId: r.caseId ?? undefined, entryId: r.entryId ?? undefined, kind: r.kind,
@@ -261,18 +237,15 @@ export async function getPhotoRow(id: string) {
   return r ?? null
 }
 
-/** Sin consentimiento vigente de fotos no se puede subir (lo exige también la base: consent_id NOT NULL). */
 export async function addPhotoRow(i: { patientId: string; caseId?: string; entryId?: string; kind: PhotoKind; storageKey: string; thumbKey: string; takenAt?: string; userId: string }): Promise<{ ok: true; id: string } | { ok: false; message: string }> {
   if (!(await getPatient(i.patientId))) return { ok: false, message: 'No encontramos al paciente.' }
-  const consent = await activeConsent(i.patientId, 'fotos')
-  if (!consent) return { ok: false, message: 'Falta el consentimiento de fotos de este paciente. Registralo en su ficha antes de subir fotos.' }
   if (i.caseId) {
     const c = await getCase(i.caseId)
     if (!c || c.patientId !== i.patientId) return { ok: false, message: 'El caso no corresponde a este paciente.' }
   }
   const [r] = await db().insert(PH).values({
     patientId: i.patientId, caseId: i.caseId ?? null, entryId: i.entryId ?? null, kind: i.kind, storageKey: i.storageKey, thumbKey: i.thumbKey,
-    consentId: consent.id, takenAt: i.takenAt || null, createdBy: i.userId,
+    takenAt: i.takenAt || null, createdBy: i.userId,
   }).returning({ id: PH.id })
   return { ok: true, id: r.id }
 }
@@ -280,4 +253,37 @@ export async function addPhotoRow(i: { patientId: string; caseId?: string; entry
 export async function deletePhotoRow(id: string): Promise<boolean> {
   const r = await db().update(PH).set({ deletedAt: new Date() }).where(and(eq(PH.id, id), isNull(PH.deletedAt))).returning({ id: PH.id })
   return r.length > 0
+}
+
+// ───────── Inicio (resumen) ─────────
+export type Pending = { entryId: string; patientId: string; caseId?: string; patient: string; caseTitle?: string; at: string }
+export type Dashboard = { patients: number; openCases: number; drafts: number; signedThisMonth: number; pending: Pending[]; recent: Pending[]; latestPatients: { id: string; name: string; createdAt: string }[] }
+
+/** Números y listas cortas para la pantalla de inicio. Solo metadatos: no descifra nada clínico. */
+export async function dashboard(): Promise<Dashboard> {
+  const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1))
+  const rows = (status: 'draft' | 'signed', limit: number) =>
+    db().select({ id: E.id, patientId: E.patientId, caseId: E.caseId, first: P.firstName, last: P.lastName, caseTitle: C.title, at: status === 'draft' ? E.createdAt : E.signedAt })
+      .from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId))
+      .where(and(eq(E.status, status), notDeleted)).orderBy(desc(status === 'draft' ? E.createdAt : E.signedAt)).limit(limit)
+  const toPending = (r: Awaited<ReturnType<typeof rows>>[number]): Pending => ({ entryId: r.id, patientId: r.patientId, caseId: r.caseId ?? undefined, patient: `${r.first} ${r.last}`, caseTitle: r.caseTitle ?? undefined, at: (r.at ?? new Date()).toISOString() })
+  const count = async (q: PromiseLike<{ n: number }[]>) => (await q)[0]?.n ?? 0
+  const [patients, openCases, drafts, signedThisMonth, pending, recent, latest] = await Promise.all([
+    count(db().select({ n: sql<number>`count(*)::int` }).from(P).where(notDeleted)),
+    count(db().select({ n: sql<number>`count(*)::int` }).from(C).innerJoin(P, eq(P.id, C.patientId)).where(and(eq(C.status, 'open'), notDeleted))),
+    count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'draft'), notDeleted))),
+    count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'signed'), gte(E.signedAt, monthStart), notDeleted))),
+    rows('draft', 5), rows('signed', 5),
+    db().select({ id: P.id, first: P.firstName, last: P.lastName, createdAt: P.createdAt }).from(P).where(notDeleted).orderBy(desc(P.createdAt)).limit(5),
+  ])
+  return {
+    patients, openCases, drafts, signedThisMonth, pending: pending.map(toPending), recent: recent.map(toPending),
+    latestPatients: latest.map((r) => ({ id: r.id, name: `${r.first} ${r.last}`, createdAt: r.createdAt.toISOString() })),
+  }
+}
+
+/** Evoluciones sin firmar (para el aviso de la barra lateral). */
+export async function draftCount(): Promise<number> {
+  const [r] = await db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'draft'), notDeleted))
+  return r?.n ?? 0
 }

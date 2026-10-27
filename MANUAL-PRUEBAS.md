@@ -1,6 +1,6 @@
 # Manual de pruebas
 
-**Automáticas:** `npm run build && npm run test:e2e` (Playwright). `e2e/panel.spec.ts` cubre: alta de paciente, antecedentes con alerta, consentimiento, caso, foto, evolución con mapa de pies y firma, adenda, cierre, historia, cifrado en la base, inmutabilidad, auditoría, acceso sin sesión, accesos cruzados entre pacientes, archivos que no son fotos y bloqueo de login.
+**Automáticas:** `npm run build && npm run test:e2e` (Playwright). `e2e/panel.spec.ts` cubre: alta de paciente, antecedentes con alerta, caso, foto, evolución con mapa de pies y firma, adenda, cierre, historia, cifrado en la base, inmutabilidad, auditoría, acceso sin sesión, accesos cruzados entre pacientes, archivos que no son fotos y bloqueo de login.
 
 **Manuales antes de cada entrega a Inés:**
 1. Entrar desde el celular: el mapa de pies se usa con el dedo (zonas con área táctil suficiente) y el botón de firma mantiene presionado.

@@ -1,17 +1,16 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { deletePhoto, grantConsent, revokeConsent } from '@/panel/lib/actions'
-import { CONSENT_LABEL, PHOTO_KIND_LABEL, type Consent, type Photo, type PhotoKind } from '@/panel/lib/types'
+import { useRef, useState } from 'react'
+import { deletePhoto } from '@/panel/lib/actions'
+import { PHOTO_KIND_LABEL, type Photo, type PhotoKind } from '@/panel/lib/types'
 
 const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4'
 const day = (iso: string) => iso.slice(0, 10).split('-').reverse().join('/')
 
-export function PhotoUpload({ patientId, caseId, hasConsent }: { patientId: string; caseId?: string; hasConsent: boolean }) {
+export function PhotoUpload({ patientId, caseId }: { patientId: string; caseId?: string }) {
   const router = useRouter()
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
-  if (!hasConsent) return <p role="note" className="rounded-card bg-amber-100 p-4 text-amber-950">Para subir fotos primero registrá el consentimiento de fotos del paciente (sección Consentimientos).</p>
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -49,6 +48,32 @@ export function PhotoUpload({ patientId, caseId, hasConsent }: { patientId: stri
 export function PhotoGrid({ photos, deletable }: { photos: Photo[]; deletable: string[] }) {
   const router = useRouter()
   const [err, setErr] = useState('')
+  const [idx, setIdx] = useState(0)
+  const [asking, setAsking] = useState<string | null>(null)
+  const viewer = useRef<HTMLDialogElement>(null)
+  const confirmDlg = useRef<HTMLDialogElement>(null)
+  const opener = useRef<Element | null>(null)
+  const cur = photos[Math.min(idx, photos.length - 1)]
+
+  function open(id: string) {
+    const i = photos.findIndex((p) => p.id === id)
+    if (i < 0) return
+    opener.current = document.activeElement
+    setIdx(i)
+    viewer.current?.showModal()
+  }
+  const go = (d: number) => setIdx((i) => (i + d + photos.length) % photos.length)
+  function onKey(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(1) }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1) }
+  }
+  async function remove() {
+    if (!asking) return
+    const r = await deletePhoto(asking)
+    confirmDlg.current?.close(); setAsking(null)
+    if (r.ok) { viewer.current?.close(); router.refresh() } else setErr(r.message)
+  }
+
   if (!photos.length) return <p>Todavía no hay fotos.</p>
   const initial = photos.find((p) => p.kind === 'inicial')
   const final = [...photos].reverse().find((p) => p.kind === 'final') ?? (photos.length > 1 ? photos[photos.length - 1] : undefined)
@@ -58,59 +83,65 @@ export function PhotoGrid({ photos, deletable }: { photos: Photo[]; deletable: s
         <section aria-label="Comparación inicial y final" className="grid gap-3 sm:grid-cols-2">
           {[initial, final].map((p, i) => (
             <figure key={p.id} className="rounded-card bg-white p-2 shadow-soft">
-              {/* eslint-disable-next-line @next/next/no-img-element -- imagen privada servida con sesión; no pasa por el optimizador */}
-              <img src={`/panel-media/${p.id}`} alt={`Foto ${i === 0 ? 'inicial' : 'final'}, ${day(p.takenAt)}`} className="aspect-square w-full rounded-control object-cover" />
+              <button type="button" onClick={() => open(p.id)} aria-label={`Ampliar foto ${i === 0 ? 'inicial' : 'final'}, ${day(p.takenAt)}`} className="group relative block w-full overflow-hidden rounded-control">
+                {/* eslint-disable-next-line @next/next/no-img-element -- imagen privada servida con sesión; no pasa por el optimizador */}
+                <img src={`/panel-media/${p.id}`} alt="" className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              </button>
               <figcaption className="mt-1 text-center font-semibold">{i === 0 ? 'Inicial' : 'Final'} · {day(p.takenAt)}</figcaption>
             </figure>
           ))}
         </section>
       )}
       {err && <p role="alert" className="text-red-800">{err}</p>}
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+      <ul className="g-stagger grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {photos.map((p) => (
-          <li key={p.id} className="rounded-card bg-white p-2 shadow-soft">
-            <a href={`/panel-media/${p.id}`} target="_blank" rel="noreferrer">
+          <li key={p.id} className="g-lift rounded-card bg-white p-2 shadow-soft">
+            <button type="button" onClick={() => open(p.id)} aria-label={`Ampliar foto: ${PHOTO_KIND_LABEL[p.kind]}, ${day(p.takenAt)}`} className="group block w-full overflow-hidden rounded-control">
               {/* eslint-disable-next-line @next/next/no-img-element -- ver arriba */}
-              <img src={`/panel-media/${p.id}?t=thumb`} alt={`${PHOTO_KIND_LABEL[p.kind]}, ${day(p.takenAt)}`} loading="lazy" className="aspect-square w-full rounded-control object-cover" />
-            </a>
+              <img src={`/panel-media/${p.id}?t=thumb`} alt="" loading="lazy" className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            </button>
             <p className="mt-1 text-base">{PHOTO_KIND_LABEL[p.kind]} · {day(p.takenAt)}</p>
-            {deletable.includes(p.id) && (
-              <button onClick={async () => { if (!confirm('¿Borrar esta foto?')) return; const r = await deletePhoto(p.id); if (r.ok) router.refresh(); else setErr(r.message) }} className="mt-1 min-h-touch text-base text-red-900 underline">Borrar</button>
-            )}
           </li>
         ))}
       </ul>
-    </div>
-  )
-}
 
-export function Consents({ patientId, consents }: { patientId: string; consents: Consent[] }) {
-  const router = useRouter()
-  const [err, setErr] = useState('')
-  const [refs, setRefs] = useState<Record<string, string>>({})
-  const kinds = Object.keys(CONSENT_LABEL) as Consent['kind'][]
-  return (
-    <ul className="space-y-3">
-      {kinds.map((k) => {
-        const active = consents.find((c) => c.kind === k && !c.revokedAt)
-        return (
-          <li key={k} className="rounded-card bg-white p-4 shadow-soft">
-            <p className="font-semibold">{CONSENT_LABEL[k]}: {active ? <span className="text-emerald-900">vigente desde {day(active.grantedAt)}</span> : <span className="text-amber-900">pendiente</span>}</p>
-            {active?.documentRef && <p className="text-base">Documento: {active.documentRef}</p>}
-            {active ? (
-              <button onClick={async () => { if (!confirm('¿Revocar este consentimiento?')) return; const r = await revokeConsent(patientId, active.id); if (r.ok) router.refresh(); else setErr(r.message) }} className="mt-2 min-h-touch rounded-control border border-red-800 px-4 text-red-900">Revocar</button>
-            ) : (
-              <div className="mt-2 flex flex-wrap items-end gap-2">
-                <label className="block text-base">Referencia del documento firmado (ej: ficha en papel, escaneo)
-                  <input value={refs[k] ?? ''} maxLength={200} onChange={(e) => setRefs((p) => ({ ...p, [k]: e.target.value }))} className="mt-1 block min-h-touch w-64 max-w-full rounded-control border border-tinta/60 px-3" />
-                </label>
-                <button onClick={async () => { const r = await grantConsent(patientId, k, refs[k] ?? ''); if (r.ok) router.refresh(); else setErr(r.message) }} className="min-h-touch rounded-control bg-violeta-oscuro px-5 text-white">Registrar consentimiento</button>
-              </div>
+      <dialog ref={viewer} className="g-viewer" aria-label="Vista previa de la foto" onKeyDown={onKey} onClose={() => (opener.current as HTMLElement | null)?.focus?.()}
+        onClick={(e) => { if (e.target === viewer.current) viewer.current?.close() }}>
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between gap-3 p-3 md:p-4">
+            <p className="min-w-0 truncate font-semibold">{PHOTO_KIND_LABEL[cur.kind]} · {day(cur.takenAt)} <span className="font-normal text-white/80">({Math.min(idx, photos.length - 1) + 1} de {photos.length})</span></p>
+            <div className="flex shrink-0 gap-2">
+              {deletable.includes(cur.id) && <button type="button" onClick={() => { setAsking(cur.id); confirmDlg.current?.showModal() }} className="min-h-touch rounded-control bg-white/15 px-4 font-semibold hover:bg-white/25">Borrar</button>}
+              <button type="button" autoFocus onClick={() => viewer.current?.close()} aria-label="Cerrar vista previa" className="grid size-12 place-items-center rounded-control bg-white/15 hover:bg-white/25">
+                <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
+            </div>
+          </div>
+          <div className="relative flex min-h-0 flex-1 items-center justify-center px-2 pb-4 md:px-16">
+            {photos.length > 1 && (
+              <button type="button" onClick={() => go(-1)} aria-label="Foto anterior" className="absolute left-2 z-10 grid size-12 place-items-center rounded-full bg-white/15 hover:bg-white/30 md:left-4">
+                <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+              </button>
             )}
-          </li>
-        )
-      })}
-      {err && <li role="alert" className="text-red-800">{err}</li>}
-    </ul>
+            {/* eslint-disable-next-line @next/next/no-img-element -- ver arriba */}
+            <img key={cur.id} src={`/panel-media/${cur.id}`} alt={`${PHOTO_KIND_LABEL[cur.kind]}, ${day(cur.takenAt)}`} className="g-viewer-img max-h-full max-w-full rounded-control object-contain shadow-2xl" />
+            {photos.length > 1 && (
+              <button type="button" onClick={() => go(1)} aria-label="Foto siguiente" className="absolute right-2 z-10 grid size-12 place-items-center rounded-full bg-white/15 hover:bg-white/30 md:right-4">
+                <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+              </button>
+            )}
+          </div>
+        </div>
+      </dialog>
+
+      <dialog ref={confirmDlg} className="g-modal text-tinta" aria-labelledby="borrar-foto" onClose={() => setAsking(null)} onClick={(e) => { if (e.target === confirmDlg.current) confirmDlg.current?.close() }}>
+        <h2 id="borrar-foto" className="text-xl font-semibold">¿Borrar esta foto?</h2>
+        <p className="mt-2">Deja de verse en la historia clínica. Queda registrado en la auditoría.</p>
+        <div className="mt-6 flex justify-end gap-2">
+          <button type="button" autoFocus onClick={() => confirmDlg.current?.close()} className="min-h-touch rounded-control border border-tinta/60 px-5 hover:bg-lila/40">Cancelar</button>
+          <button type="button" onClick={remove} className="min-h-touch rounded-control bg-error-texto px-5 font-semibold text-white hover:bg-tinta">Borrar foto</button>
+        </div>
+      </dialog>
+    </div>
   )
 }

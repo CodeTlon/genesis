@@ -16,7 +16,7 @@ export default async function Caso({ params }: { params: Promise<{ id: string; c
   const { id, caseId } = await params
   const [p, c] = await Promise.all([repo.getPatient(id), repo.getCase(caseId)])
   if (!p || !c || c.patientId !== id) notFound() // el caso tiene que ser de ESE paciente (evita acceder por IDs cruzados)
-  const [entries, photos, consent] = await Promise.all([repo.listEntries(id, caseId), repo.listPhotos(id, caseId), repo.activeConsent(id, 'fotos')])
+  const [entries, photos] = await Promise.all([repo.listEntries(id, caseId), repo.listPhotos(id, caseId)])
   const open = c.status === 'open'
   return (
     <div className="space-y-8">
@@ -32,7 +32,7 @@ export default async function Caso({ params }: { params: Promise<{ id: string; c
 
       <section aria-labelledby="fotos" className="space-y-3">
         <h2 id="fotos" className="text-xl uppercase tracking-[0.06em]">Fotos</h2>
-        {open && <PhotoUpload patientId={id} caseId={caseId} hasConsent={!!consent} />}
+        {open && <PhotoUpload patientId={id} caseId={caseId} />}
         <PhotoGrid photos={photos} deletable={photos.filter((ph) => user.role === 'admin' || ph.createdBy === user.id).map((ph) => ph.id)} />
       </section>
 
@@ -44,7 +44,7 @@ export default async function Caso({ params }: { params: Promise<{ id: string; c
       <section aria-labelledby="cierre" className="space-y-3">
         <h2 id="cierre" className="text-xl uppercase tracking-[0.06em]">Conclusión y sugerencias</h2>
         {open ? (
-          <details className="rounded-card bg-white p-4 shadow-soft"><summary className="min-h-touch cursor-pointer font-semibold">Cerrar el caso</summary><div className="mt-3"><CloseCaseForm c={c} /></div></details>
+          <details className="g-acc rounded-card bg-white p-4 shadow-soft"><summary className="flex min-h-touch items-center justify-between font-semibold">Cerrar el caso<svg aria-hidden viewBox="0 0 24 24" className="g-chev size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg></summary><div className="mt-3"><CloseCaseForm c={c} /></div></details>
         ) : (
           <div className="space-y-2 rounded-card bg-white p-5 shadow-soft">
             <p><strong>Conclusión:</strong> {c.conclusion}</p>
