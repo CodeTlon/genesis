@@ -95,7 +95,7 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
               <ul className="g-stagger divide-y divide-lila/50 rounded-card bg-white shadow-soft">
                 {cases.map((c) => (
                   <li key={c.id}>
-                    <Link href={`${base}/casos/${c.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 hover:bg-lila/30">
+                    <Link href={`${base}/casos/${c.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-lila/30">
                       <span className="text-lg font-semibold">{c.title}</span>
                       <span className={`rounded-full px-3 py-0.5 text-base font-semibold ${c.status === 'open' ? 'bg-ok-fondo text-ok-texto' : 'bg-white text-tinta-suave ring-1 ring-tinta/30'}`}>{c.status === 'open' ? 'Abierto' : 'Cerrado'} · desde {day(c.openedAt)}</span>
                     </Link>

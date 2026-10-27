@@ -2,7 +2,7 @@
 // Toda función asume que el llamador ya validó la sesión (requireUser) y los datos de entrada (zod en actions.ts).
 // Los textos clínicos libres (antecedentes, motivo, conclusión, payload de evoluciones) se guardan cifrados (crypto.ts).
 import { createHash } from 'node:crypto'
-import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, isNull, sql } from 'drizzle-orm'
 import { db, schema, TENANT_ID } from '@genesis/db/client'
 import { decOpt, decryptJson, encOpt, encryptJson } from './crypto'
 import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type DiabetesInfo, type Addendum, type Alert, type Antecedentes, type Case, type Entry, type EntryPayload, type Patient, type Photo, type PhotoKind } from './types'
@@ -253,4 +253,37 @@ export async function addPhotoRow(i: { patientId: string; caseId?: string; entry
 export async function deletePhotoRow(id: string): Promise<boolean> {
   const r = await db().update(PH).set({ deletedAt: new Date() }).where(and(eq(PH.id, id), isNull(PH.deletedAt))).returning({ id: PH.id })
   return r.length > 0
+}
+
+// ───────── Inicio (resumen) ─────────
+export type Pending = { entryId: string; patientId: string; caseId?: string; patient: string; caseTitle?: string; at: string }
+export type Dashboard = { patients: number; openCases: number; drafts: number; signedThisMonth: number; pending: Pending[]; recent: Pending[]; latestPatients: { id: string; name: string; createdAt: string }[] }
+
+/** Números y listas cortas para la pantalla de inicio. Solo metadatos: no descifra nada clínico. */
+export async function dashboard(): Promise<Dashboard> {
+  const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1))
+  const rows = (status: 'draft' | 'signed', limit: number) =>
+    db().select({ id: E.id, patientId: E.patientId, caseId: E.caseId, first: P.firstName, last: P.lastName, caseTitle: C.title, at: status === 'draft' ? E.createdAt : E.signedAt })
+      .from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId))
+      .where(and(eq(E.status, status), notDeleted)).orderBy(desc(status === 'draft' ? E.createdAt : E.signedAt)).limit(limit)
+  const toPending = (r: Awaited<ReturnType<typeof rows>>[number]): Pending => ({ entryId: r.id, patientId: r.patientId, caseId: r.caseId ?? undefined, patient: `${r.first} ${r.last}`, caseTitle: r.caseTitle ?? undefined, at: (r.at ?? new Date()).toISOString() })
+  const count = async (q: PromiseLike<{ n: number }[]>) => (await q)[0]?.n ?? 0
+  const [patients, openCases, drafts, signedThisMonth, pending, recent, latest] = await Promise.all([
+    count(db().select({ n: sql<number>`count(*)::int` }).from(P).where(notDeleted)),
+    count(db().select({ n: sql<number>`count(*)::int` }).from(C).innerJoin(P, eq(P.id, C.patientId)).where(and(eq(C.status, 'open'), notDeleted))),
+    count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'draft'), notDeleted))),
+    count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'signed'), gte(E.signedAt, monthStart), notDeleted))),
+    rows('draft', 5), rows('signed', 5),
+    db().select({ id: P.id, first: P.firstName, last: P.lastName, createdAt: P.createdAt }).from(P).where(notDeleted).orderBy(desc(P.createdAt)).limit(5),
+  ])
+  return {
+    patients, openCases, drafts, signedThisMonth, pending: pending.map(toPending), recent: recent.map(toPending),
+    latestPatients: latest.map((r) => ({ id: r.id, name: `${r.first} ${r.last}`, createdAt: r.createdAt.toISOString() })),
+  }
+}
+
+/** Evoluciones sin firmar (para el aviso de la barra lateral). */
+export async function draftCount(): Promise<number> {
+  const [r] = await db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'draft'), notDeleted))
+  return r?.n ?? 0
 }

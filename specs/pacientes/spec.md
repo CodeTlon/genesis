@@ -38,3 +38,9 @@ El sistema DEBE filtrar la lista de pacientes mientras se escribe, sin pulsar un
 - Escenario: Dado que hay dos pacientes, Cuando se escribe parte de un apellido, Entonces solo queda visible el paciente que coincide.
 - verify: e2e e2e/ux.spec.ts
 - confianza: confirmado
+
+### REQ-PAC-008 [should] Pantalla de inicio con resumen
+El sistema DEBE llevar tras el login a una pantalla de inicio con el saludo, un buscador de pacientes, los totales (pacientes, casos abiertos, evoluciones sin firmar y firmadas del mes) y la lista de evoluciones sin firmar para retomar.
+- Escenario: Dado un paciente con una evolución sin firmar, Cuando se inicia sesión, Entonces se muestra el inicio y la evolución sin firmar aparece en "Para retomar".
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado

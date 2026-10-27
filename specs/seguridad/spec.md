@@ -44,3 +44,9 @@ El login DEBE ofrecer un botón para mostrar u ocultar la contraseña escrita, o
 - Escenario: Dado el formulario de login con una contraseña escrita, Cuando se pulsa el botón de mostrar, Entonces el campo muestra el texto, y al pulsarlo de nuevo vuelve a ocultarlo.
 - verify: e2e e2e/ux.spec.ts
 - confianza: confirmado
+
+### REQ-SEG-007 [should] Avisos dentro de la página, nunca del navegador
+El sistema NO DEBE usar alert, confirm ni los globos de validación del navegador: los errores de un campo DEBEN verse como texto debajo del campo y las confirmaciones DEBEN ser un modal propio.
+- Escenario: Dado el login con los campos vacíos, Cuando se pulsa Entrar, Entonces aparece "Completá este campo." debajo del campo y el campo queda marcado como inválido.
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado

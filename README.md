@@ -33,6 +33,7 @@ npm run dev -w @genesis/web
 `feature/<origen>-<tarea>` → PR a `dev` → `test` → `main`. Producción en Coolify con `docker-compose.coolify.yml`; variables en `.env.example`.
 
 ## Cambios
+- **2026-10-27** — Rediseño: pantalla de Inicio con resumen (pendientes, totales, recientes) y barra lateral completa; login nuevo en dos columnas; mapa de pies con degradé, dedos orgánicos y marcas animadas; vista previa de fotos; modales con animación de entrada y salida; errores de formulario dentro de la página y aviso propio al salir con cambios (REQ-PAC-008, REQ-FOT-004, REQ-SEG-007, ADR-020).
 - **2026-10-27** — El login tiene un ojo para mostrar u ocultar la contraseña (REQ-SEG-006).
 - **2026-10-23** — Se elimina el módulo de consentimientos (ADR-019): sin pestaña, sin bloqueo de fotos y sin sección en la historia imprimible; migración 0006.
 - **2026-10-21** — Se elimina el sitio público y el CMS (ADR-016): el producto es solo historias clínicas.

@@ -95,8 +95,13 @@ html { scrollbar-width: thin; scrollbar-color: var(--color-violeta-oscuro) trans
 ::-webkit-scrollbar-thumb:hover { background: var(--color-violeta-oscuro); background-clip: content-box; }
 
 /* Modales propios (<dialog>): reemplazan alert/confirm del navegador */
-dialog.g-modal { margin: auto; max-width: min(28rem, calc(100vw - 2rem)); border: 0; border-radius: var(--radius-card); padding: 1.5rem; box-shadow: 0 20px 60px rgb(0 0 0 / .25); animation: g-fade-up .2s ease-out both; }
-dialog.g-modal::backdrop { background: rgb(40 25 55 / .45); backdrop-filter: blur(2px); }
+dialog.g-modal { margin: auto; max-width: min(28rem, calc(100vw - 2rem)); border: 0; border-radius: var(--radius-card); padding: 1.5rem; box-shadow: 0 20px 60px rgb(0 0 0 / .25);
+  opacity: 0; transform: translateY(10px) scale(.98); transition: opacity .2s ease, transform .2s var(--ease-out), overlay .2s allow-discrete, display .2s allow-discrete; }
+dialog.g-modal[open] { opacity: 1; transform: none; }
+@starting-style { dialog.g-modal[open] { opacity: 0; transform: translateY(10px) scale(.98); } }
+dialog.g-modal::backdrop { background: rgb(40 25 55 / 0); backdrop-filter: blur(0); transition: background .2s ease, backdrop-filter .2s ease, overlay .2s allow-discrete, display .2s allow-discrete; }
+dialog.g-modal[open]::backdrop { background: rgb(40 25 55 / .45); backdrop-filter: blur(2px); }
+@starting-style { dialog.g-modal[open]::backdrop { background: rgb(40 25 55 / 0); backdrop-filter: blur(0); } }
 
 /* Escalonado: los hijos directos entran de a uno (listas de turnos, tarjetas). */
 .g-stagger > * { animation: g-rise .4s ease-out both; }
@@ -126,3 +131,29 @@ dialog.g-modal::backdrop { background: rgb(40 25 55 / .45); backdrop-filter: blu
 @keyframes g-drift-a { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(7rem, 4rem) scale(1.15); } }
 @keyframes g-drift-b { 0%, 100% { transform: translate(0, 0) scale(1.1); } 50% { transform: translate(-6rem, 5rem) scale(.9); } }
 @keyframes g-drift-c { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-8rem, -4rem) scale(1.2); } }
+
+/* Mapa de pies: las zonas cambian de color con una transición y la marca nueva entra con un pequeño rebote. */
+.g-zone { transition: fill .3s ease, stroke .2s ease, stroke-width .2s ease, filter .2s ease; }
+g[role="button"]:hover .g-zone { filter: brightness(.95) saturate(1.15); }
+.g-pop { transform-box: fill-box; transform-origin: center; animation: g-pop .35s cubic-bezier(.34, 1.56, .64, 1) both; }
+@keyframes g-pop { from { transform: scale(0); } to { transform: none; } }
+
+/* Aparición de bloques que se muestran con un botón (examen completo, adenda, edición). */
+@keyframes g-reveal { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.g-reveal { animation: g-reveal .28s var(--ease-out) both; }
+
+/* Tarjeta que se levanta al pasar el mouse. */
+.g-lift { transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out); }
+.g-lift:hover { transform: translateY(-2px); box-shadow: 0 14px 36px -14px rgb(123 63 184 / .4); }
+
+/* Visor de fotos (<dialog>): entra y sale con un fundido; el fondo se oscurece. */
+dialog.g-viewer { margin: auto; max-width: 100vw; max-height: 100dvh; width: 100vw; height: 100dvh; border: 0; padding: 0; background: transparent; color: #fff;
+  opacity: 0; transition: opacity .22s ease, overlay .22s allow-discrete, display .22s allow-discrete; }
+dialog.g-viewer[open] { opacity: 1; }
+@starting-style { dialog.g-viewer[open] { opacity: 0; } }
+dialog.g-viewer::backdrop { background: rgb(20 10 32 / .88); backdrop-filter: blur(4px); }
+.g-viewer-img { animation: g-zoom-in .28s var(--ease-out) both; }
+@keyframes g-zoom-in { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+
+/* Campo con error (lo marca FormValidity o el formulario con aria-invalid). */
+input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--color-error-texto); box-shadow: 0 0 0 1px var(--color-error-texto); }

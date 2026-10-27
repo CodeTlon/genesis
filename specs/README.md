@@ -12,8 +12,8 @@ Método: SDD CodeTlon (`sdd: v1`). Validador: `node scripts/spec-lint.mjs` (corr
 | ANT antecedentes y alertas | `antecedentes/spec.md` | 3 | vigente |
 | CAS casos | `casos/spec.md` | 1 | vigente |
 | EVO evoluciones | `evoluciones/spec.md` | 7 | vigente |
-| FOT fotos clínicas | `fotos/spec.md` | 3 | vigente |
-| SEG seguridad | `seguridad/spec.md` | 6 | vigente (1 gap) |
+| FOT fotos clínicas | `fotos/spec.md` | 4 | vigente |
+| SEG seguridad | `seguridad/spec.md` | 7 | vigente (1 gap) |
 
 ## Cambios abiertos
 Ninguno.

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import '../globals.css'
 import { fontVars } from '@/fonts'
+import { FormValidity } from '@/panel/components/form-validity'
 
 export const metadata: Metadata = {
   title: 'GENESIS · Panel',
@@ -12,7 +13,7 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, them
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-AR" className={fontVars}>
-      <body>{children}</body>
+      <body>{children}<FormValidity /></body>
     </html>
   )
 }

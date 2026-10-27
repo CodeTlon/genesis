@@ -12,11 +12,12 @@ const SEV_FILL = { 1: '#f5c84b', 2: '#f08a3c', 3: '#d64545' } as const
 const SEV_LABEL = { 1: 'Leve', 2: 'Moderada', 3: 'Intensa' } as const
 const STATE_LABEL = { a_tratar: 'A tratar', tratado: 'Tratado' } as const
 const TREATED_FILL = '#3f9d6b'
-const EMPTY_FILL = '#f3eef9'
 
 // Silueta de un pie derecho visto desde la planta (viewBox 0 10 200 410; el dedo gordo queda a la izquierda).
 // El pie izquierdo es el espejo. La curva interna de la izquierda es el arco.
-const OUTLINE = 'M40 112 C30 150 40 190 58 235 C70 270 66 300 60 330 C56 375 80 408 112 408 C146 408 166 375 162 330 C160 290 176 250 184 200 C192 160 190 130 184 112 C150 90 90 86 40 112 Z'
+const OUTLINE = 'M46 120 C34 154 38 196 56 236 C68 264 70 292 64 320 C58 362 74 404 112 408 C148 410 168 380 164 336 C162 300 176 264 184 214 C191 176 192 140 184 118 C152 92 94 90 46 120 Z'
+// Giro de cada dedo (grados) para que abanique como un pie real.
+const TILT = [-8, -3, 1, 6, 12]
 
 // El tipo de pie cambia el largo relativo de los dedos (Dedo 1 = dedo gordo).
 const TOES: Record<FootType, Record<string, Toe>> = {
@@ -97,7 +98,7 @@ export function FootMap({ footType, onFootType, markers, onChange }: {
     const m = find(side, zone)
     const selected = sel?.side === side && sel.zone === zone
     const label = `${sideLabel(side)}, ${zone}${m ? `: ${m.finding}, ${SEV_LABEL[m.severity]}, ${STATE_LABEL[m.state]}` : ''}`
-    const fill = m ? (m.state === 'tratado' ? TREATED_FILL : SEV_FILL[m.severity]) : EMPTY_FILL
+    const fill = m ? (m.state === 'tratado' ? TREATED_FILL : SEV_FILL[m.severity]) : `url(#${uid}-skin)`
     return (
       <g key={zone} role="button" tabIndex={0} aria-label={label} aria-pressed={selected} className="cursor-pointer outline-none [&:focus-visible_*]:stroke-[4]"
         onClick={() => pick(side, zone)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(side, zone) } }}>
@@ -113,14 +114,21 @@ export function FootMap({ footType, onFootType, markers, onChange }: {
     const toes = Object.entries(TOES[type])
     return (
       <figure className={`text-center ${shown === side ? '' : 'max-md:hidden'}`} key={side}>
-        <svg viewBox="0 10 200 410" className="mx-auto h-auto w-full max-w-[18rem] touch-manipulation md:max-w-[15rem]" role="group" aria-label={sideLabel(side)}>
-          <defs><clipPath id={clip}><path d={OUTLINE} /></clipPath></defs>
+        <svg viewBox="0 10 200 410" className="mx-auto h-auto w-full max-w-[18rem] touch-manipulation drop-shadow-[0_10px_12px_rgb(80_40_130/.18)] md:max-w-[15rem]" role="group" aria-label={sideLabel(side)}>
+          <defs>
+            <clipPath id={clip}><path d={OUTLINE} /></clipPath>
+            <linearGradient id={`${uid}-skin`} x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stopColor="#fffdff" /><stop offset="1" stopColor="#e9dcf6" /></linearGradient>
+          </defs>
           <g transform={side === 'left' ? 'translate(200 0) scale(-1 1)' : undefined}>
             {/* cuerpo: se pinta cada zona recortada por la silueta, y encima el contorno */}
-            {BODY[view].map(({ zone, d }) => zoneEl(side, zone, (fill, stroke, sw) => <path d={d} clipPath={`url(#${clip})`} fill={fill} stroke={stroke} strokeWidth={sw} />))}
-            <path d={OUTLINE} fill="none" stroke="#6b5a85" strokeWidth={2.5} pointerEvents="none" />
-            {toes.map(([zone, t]) => zoneEl(side, zone, (fill, stroke, sw) => <circle cx={t.cx} cy={t.cy} r={t.r} fill={fill} stroke={stroke} strokeWidth={sw} />,
-              <circle cx={t.cx} cy={t.cy} r={t.r + 7} fill="transparent" />))} {/* área de toque ampliada (>= 44 px) */}
+            {BODY[view].map(({ zone, d }) => zoneEl(side, zone, (fill, stroke, sw) => <path className="g-zone" d={d} clipPath={`url(#${clip})`} fill={fill} stroke={stroke} strokeWidth={sw} />))}
+            {view === 'plantar' && <path d="M60 238 C74 266 74 294 66 322 C92 304 100 264 88 232 Z" fill="#7b3fb8" fillOpacity={0.07} pointerEvents="none" />}
+            <path d={OUTLINE} fill="none" stroke="#6b5a85" strokeWidth={2.5} strokeLinejoin="round" pointerEvents="none" />
+            {toes.map(([zone, t]) => zoneEl(side, zone, (fill, stroke, sw) => <ellipse className="g-zone" cx={t.cx} cy={t.cy} rx={t.r * 0.94} ry={t.r * 1.08} transform={`rotate(${TILT[Number(zone.slice(-1)) - 1]} ${t.cx} ${t.cy})`} fill={fill} stroke={stroke} strokeWidth={sw} />,
+              <>
+                {view === 'dorsal' && <ellipse cx={t.cx} cy={t.cy - t.r * 0.42} rx={t.r * 0.52} ry={t.r * 0.34} transform={`rotate(${TILT[Number(zone.slice(-1)) - 1]} ${t.cx} ${t.cy})`} fill="#fff" fillOpacity={0.6} stroke="#6b5a85" strokeWidth={1} pointerEvents="none" />}
+                <circle cx={t.cx} cy={t.cy} r={t.r + 7} fill="transparent" />
+              </>))} {/* área de toque ampliada (>= 44 px) */}
           </g>
           <g pointerEvents="none" fill="#3b1d6e" textAnchor="middle" fontFamily="inherit">
             {BODY[view].map(({ zone, at }) => <text key={zone} x={mx(at[0])} y={at[1]} fontSize={15} fontWeight={600}>{zone}</text>)}
@@ -132,7 +140,7 @@ export function FootMap({ footType, onFootType, markers, onChange }: {
               const m = find(side, zone)
               if (!m) return null
               return (
-                <g key={zone}>
+                <g key={`${zone}-${m.severity}-${m.state}`} className="g-pop">
                   <circle cx={x} cy={y} r={10} fill="#fff" stroke="#3b1d6e" strokeWidth={2} />
                   {m.state === 'tratado' ? <path d={`M${x - 5} ${y} l3.5 3.5 l6.5 -7`} fill="none" stroke="#1f6b43" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /> : <text x={x} y={y + 5} textAnchor="middle" fontSize={14} fontWeight={800} fill="#3b1d6e">{m.severity}</text>}
                 </g>
@@ -244,16 +252,16 @@ function MiniFoot({ side, view, type, markers }: { side: Side; view: View; type:
   const mine = markers.filter((m) => m.side === side && m.view === view)
   const fillOf = (zone: string) => {
     const m = mine.find((x) => x.zone === zone)
-    return m ? (m.state === 'tratado' ? TREATED_FILL : SEV_FILL[m.severity]) : EMPTY_FILL
+    return m ? (m.state === 'tratado' ? TREATED_FILL : SEV_FILL[m.severity]) : `url(#${uid}-skin)`
   }
   return (
     <figure className="text-center">
       <svg viewBox="0 10 200 410" className="mx-auto h-auto w-20" role="img" aria-label={`${sideLabel(side)}, ${view === 'plantar' ? 'planta' : 'dorso'}: ${mine.length} ${mine.length === 1 ? 'marca' : 'marcas'}`}>
-        <defs><clipPath id={clip}><path d={OUTLINE} /></clipPath></defs>
+        <defs><clipPath id={clip}><path d={OUTLINE} /></clipPath><linearGradient id={`${uid}-skin`} x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stopColor="#fffdff" /><stop offset="1" stopColor="#e9dcf6" /></linearGradient></defs>
         <g transform={side === 'left' ? 'translate(200 0) scale(-1 1)' : undefined}>
           {BODY[view].map(({ zone, d }) => <path key={zone} d={d} clipPath={`url(#${clip})`} fill={fillOf(zone)} stroke="#6b5a85" strokeWidth={2} />)}
           <path d={OUTLINE} fill="none" stroke="#6b5a85" strokeWidth={2.5} />
-          {Object.entries(TOES[type]).map(([zone, t]) => <circle key={zone} cx={t.cx} cy={t.cy} r={t.r} fill={fillOf(zone)} stroke="#6b5a85" strokeWidth={2} />)}
+          {Object.entries(TOES[type]).map(([zone, t]) => <ellipse key={zone} cx={t.cx} cy={t.cy} rx={t.r * 0.94} ry={t.r * 1.08} transform={`rotate(${TILT[Number(zone.slice(-1)) - 1]} ${t.cx} ${t.cy})`} fill={fillOf(zone)} stroke="#6b5a85" strokeWidth={2} />)}
         </g>
       </svg>
       <figcaption className="text-base text-tinta-suave">{side === 'left' ? 'Izquierdo' : 'Derecho'}</figcaption>

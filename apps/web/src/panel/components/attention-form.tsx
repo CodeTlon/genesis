@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState } from 'react'
 import HoldButton from '@genesis/ui/vendor/HoldButton'
 import { FootMap } from './foot-map'
@@ -21,6 +22,9 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
   const [unsaved, setUnsaved] = useState(false)
   const [signing, setSigning] = useState(false)
   const confirmRef = useRef<HTMLDialogElement>(null)
+  const leaveRef = useRef<HTMLDialogElement>(null)
+  const leaveTo = useRef('')
+  const router = useRouter()
   const confirmTitle = useId()
   const dirty = useRef(false)
   const idRef = useRef<string | undefined>(undefined)
@@ -29,7 +33,21 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
 
   const set = (id: string, v: unknown) => { dirty.current = true; setUnsaved(true); setValues((p) => ({ ...p, [id]: v })) }
 
-  // Si se intenta cerrar la pestaña con cambios que todavía no se guardaron, el navegador avisa.
+  // Salir por un enlace de la app con cambios sin guardar: modal propio. Cerrar la pestaña no se puede personalizar,
+  // así que ahí queda el aviso del navegador (solo mientras haya algo sin guardar, normalmente un par de segundos).
+  useEffect(() => {
+    if (!unsaved || signed) return
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as Element).closest('a[href]') as HTMLAnchorElement | null
+      if (!a || a.target === '_blank' || a.origin !== location.origin || e.defaultPrevented || e.metaKey || e.ctrlKey) return
+      e.preventDefault(); e.stopPropagation()
+      leaveTo.current = a.pathname + a.search
+      leaveRef.current?.showModal()
+    }
+    document.addEventListener('click', onClick, true)
+    return () => document.removeEventListener('click', onClick, true)
+  }, [unsaved, signed])
+
   useEffect(() => {
     if (!unsaved || signed) return
     const warn = (e: BeforeUnloadEvent) => { e.preventDefault() }
@@ -73,7 +91,7 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
     <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
       <p role="note" className="rounded-card bg-lila/50 p-3">Caso: <strong>{caseTitle}</strong>. Escribí solo lo que haga falta: se guarda solo y firmás al final.</p>
       {fields.map((f) => (
-        <div key={f.id}>
+        <div key={f.id} className={f.advanced ? 'g-reveal' : undefined}>
           <FieldInput field={f} value={values[f.id]} onChange={(v) => set(f.id, v)}
             footType={values.footType} onFootType={(t) => set('footType', t)}
             markers={(values.markers ?? []) as FootMarker[]} onMarkers={(m) => set('markers', m)} />
@@ -92,6 +110,14 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
           <button type="button" onClick={() => confirmRef.current?.showModal()} className="min-h-touch rounded-control border border-violeta-oscuro px-6 font-semibold text-violeta-oscuro hover:bg-lila/40">Firmar</button>
         </div>
       </div>
+      <dialog ref={leaveRef} className="g-modal" aria-labelledby="salir-titulo" onClick={(e) => { if (e.target === leaveRef.current) leaveRef.current?.close() }}>
+        <h2 id="salir-titulo" className="text-xl font-semibold">Hay cambios sin guardar</h2>
+        <p className="mt-2">Se están guardando solos. Si salís ahora, lo último que escribiste podría perderse.</p>
+        <div className="mt-6 flex justify-end gap-2">
+          <button type="button" autoFocus onClick={() => leaveRef.current?.close()} className="min-h-touch rounded-control bg-violeta-oscuro px-5 font-semibold text-white hover:bg-tinta">Quedarme</button>
+          <button type="button" onClick={() => { leaveRef.current?.close(); router.push(leaveTo.current) }} className="min-h-touch rounded-control border border-tinta/60 px-5 hover:bg-lila/40">Salir igual</button>
+        </div>
+      </dialog>
       <dialog ref={confirmRef} className="g-modal" aria-labelledby={confirmTitle} onClick={(e) => { if (e.target === confirmRef.current) confirmRef.current?.close() }}>
         <h2 id={confirmTitle} className="text-xl font-semibold">¿Firmar esta evolución?</h2>
         <p className="mt-2">Una vez firmada ya no se puede editar: cualquier corrección se hace con una adenda.</p>

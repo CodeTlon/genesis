@@ -34,7 +34,7 @@ export async function signIn(formData: FormData) {
     await audit(null, 'login_failed', 'email', email)
     redirect('/panel/login?error=1')
   }
-  redirect('/panel/pacientes')
+  redirect('/panel/inicio')
 }
 
 export async function signOut() {

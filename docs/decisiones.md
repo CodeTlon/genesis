@@ -137,3 +137,8 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **Qué:** a pedido de Mateo se quita la pestaña Consentimientos, el bloqueo de subida de fotos sin consentimiento y la sección de la historia imprimible. La migración `0006_sin_consentimientos.sql` borra la tabla `consents` y la columna `clinical_photos.consent_id` (irreversible; ninguna base tenía datos reales).
 - **Consecuencia:** las fotos son dato de salud (ley 25.326) y el consentimiento deja de quedar registrado en el sistema; Inés debe gestionarlo por fuera (papel). REQ-FOT-001 pasa a "Subir fotos al caso".
 - **Pendiente:** texto de consentimiento revisado por una persona con matrícula (fuera del sistema).
+
+## ADR-020 Inicio, login y avisos propios
+- **Inicio:** tras el login se llega a `/panel/inicio` (saludo, buscador, totales, evoluciones sin firmar y firmadas, pacientes recientes). `repo.dashboard()` solo cuenta y lista metadatos; no descifra nada clínico.
+- **Sin diálogos del navegador:** no se usa `alert`, `confirm` ni los globos de validación. `FormValidity` los reemplaza por un mensaje debajo del campo; el borrado de fotos y la salida con cambios sin guardar usan modales propios. Queda el aviso del navegador al cerrar la pestaña con algo sin guardar (no se puede personalizar) y los controles nativos de lista, fecha y archivo.
+- **Movimiento:** los `<dialog>` entran y salen con `@starting-style` y `allow-discrete`; los bloques que se despliegan usan `g-reveal`; las marcas del mapa entran con un rebote corto. Todo se reduce con `prefers-reduced-motion`.
