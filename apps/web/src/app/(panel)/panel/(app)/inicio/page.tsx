@@ -1,20 +1,11 @@
 import Link from 'next/link'
 import { requireUser } from '@/panel/lib/auth-server'
+import { hourInCordoba, longToday, when } from '@/panel/lib/format'
 import { dashboard, type Pending } from '@/panel/lib/repo'
 
 export const dynamic = 'force-dynamic'
 
-const TZ = 'America/Argentina/Cordoba'
-const hour = () => Number(new Intl.DateTimeFormat('es-AR', { hour: 'numeric', hour12: false, timeZone: TZ }).format(new Date()))
-const greeting = () => (hour() < 6 ? 'Buenas noches' : hour() < 13 ? 'Buenos días' : hour() < 20 ? 'Buenas tardes' : 'Buenas noches')
-const dayKey = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d)
-/** "hoy", "ayer" o dd/mm, en horario de Córdoba. */
-function when(iso: string) {
-  const d = new Date(iso), now = new Date()
-  if (dayKey(d) === dayKey(now)) return 'hoy'
-  if (dayKey(d) === dayKey(new Date(now.getTime() - 864e5))) return 'ayer'
-  return new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', timeZone: TZ }).format(d)
-}
+const greeting = () => { const h = hourInCordoba(); return h < 6 ? 'Buenas noches' : h < 13 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches' }
 
 const I = (d: string) => <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
 const ICON = {
@@ -28,19 +19,20 @@ const ICON = {
 
 const href = (p: Pending) => (p.caseId ? `/panel/pacientes/${p.patientId}/casos/${p.caseId}` : `/panel/pacientes/${p.patientId}`)
 
-function Stat({ icon, n, label, to, tone }: { icon: string; n: number; label: string; to: string; tone: string }) {
+function Stat({ icon, n, label, go, to, tone }: { icon: string; n: number; label: string; go: string; to: string; tone: string }) {
   return (
-    <Link href={to} className="group flex flex-col items-start gap-3 rounded-card bg-white p-4 sm:flex-row sm:items-center sm:gap-4 shadow-soft transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_-14px_rgb(123_63_184/.4)]">
-      <span className={`grid size-12 shrink-0 place-items-center rounded-control ${tone}`}>{I(icon)}</span>
-      <span className="min-w-0">
-        <span className="block text-4xl font-semibold leading-none tracking-tight">{n}</span>
-        <span className="mt-1 block text-base text-tinta-suave">{label}</span>
+    <Link href={to} className="group flex flex-col gap-3 rounded-card bg-white p-4 shadow-soft transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_-14px_rgb(123_63_184/.4)]">
+      <span className="flex items-center gap-3">
+        <span className={`grid size-11 shrink-0 place-items-center rounded-control ${tone}`}>{I(icon)}</span>
+        <span className="text-4xl font-semibold leading-none tracking-tight">{n}</span>
       </span>
+      <span className="text-base text-tinta-suave">{label}</span>
+      <span className="mt-auto inline-flex items-center gap-1 text-base font-semibold text-violeta-oscuro">{go}<svg aria-hidden viewBox="0 0 24 24" className="size-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg></span>
     </Link>
   )
 }
 
-function List({ id, title, empty, items, tone }: { id?: string; title: string; empty: string; items: Pending[]; tone: string }) {
+function List({ id, title, empty, items, tone, more }: { id?: string; title: string; empty: string; items: Pending[]; tone: string; more?: { href: string; label: string } }) {
   return (
     <section id={id} aria-labelledby={`${id ?? title}-h`} className="rounded-card bg-white p-5 shadow-soft">
       <h2 id={`${id ?? title}-h`} className="text-xl">{title}</h2>
@@ -59,6 +51,7 @@ function List({ id, title, empty, items, tone }: { id?: string; title: string; e
           ))}
         </ul>
       )}
+      {more && <Link href={more.href} className="mt-3 inline-flex min-h-touch items-center font-semibold text-violeta-oscuro hover:underline">{more.label}</Link>}
     </section>
   )
 }
@@ -66,14 +59,13 @@ function List({ id, title, empty, items, tone }: { id?: string; title: string; e
 export default async function Inicio() {
   const user = await requireUser()
   const d = await dashboard()
-  const today = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: TZ }).format(new Date())
   return (
     <div className="space-y-6">
       <header className="relative overflow-hidden rounded-card bg-gradient-to-br from-violeta-oscuro to-[#4f2480] p-6 text-white shadow-soft md:p-8">
         <span aria-hidden className="g-blob g-blob-1 !size-72 !opacity-25" />
         <span aria-hidden className="g-blob g-blob-3 !right-[-4rem] !left-auto !size-64 !opacity-20" />
         <div className="relative">
-          <p className="text-base text-white/85">{today.charAt(0).toUpperCase() + today.slice(1)}</p>
+          <p className="text-base text-white/85">{longToday()}</p>
           <h1 className="mt-1 text-3xl md:text-4xl">{greeting()}, {user.name.split(' ')[0]}</h1>
           <p className="mt-2 max-w-xl text-white/90">{d.drafts > 0 ? `Tenés ${d.drafts} ${d.drafts === 1 ? 'evolución' : 'evoluciones'} sin firmar para retomar.` : 'Todo al día. Buscá un paciente o cargá uno nuevo para empezar.'}</p>
           <form action="/panel/pacientes" className="mt-5 flex max-w-xl gap-2">
@@ -84,17 +76,14 @@ export default async function Inicio() {
         </div>
       </header>
 
-      <div className="g-stagger grid grid-cols-2 gap-3 xl:grid-cols-4">
-        <Stat icon={ICON.people} n={d.patients} label={d.patients === 1 ? 'Paciente' : 'Pacientes'} to="/panel/pacientes" tone="bg-lila/50 text-violeta-oscuro" />
-        <Stat icon={ICON.folder} n={d.openCases} label={d.openCases === 1 ? 'Caso abierto' : 'Casos abiertos'} to="/panel/pacientes" tone="bg-info-fondo text-info-texto" />
-        <Stat icon={ICON.pencil} n={d.drafts} label={d.drafts === 1 ? 'Sin firmar' : 'Sin firmar'} to="#pendientes" tone="bg-aviso-fondo text-aviso-texto" />
-        <Stat icon={ICON.check} n={d.signedThisMonth} label="Firmadas este mes" to="#recientes" tone="bg-ok-fondo text-ok-texto" />
-      </div>
+      <nav aria-label="Resumen" className="g-stagger grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <Stat icon={ICON.people} n={d.patients} label={d.patients === 1 ? 'Paciente' : 'Pacientes'} go="Ver lista" to="/panel/pacientes" tone="bg-lila/50 text-violeta-oscuro" />
+        <Stat icon={ICON.folder} n={d.openCases} label={d.openCases === 1 ? 'Caso abierto' : 'Casos abiertos'} go="Ver casos" to="/panel/casos" tone="bg-info-fondo text-info-texto" />
+        <Stat icon={ICON.pencil} n={d.drafts} label="Sin firmar" go="Retomar" to="/panel/atenciones?tab=sin-firmar" tone="bg-aviso-fondo text-aviso-texto" />
+        <Stat icon={ICON.check} n={d.signedThisMonth} label="Firmadas este mes" go="Ver firmadas" to="/panel/atenciones?tab=firmadas" tone="bg-ok-fondo text-ok-texto" />
+      </nav>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <List id="pendientes" title="Para retomar" empty="No hay evoluciones sin firmar." items={d.pending} tone="bg-aviso-fondo text-aviso-texto" />
-        <List id="recientes" title="Últimas firmadas" empty="Todavía no se firmó ninguna evolución." items={d.recent} tone="bg-ok-fondo text-ok-texto" />
-      </div>
+      <List id="pendientes" title="Para retomar" empty="No hay evoluciones sin firmar. Todo al día." items={d.pending} tone="bg-aviso-fondo text-aviso-texto" more={d.drafts > d.pending.length ? { href: '/panel/atenciones?tab=sin-firmar', label: `Ver las ${d.drafts}` } : undefined} />
 
       <section aria-labelledby="nuevos-h" className="rounded-card bg-white p-5 shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3">

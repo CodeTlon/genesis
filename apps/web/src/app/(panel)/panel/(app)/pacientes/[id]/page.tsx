@@ -4,12 +4,15 @@ import { AlertBadges } from '@/panel/components/alert-badges'
 import { BackBar } from '@/panel/components/back-link'
 import { Editable } from '@/panel/components/editable'
 import { AntecedentesForm, OpenCaseForm, PatientForm } from '@/panel/components/forms'
+import { Pagination, parsePage } from '@/panel/components/pagination'
 import { Tabs } from '@/panel/components/tabs'
 import { audit, requireUser } from '@/panel/lib/auth-server'
 import * as repo from '@/panel/lib/repo'
 import { ANTECEDENTE_ITEMS, type Antecedentes, type Patient } from '@/panel/lib/types'
 
 export const dynamic = 'force-dynamic'
+
+const CASES_PAGE = 10
 
 const day = (iso: string) => iso.slice(0, 10).split('-').reverse().join('/')
 const TABS = ['casos', 'antecedentes', 'datos'] as const
@@ -59,14 +62,15 @@ function AntecedentesSummary({ a }: { a: Antecedentes | null }) {
   )
 }
 
-export default async function Ficha({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string }> }) {
+export default async function Ficha({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; page?: string }> }) {
   const user = await requireUser()
   const { id } = await params
-  const { tab: rawTab } = await searchParams
+  const { tab: rawTab, page: rawPage } = await searchParams
   const tab: Tab = TABS.includes(rawTab as Tab) ? (rawTab as Tab) : 'casos'
   const p = await repo.getPatient(id)
   if (!p) notFound()
   const [ant, cases] = await Promise.all([repo.latestAntecedentes(id), repo.listCases(id)])
+  const casesPage = parsePage(rawPage, Math.ceil(cases.length / CASES_PAGE))
   await audit(user.id, 'view_patient', 'patient', id)
   const openCase = cases.find((c) => c.status === 'open')
   const base = `/panel/pacientes/${id}`
@@ -92,8 +96,9 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
         {tab === 'casos' && (
           <>
             {cases.length === 0 ? <p className="rounded-card bg-white p-6 text-lg shadow-soft">Todavía no hay casos. Abrí el primero (por ejemplo: uñero pie derecho) para empezar a registrar evoluciones.</p> : (
+              <>
               <ul className="g-stagger divide-y divide-lila/50 rounded-card bg-white shadow-soft">
-                {cases.map((c) => (
+                {cases.slice((casesPage - 1) * CASES_PAGE, casesPage * CASES_PAGE).map((c) => (
                   <li key={c.id}>
                     <Link href={`${base}/casos/${c.id}`} className="flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-lila/30">
                       <span className="text-lg font-semibold">{c.title}</span>
@@ -102,6 +107,8 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
                   </li>
                 ))}
               </ul>
+              <Pagination base={base} params={{ tab: 'casos' }} page={casesPage} total={cases.length} pageSize={CASES_PAGE} noun={cases.length === 1 ? 'caso' : 'casos'} />
+              </>
             )}
             <details className="g-acc rounded-card bg-white p-4 shadow-soft">
               <summary className="flex min-h-touch items-center justify-between text-lg font-semibold text-violeta-oscuro">Abrir un caso nuevo<svg aria-hidden viewBox="0 0 24 24" className="g-chev size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg></summary>

@@ -2,20 +2,20 @@ import Link from 'next/link'
 import { AlertBadges } from '@/panel/components/alert-badges'
 import { PatientSearch } from '@/panel/components/patient-search'
 import { requireUser } from '@/panel/lib/auth-server'
-import { listPatients } from '@/panel/lib/repo'
+import { Pagination, parsePage } from '@/panel/components/pagination'
+import { countPatients, listPatients } from '@/panel/lib/repo'
 
 export const dynamic = 'force-dynamic'
 
 const PAGE = 25
 
-export default async function Pacientes({ searchParams }: { searchParams: Promise<{ q?: string; n?: string }> }) {
+export default async function Pacientes({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   await requireUser()
-  const { q, n } = await searchParams
-  const limit = Math.min(Math.max(Number(n) || PAGE, PAGE), 200)
-  const rows = await listPatients(q, limit + 1)
-  const more = rows.length > limit
-  const shown = rows.slice(0, limit)
-  const moreHref = `/panel/pacientes?${new URLSearchParams({ ...(q ? { q } : {}), n: String(limit + PAGE) })}`
+  const sp = await searchParams
+  const q = sp.q?.trim() || undefined
+  const total = await countPatients(q)
+  const page = parsePage(sp.page, Math.ceil(total / PAGE))
+  const shown = await listPatients(q, PAGE, (page - 1) * PAGE)
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -50,7 +50,7 @@ export default async function Pacientes({ searchParams }: { searchParams: Promis
               </li>
             ))}
           </ul>
-          {more && <div className="text-center"><Link href={moreHref} scroll={false} className="inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-6 font-semibold text-violeta-oscuro hover:bg-lila/40">Ver más pacientes</Link></div>}
+          <Pagination base="/panel/pacientes" params={{ q }} page={page} total={total} pageSize={PAGE} noun={total === 1 ? 'paciente' : 'pacientes'} />
         </>
       )}
     </div>

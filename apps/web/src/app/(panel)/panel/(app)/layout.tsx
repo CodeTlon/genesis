@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser()
   const drafts = await draftCount()
-  const nav = [{ href: '/panel/inicio', label: 'Inicio' }, { href: '/panel/pacientes', label: 'Pacientes' }, { href: '/panel/pacientes/nuevo', label: 'Nuevo paciente', short: 'Nuevo' }]
+  const nav = [{ href: '/panel/inicio', label: 'Inicio' }, { href: '/panel/pacientes', label: 'Pacientes' }, { href: '/panel/casos', label: 'Casos' }, { href: '/panel/atenciones', label: 'Atenciones' }, { href: '/panel/pacientes/nuevo', label: 'Nuevo paciente', short: 'Nuevo' }]
   return (
     <ToastProvider>
     <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-control focus:bg-white focus:px-4 focus:py-3 focus:font-semibold focus:shadow-soft">Saltar al contenido</a>
