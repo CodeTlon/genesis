@@ -20,3 +20,9 @@ export async function login(page: Page, email = USER.email) {
   await page.getByRole('button', { name: 'Entrar' }).click()
   await expect(page).toHaveURL(/\/panel\/(inicio|pacientes)/)
 }
+
+/** Abre una sección plegable (details) por su título; si ya está abierta no hace nada. */
+export async function openSection(page: Page, title: string) {
+  const d = page.locator('details.g-acc', { has: page.locator('summary', { hasText: title }) })
+  if (!(await d.evaluate((e) => (e as HTMLDetailsElement).open))) await d.locator('summary').click()
+}

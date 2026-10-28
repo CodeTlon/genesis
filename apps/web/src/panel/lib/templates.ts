@@ -11,6 +11,8 @@ export type Field = {
   unit?: string
   /** Solo se muestra en "modo completo". El modo simple muestra pocos campos. */
   advanced?: boolean
+  /** Tarjeta de la pantalla de atención donde se muestra. */
+  group?: string
 }
 
 export type Template = {
@@ -40,13 +42,13 @@ const PATOLOGIAS: [string, string][] = [
 export const TEMPLATE: Template = {
   code: 'B', name: 'Podología — evolución', version: 1, status: 'propuesta',
   fields: [
-    { id: 'motivo', label: 'Motivo de la visita', type: 'text', placeholder: 'Ej: control de rutina, dolor en el dedo gordo' },
-    { id: 'mapa', label: 'Mapa de pies', type: 'footmap', hint: 'Elegí el tipo de pie y tocá una zona para marcar un hallazgo' },
-    { id: 'hallazgos', label: 'Hallazgos', type: 'multi', options: ['Heloma', 'Hiperqueratosis', 'Onicolisis', 'Onicocriptosis (uña encarnada)', 'Micosis', 'Verrugas plantares', 'Fisuras', 'Deformidades'] },
-    { id: 'procedimiento', label: 'Procedimiento realizado', type: 'longtext', placeholder: 'Ej: quiropodia, enucleación de heloma, fresado de uña' },
-    { id: 'indicaciones', label: 'Indicaciones', type: 'longtext', placeholder: 'Ej: crema hidratante dos veces al día, calzado amplio' },
-    { id: 'tratamiento_preventivo', label: 'Tratamiento preventivo', type: 'longtext', placeholder: 'Ej: plantillas, controles cada 60 días' },
-    { id: 'control', label: 'Control (próxima visita)', type: 'text', placeholder: 'Ej: en 45 días' },
+    { id: 'motivo', group: 'Visita', label: 'Motivo de la visita', type: 'text', placeholder: 'Ej: control de rutina, dolor en el dedo gordo' },
+    { id: 'mapa', group: 'Mapa', label: 'Mapa de pies', type: 'footmap', hint: 'Elegí el tipo de pie y tocá una zona para marcar un hallazgo' },
+    { id: 'hallazgos', group: 'Atención', label: 'Hallazgos', type: 'multi', options: ['Heloma', 'Hiperqueratosis', 'Onicolisis', 'Onicocriptosis (uña encarnada)', 'Micosis', 'Verrugas plantares', 'Fisuras', 'Deformidades'] },
+    { id: 'procedimiento', group: 'Atención', label: 'Procedimiento realizado', type: 'longtext', placeholder: 'Ej: quiropodia, enucleación de heloma, fresado de uña' },
+    { id: 'indicaciones', group: 'Indicaciones', label: 'Indicaciones', type: 'longtext', placeholder: 'Ej: crema hidratante dos veces al día, calzado amplio' },
+    { id: 'tratamiento_preventivo', group: 'Indicaciones', label: 'Tratamiento preventivo', type: 'longtext', placeholder: 'Ej: plantillas, controles cada 60 días' },
+    { id: 'control', group: 'Indicaciones', label: 'Control (próxima visita)', type: 'text', placeholder: 'Ej: en 45 días' },
     ...EXAMEN.flatMap(([id, label, options]) => [
       { id: `${id}_der`, label: `${label} (pie derecho)`, type: 'select' as const, options, advanced: true },
       { id: `${id}_izq`, label: `${label} (pie izquierdo)`, type: 'select' as const, options, advanced: true },

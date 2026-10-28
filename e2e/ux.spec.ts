@@ -112,3 +112,14 @@ test('[REQ-SEG-007] salir de una evolución con cambios sin guardar pide confirm
   await page.getByRole('button', { name: 'Quedarme' }).click()
   await expect(page).toHaveURL(/atencion/)
 })
+
+test('[REQ-PAC-009] el alta muestra lo esencial, el resto se abre aparte y Cancelar vuelve a la lista', async ({ page }) => {
+  await login(page)
+  await page.goto('/panel/pacientes/nuevo')
+  await expect(page.getByLabel('Teléfono')).toBeVisible()
+  await expect(page.getByLabel('Domicilio')).toBeHidden()
+  await page.getByText('Contacto y cobertura').click()
+  await expect(page.getByLabel('Domicilio')).toBeVisible()
+  await page.getByRole('link', { name: 'Cancelar' }).click()
+  await expect(page).toHaveURL(/\/panel\/pacientes$/)
+})

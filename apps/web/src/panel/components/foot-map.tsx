@@ -183,7 +183,7 @@ export function FootMap({ footType, onFootType, markers, onChange }: {
         ))}
       </div>
       <div role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${view}`} className="g-enter grid gap-2 md:grid-cols-2" key={view}>{foot('left')}{foot('right')}</div>
-      <p className="mt-1 text-center text-base text-tinta-suave">Con teclado: Tab para moverte, Enter para elegir una zona y Escape para cerrar.</p>
+      <p className="sr-only">Con teclado: Tab para moverte, Enter para elegir una zona y Escape para cerrar.</p>
 
       <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-base" aria-label="Referencias de color">
         {([1, 2, 3] as const).map((s) => <li key={s} className="flex items-center gap-1"><span aria-hidden className="size-4 rounded-full border border-tinta/40" style={{ background: SEV_FILL[s] }} />{SEV_LABEL[s]} (a tratar)</li>)}
@@ -228,7 +228,7 @@ export function FootMap({ footType, onFootType, markers, onChange }: {
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={save} className="min-h-touch rounded-control bg-violeta-oscuro px-6 font-semibold text-white">Guardar marca</button>
             {find(sel.side, sel.zone) && <button type="button" onClick={remove} className="min-h-touch rounded-control border border-error-texto px-5 text-error-texto">Quitar marca</button>}
-            <button type="button" onClick={() => setSel(null)} className="min-h-touch rounded-control px-5 underline">Cancelar</button>
+            <button type="button" onClick={() => setSel(null)} className="min-h-touch rounded-control border border-tinta/50 bg-white px-5 font-semibold hover:bg-lila/40">Cancelar</button>
           </div>
         </div>
         </dialog>

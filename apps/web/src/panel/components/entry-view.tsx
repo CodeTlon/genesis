@@ -53,7 +53,7 @@ export function EntryView({ entry }: { entry: Entry }) {
               {msg && <p role="alert" className="text-red-800">{msg}</p>}
               <div className="flex gap-2">
                 <button disabled={busy} onClick={submit} className="min-h-touch rounded-control bg-violeta-oscuro px-5 text-white disabled:opacity-60">Guardar adenda</button>
-                <button onClick={() => setOpen(false)} className="min-h-touch px-5 underline">Cancelar</button>
+                <button onClick={() => setOpen(false)} className="min-h-touch rounded-control border border-tinta/50 bg-white px-5 font-semibold hover:bg-lila/40">Cancelar</button>
               </div>
             </div>
           )}
