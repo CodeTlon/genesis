@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { ensureUser, login } from './helpers'
+import { ensureUser, login, openSection } from './helpers'
 
 test.describe.configure({ mode: 'serial' })
 test.beforeAll(() => ensureUser())
@@ -20,6 +20,7 @@ test('[REQ-PAC-005] la ficha guarda nacionalidad, medidas, grupo sanguíneo, act
   await page.goto('/panel/pacientes/nuevo')
   await page.getByLabel('Nombre', { exact: true }).fill('Ficha')
   await page.getByLabel('Apellido', { exact: true }).fill(`Completa ${RUN}`)
+  await openSection(page, 'Salud y hábitos')
   await page.getByLabel('Fecha de primera consulta').fill('2026-10-20')
   await page.getByLabel('Nacionalidad').fill('Argentina')
   await page.getByLabel('Sexo').selectOption('Femenino')
@@ -53,10 +54,13 @@ test('[REQ-ANT-002][REQ-ANT-003] antecedentes de la ficha, alerta de antiagregad
   await login(page)
   await page.goto(`${patientUrl}?tab=antecedentes`)
   await page.getByRole('button', { name: 'Editar antecedentes' }).click()
+  await openSection(page, 'Otros antecedentes')
   for (const a of ['Antiagregados', 'Artritis', 'Artrosis', 'Dermatológicos', 'Problema respiratorio', 'Traumatológicos', 'Reumatológicos', 'Colesterol', 'Triglicéridos', 'Diabetes', 'Anticoagulantes', 'Marcapasos'])
     await expect(page.getByLabel(new RegExp(`^${a}`))).toBeVisible()
   await page.getByLabel(/^Antiagregados/).check()
   await page.getByLabel(/^Diabetes/).check()
+  await openSection(page, 'Datos de diabetes')
+  await openSection(page, 'Más datos')
   await page.getByLabel('Tipo de diabetes').fill('Tipo 2')
   await page.getByLabel('Tiempo de evolución').fill('8 años')
   await page.getByLabel('Antecedentes familiares').fill('Madre diabética')

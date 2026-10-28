@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import pg from 'pg'
-import { DB, ensureUser, login } from './helpers'
+import { DB, ensureUser, login, openSection } from './helpers'
 
 test.describe.configure({ mode: 'serial' })
 test.beforeAll(() => ensureUser())
@@ -36,6 +36,7 @@ test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-
   await page.goto(`${patientUrl}?tab=antecedentes`)
   await page.getByRole('button', { name: 'Editar antecedentes' }).click()
   await page.getByLabel(/^Diabetes/).check()
+  await openSection(page, 'Más datos')
   await page.getByLabel('Otros antecedentes y notas (opcional)').fill(`Nota-antecedente-${RUN}`)
   await page.getByRole('button', { name: 'Guardar antecedentes' }).click()
   await expect(page.getByRole('status').filter({ hasText: 'Guardado' })).toBeVisible()
@@ -51,6 +52,7 @@ test('[REQ-PAC-001][REQ-ANT-001][REQ-CAS-001][REQ-EVO-001][REQ-EVO-002][REQ-EVO-
   await expect(page).toHaveURL(/\/casos\/[0-9a-f-]{36}$/)
   caseUrl = page.url()
 
+  await openSection(page, 'Agregar una foto')
   await page.getByLabel(/^Foto \(JPG/).setInputFiles(FOTO)
   await page.getByLabel('Tipo').selectOption('inicial')
   await page.getByRole('button', { name: 'Subir foto' }).click()
@@ -164,7 +166,7 @@ test('[REQ-FOT-002] la subida rechaza archivos que no son fotos aunque digan ser
   await page.goto(caseUrl)
   // el caso está cerrado: reabrir para probar la subida
   await page.getByRole('button', { name: 'Reabrir caso' }).click()
-  await expect(page.getByRole('button', { name: 'Subir foto' })).toBeVisible()
+  await expect(page.getByText('Agregar una foto')).toBeVisible() // con el caso abierto se puede subir
   const bad = await page.request.post('/api/clinico/fotos', { multipart: { foto: { name: 'x.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('esto no es una imagen') }, patientId: patientUrl.split('/').pop()!, kind: 'inicial' } })
   expect(bad.status()).toBe(422)
   const svg = await page.request.post('/api/clinico/fotos', { multipart: { foto: { name: 'x.svg', mimeType: 'image/svg+xml', buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>') }, patientId: patientUrl.split('/').pop()!, kind: 'inicial' } })

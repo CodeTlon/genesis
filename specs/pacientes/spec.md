@@ -44,3 +44,9 @@ El sistema DEBE llevar tras el login a una pantalla de inicio con el saludo, un 
 - Escenario: Dado un paciente con una evolución sin firmar, Cuando se inicia sesión, Entonces se muestra el inicio y la evolución sin firmar aparece en "Para retomar".
 - verify: e2e e2e/ux.spec.ts
 - confianza: confirmado
+
+### REQ-PAC-009 [should] Formularios con lo esencial a la vista
+El sistema DEBE mostrar en el alta del paciente solo los datos de identificación y teléfono, con el resto en secciones plegables cerradas, y DEBE ofrecer un botón Cancelar junto al de guardar tanto al crear como al editar.
+- Escenario: Dado el formulario de nuevo paciente, Cuando se abre, Entonces las secciones "Contacto y cobertura" y "Salud y hábitos" están cerradas, se abren al pulsarlas y el botón Cancelar vuelve a la lista de pacientes.
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado

@@ -2,8 +2,11 @@
 import { createContext, useContext, useState } from 'react'
 
 const Done = createContext<() => void>(() => {})
+const Cancel = createContext<(() => void) | null>(null)
 /** Los formularios llaman a esto al guardar bien, para volver a la vista de lectura. */
 export const useEditDone = () => useContext(Done)
+/** Cierra la edición sin guardar; es null cuando el formulario no está dentro de un Editable (por ejemplo, al crear). */
+export const useEditCancel = () => useContext(Cancel)
 
 /** Muestra el resumen de solo lectura y, con "Editar", el formulario completo. Evita tener formularios enormes siempre a la vista. */
 export function Editable({ summary, editLabel = 'Editar', children }: { summary: React.ReactNode; editLabel?: string; children: React.ReactNode }) {
@@ -21,10 +24,9 @@ export function Editable({ summary, editLabel = 'Editar', children }: { summary:
   }
   return (
     <Done.Provider value={() => setEditing(false)}>
-      <div className="g-enter space-y-4">
-        {children}
-        <button type="button" onClick={() => setEditing(false)} className="min-h-touch rounded-control px-4 font-semibold text-tinta-suave underline">Cancelar</button>
-      </div>
+      <Cancel.Provider value={() => setEditing(false)}>
+        <div className="g-enter space-y-4">{children}</div>
+      </Cancel.Provider>
     </Done.Provider>
   )
 }

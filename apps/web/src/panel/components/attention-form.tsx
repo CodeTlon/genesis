@@ -9,6 +9,10 @@ import type { Field, Template } from '@/panel/lib/templates'
 import type { EntryPayload, FootMarker, FootType } from '@/panel/lib/types'
 
 type Values = EntryPayload
+const GROUPS = [
+  { id: 'Visita', title: '' }, { id: 'Mapa', title: '' },
+  { id: 'Atención', title: 'Atención realizada' }, { id: 'Indicaciones', title: 'Indicaciones y control' }, { id: 'Examen completo', title: 'Examen completo' },
+]
 const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4 placeholder:text-tinta-suave'
 
 export function AttentionForm({ patientId, patientName, caseId, caseTitle, template, initial }: {
@@ -90,13 +94,24 @@ export function AttentionForm({ patientId, patientName, caseId, caseTitle, templ
   return (
     <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
       <p role="note" className="rounded-card bg-lila/50 p-3">Caso: <strong>{caseTitle}</strong>. Escribí solo lo que haga falta: se guarda solo y firmás al final.</p>
-      {fields.map((f) => (
-        <div key={f.id} className={f.advanced ? 'g-reveal' : undefined}>
-          <FieldInput field={f} value={values[f.id]} onChange={(v) => set(f.id, v)}
-            footType={values.footType} onFootType={(t) => set('footType', t)}
-            markers={(values.markers ?? []) as FootMarker[]} onMarkers={(m) => set('markers', m)} />
-        </div>
-      ))}
+      {GROUPS.map(({ id, title }) => {
+        const items = fields.filter((f) => (f.group ?? (f.advanced ? 'Examen completo' : 'Visita')) === id)
+        if (!items.length) return null
+        const body = items.map((f) => (
+          <div key={f.id} className={f.advanced ? 'g-reveal' : undefined}>
+            <FieldInput field={f} value={values[f.id]} onChange={(v) => set(f.id, v)}
+              footType={values.footType} onFootType={(t) => set('footType', t)}
+              markers={(values.markers ?? []) as FootMarker[]} onMarkers={(m) => set('markers', m)} />
+          </div>
+        ))
+        // Motivo y mapa van sueltos (el mapa ya es una tarjeta); el resto, en tarjetas con título.
+        return title ? (
+          <section key={id} aria-label={title} className={`${id === 'Examen completo' ? 'g-reveal ' : ''}space-y-5 rounded-card bg-white p-5 shadow-soft`}>
+            <h2 className="text-xl font-semibold text-violeta-oscuro">{title}</h2>
+            {body}
+          </section>
+        ) : <div key={id} className="space-y-6">{body}</div>
+      })}
       {hasAdvanced && (
         <button type="button" onClick={() => setAdvanced((a) => !a)} aria-expanded={advanced} className="min-h-touch rounded-control border border-violeta-oscuro px-5 text-violeta-oscuro">
           {advanced ? 'Ver menos campos' : 'Ver más campos (examen completo)'}
