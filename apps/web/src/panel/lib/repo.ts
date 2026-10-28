@@ -24,13 +24,19 @@ const toPatient = (r: typeof P.$inferSelect): Patient => ({
 
 const notDeleted = and(eq(P.tenantId, TENANT_ID), isNull(P.deletedAt))
 
-export async function listPatients(q?: string, limit = 200): Promise<Patient[]> {
+const patientWhere = (q?: string) => {
   const term = q?.trim()
-  const where = term
-    ? and(notDeleted, sql`search_text like '%' || lower(immutable_unaccent(${term})) || '%'`)
-    : notDeleted
-  const rows = await db().select().from(P).where(where).orderBy(asc(P.lastName), asc(P.firstName)).limit(limit)
+  return term ? and(notDeleted, sql`search_text like '%' || lower(immutable_unaccent(${term})) || '%'`) : notDeleted
+}
+
+export async function listPatients(q?: string, limit = 200, offset = 0): Promise<Patient[]> {
+  const rows = await db().select().from(P).where(patientWhere(q)).orderBy(asc(P.lastName), asc(P.firstName), asc(P.id)).limit(limit).offset(offset)
   return rows.map(toPatient)
+}
+
+export async function countPatients(q?: string): Promise<number> {
+  const [r] = await db().select({ n: sql<number>`count(*)::int` }).from(P).where(patientWhere(q))
+  return r?.n ?? 0
 }
 
 export async function getPatient(id: string): Promise<Patient | null> {
@@ -158,11 +164,16 @@ async function hydrateEntries(rows: { e: typeof E.$inferSelect; author: string |
   }))
 }
 
-export async function listEntries(patientId: string, caseId?: string): Promise<Entry[]> {
+export async function listEntries(patientId: string, caseId?: string, page?: { limit: number; offset: number }): Promise<Entry[]> {
   if (!isUuid(patientId)) return []
   const where = caseId ? and(eq(E.patientId, patientId), eq(E.caseId, caseId)) : eq(E.patientId, patientId)
-  const rows = await db().select({ e: E, author: U.name }).from(E).leftJoin(U, eq(U.id, E.authorUserId)).where(where).orderBy(desc(E.createdAt))
-  return hydrateEntries(rows)
+  const q = db().select({ e: E, author: U.name }).from(E).leftJoin(U, eq(U.id, E.authorUserId)).where(where).orderBy(desc(E.createdAt), desc(E.id))
+  return hydrateEntries(page ? await q.limit(page.limit).offset(page.offset) : await q)
+}
+
+export async function countEntries(patientId: string, caseId: string): Promise<number> {
+  if (!isUuid(patientId) || !isUuid(caseId)) return 0
+  return count(db().select({ n: sql<number>`count(*)::int` }).from(E).where(and(eq(E.patientId, patientId), eq(E.caseId, caseId))))
 }
 
 export async function getEntry(id: string): Promise<Entry | null> {
@@ -255,35 +266,57 @@ export async function deletePhotoRow(id: string): Promise<boolean> {
   return r.length > 0
 }
 
-// ───────── Inicio (resumen) ─────────
+// ───────── Inicio (resumen) y listados globales ─────────
 export type Pending = { entryId: string; patientId: string; caseId?: string; patient: string; caseTitle?: string; at: string }
-export type Dashboard = { patients: number; openCases: number; drafts: number; signedThisMonth: number; pending: Pending[]; recent: Pending[]; latestPatients: { id: string; name: string; createdAt: string }[] }
+export type Dashboard = { patients: number; openCases: number; drafts: number; signedThisMonth: number; pending: Pending[]; latestPatients: { id: string; name: string; createdAt: string }[] }
 
-/** Números y listas cortas para la pantalla de inicio. Solo metadatos: no descifra nada clínico. */
+const monthStart = () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1))
+const count = async (q: PromiseLike<{ n: number }[]>) => (await q)[0]?.n ?? 0
+
+/** Evoluciones de todos los pacientes, sin firmar o firmadas (opcionalmente solo las de este mes). Solo metadatos: no descifra nada clínico. */
+export async function listAttentions(status: 'draft' | 'signed', opts: { limit?: number; offset?: number; thisMonth?: boolean } = {}): Promise<Pending[]> {
+  const at = status === 'draft' ? E.createdAt : E.signedAt
+  const where = and(eq(E.status, status), notDeleted, opts.thisMonth ? gte(E.signedAt, monthStart()) : undefined)
+  const rows = await db().select({ id: E.id, patientId: E.patientId, caseId: E.caseId, first: P.firstName, last: P.lastName, caseTitle: C.title, at })
+    .from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId)).where(where).orderBy(desc(at), desc(E.id)).limit(opts.limit ?? 50).offset(opts.offset ?? 0)
+  return rows.map((r) => ({ entryId: r.id, patientId: r.patientId, caseId: r.caseId ?? undefined, patient: `${r.first} ${r.last}`, caseTitle: r.caseTitle ?? undefined, at: (r.at ?? new Date()).toISOString() }))
+}
+
+export async function countAttentions(status: 'draft' | 'signed', thisMonth = false): Promise<number> {
+  return count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, status), notDeleted, thisMonth ? gte(E.signedAt, monthStart()) : undefined)))
+}
+
+export type OpenCaseRow = { caseId: string; patientId: string; patient: string; title: string; openedAt: string; lastAt: string; drafts: number }
+
+/** Casos abiertos de todos los pacientes, el de actividad más reciente primero. */
+export async function listOpenCases(limit = 50, offset = 0): Promise<OpenCaseRow[]> {
+  const last = sql<Date>`coalesce(max(${E.createdAt}), ${C.openedAt})`
+  const rows = await db().select({
+    id: C.id, patientId: C.patientId, first: P.firstName, lastName: P.lastName, title: C.title, openedAt: C.openedAt, lastAt: last,
+    drafts: sql<number>`count(${E.id}) filter (where ${E.status} = 'draft')::int`,
+  }).from(C).innerJoin(P, eq(P.id, C.patientId)).leftJoin(E, eq(E.caseId, C.id))
+    .where(and(eq(C.status, 'open'), notDeleted)).groupBy(C.id, P.id).orderBy(desc(last), desc(C.id)).limit(limit).offset(offset)
+  return rows.map((r) => ({ caseId: r.id, patientId: r.patientId, patient: `${r.first} ${r.lastName}`, title: r.title, openedAt: r.openedAt.toISOString(), lastAt: new Date(r.lastAt).toISOString(), drafts: r.drafts }))
+}
+
+/** Números y listas cortas para la pantalla de inicio. */
 export async function dashboard(): Promise<Dashboard> {
-  const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1))
-  const rows = (status: 'draft' | 'signed', limit: number) =>
-    db().select({ id: E.id, patientId: E.patientId, caseId: E.caseId, first: P.firstName, last: P.lastName, caseTitle: C.title, at: status === 'draft' ? E.createdAt : E.signedAt })
-      .from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId))
-      .where(and(eq(E.status, status), notDeleted)).orderBy(desc(status === 'draft' ? E.createdAt : E.signedAt)).limit(limit)
-  const toPending = (r: Awaited<ReturnType<typeof rows>>[number]): Pending => ({ entryId: r.id, patientId: r.patientId, caseId: r.caseId ?? undefined, patient: `${r.first} ${r.last}`, caseTitle: r.caseTitle ?? undefined, at: (r.at ?? new Date()).toISOString() })
-  const count = async (q: PromiseLike<{ n: number }[]>) => (await q)[0]?.n ?? 0
-  const [patients, openCases, drafts, signedThisMonth, pending, recent, latest] = await Promise.all([
+  const [patients, openCases, drafts, signedThisMonth, pending, latest] = await Promise.all([
     count(db().select({ n: sql<number>`count(*)::int` }).from(P).where(notDeleted)),
     count(db().select({ n: sql<number>`count(*)::int` }).from(C).innerJoin(P, eq(P.id, C.patientId)).where(and(eq(C.status, 'open'), notDeleted))),
     count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'draft'), notDeleted))),
-    count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'signed'), gte(E.signedAt, monthStart), notDeleted))),
-    rows('draft', 5), rows('signed', 5),
-    db().select({ id: P.id, first: P.firstName, last: P.lastName, createdAt: P.createdAt }).from(P).where(notDeleted).orderBy(desc(P.createdAt)).limit(5),
+    count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'signed'), gte(E.signedAt, monthStart()), notDeleted))),
+    listAttentions('draft', { limit: 5 }),
+    db().select({ id: P.id, first: P.firstName, last: P.lastName, createdAt: P.createdAt }).from(P).where(notDeleted).orderBy(desc(P.createdAt)).limit(6),
   ])
-  return {
-    patients, openCases, drafts, signedThisMonth, pending: pending.map(toPending), recent: recent.map(toPending),
-    latestPatients: latest.map((r) => ({ id: r.id, name: `${r.first} ${r.last}`, createdAt: r.createdAt.toISOString() })),
-  }
+  return { patients, openCases, drafts, signedThisMonth, pending, latestPatients: latest.map((r) => ({ id: r.id, name: `${r.first} ${r.last}`, createdAt: r.createdAt.toISOString() })) }
 }
 
 /** Evoluciones sin firmar (para el aviso de la barra lateral). */
 export async function draftCount(): Promise<number> {
-  const [r] = await db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'draft'), notDeleted))
-  return r?.n ?? 0
+  return count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'draft'), notDeleted)))
+}
+
+export async function countOpenCases(): Promise<number> {
+  return count(db().select({ n: sql<number>`count(*)::int` }).from(C).innerJoin(P, eq(P.id, C.patientId)).where(and(eq(C.status, 'open'), notDeleted)))
 }

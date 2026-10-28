@@ -21,6 +21,8 @@ Next 16.4.2 + React 19.3.1 + Tailwind v4 + Better Auth + Drizzle (consultas) + P
 
 - `app/(panel)/panel/(app)/inicio`: pantalla de inicio. `panel/components/form-validity.tsx` (errores de campo propios), `foot-shape.tsx` (silueta del login), `password-field.tsx` (ojo).
 
+- `scripts/sembrar-prueba.ts`: datos ficticios con volumen (`SEMBRAR_DATOS_FICTICIOS=si CANTIDAD=250 npx tsx scripts/sembrar-prueba.ts`). `e2e/dispositivos.spec.ts` lo usa.
+
 ## Specs (SDD)
 Perfil **S2** (`sdd: v1`): `specs/<capacidad>/spec.md` con REQ-CAP-NNN, validador `npm run spec:lint` (corre en CI). Cada test E2E lleva `[REQ-XXX-NNN]` en el título. Un cambio de comportamiento abre un delta en `specs/changes/` antes de implementarse. Brecha abierta: REQ-SEG-005 (simulacro de restauración real).
 

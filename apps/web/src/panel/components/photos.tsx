@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { deletePhoto } from '@/panel/lib/actions'
 import { PHOTO_KIND_LABEL, type Photo, type PhotoKind } from '@/panel/lib/types'
 
+const PHOTOS_PAGE = 12
 const input = 'mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4'
 const day = (iso: string) => iso.slice(0, 10).split('-').reverse().join('/')
 
@@ -50,6 +51,7 @@ export function PhotoGrid({ photos, deletable }: { photos: Photo[]; deletable: s
   const [err, setErr] = useState('')
   const [idx, setIdx] = useState(0)
   const [asking, setAsking] = useState<string | null>(null)
+  const [visible, setVisible] = useState(PHOTOS_PAGE)
   const viewer = useRef<HTMLDialogElement>(null)
   const confirmDlg = useRef<HTMLDialogElement>(null)
   const opener = useRef<Element | null>(null)
@@ -94,7 +96,7 @@ export function PhotoGrid({ photos, deletable }: { photos: Photo[]; deletable: s
       )}
       {err && <p role="alert" className="text-red-800">{err}</p>}
       <ul className="g-stagger grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {photos.map((p) => (
+        {photos.slice(0, visible).map((p) => (
           <li key={p.id} className="g-lift rounded-card bg-white p-2 shadow-soft">
             <button type="button" onClick={() => open(p.id)} aria-label={`Ampliar foto: ${PHOTO_KIND_LABEL[p.kind]}, ${day(p.takenAt)}`} className="group block w-full overflow-hidden rounded-control">
               {/* eslint-disable-next-line @next/next/no-img-element -- ver arriba */}
@@ -104,6 +106,12 @@ export function PhotoGrid({ photos, deletable }: { photos: Photo[]; deletable: s
           </li>
         ))}
       </ul>
+      {photos.length > visible && (
+        <div className="text-center">
+          <p className="text-base text-tinta-suave">Mostrando {visible} de {photos.length} fotos</p>
+          <button type="button" onClick={() => setVisible((v) => v + PHOTOS_PAGE)} className="mt-2 min-h-touch rounded-control border border-violeta-oscuro px-6 font-semibold text-violeta-oscuro hover:bg-lila/40">Ver más fotos</button>
+        </div>
+      )}
 
       <dialog ref={viewer} className="g-viewer" aria-label="Vista previa de la foto" onKeyDown={onKey} onClose={() => (opener.current as HTMLElement | null)?.focus?.()}
         onClick={(e) => { if (e.target === viewer.current) viewer.current?.close() }}>
