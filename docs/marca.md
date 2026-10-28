@@ -31,7 +31,7 @@ Regla: texto blanco solo sobre violeta-oscuro; sobre malva, texto tinta.
 
 ## Tipografía (autoalojada con `next/font`, `display: swap`; sin CDN)
 - Títulos: **Montserrat Light**, mayúsculas, tracking amplio.
-- Cuerpo: **Montserrat Regular**, base ≥ 18 px (requisito del panel; el sitio también).
+- Cuerpo: **Montserrat Regular**, base 16 px (el panel la usó en 18 px hasta 2026-10-28 y se sintió grande); botones táctiles de 48 px.
 - Etiquetas superiores: **Roboto Condensed**.
 
 ## Patrón de pieza → patrón de página de servicio
