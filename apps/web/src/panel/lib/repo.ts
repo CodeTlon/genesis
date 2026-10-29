@@ -2,7 +2,7 @@
 // Toda función asume que el llamador ya validó la sesión (requireUser) y los datos de entrada (zod en actions.ts).
 // Los textos clínicos libres (antecedentes, motivo, conclusión, payload de evoluciones) se guardan cifrados (crypto.ts).
 import { createHash } from 'node:crypto'
-import { and, asc, desc, eq, gte, inArray, isNull, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm'
 import { db, schema, TENANT_ID } from '@genesis/db/client'
 import { decOpt, decryptJson, encOpt, encryptJson } from './crypto'
 import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type DiabetesInfo, type Addendum, type Alert, type Antecedentes, type Case, type Entry, type EntryPayload, type Patient, type Photo, type PhotoKind } from './types'
@@ -279,38 +279,50 @@ export async function deletePhotoRow(id: string): Promise<boolean> {
 }
 
 // ───────── Inicio (resumen) y listados globales ─────────
-export type Pending = { entryId: string; patientId: string; caseId?: string; patient: string; caseTitle?: string; at: string }
-export type Dashboard = { patients: number; openCases: number; drafts: number; signedThisMonth: number; pending: Pending[]; latestPatients: { id: string; name: string; createdAt: string }[] }
+export type Pending = { entryId: string; patientId: string; caseId?: string; status: 'draft' | 'signed'; patient: string; caseTitle?: string; at: string }
+export type Dashboard = { patients: number; openCases: number; drafts: number; today: number; pending: Pending[]; latestPatients: { id: string; name: string; createdAt: string }[] }
 
-const monthStart = () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1))
+// Córdoba está en UTC-3 todo el año (sin horario de verano): los límites de día y mes se calculan con ese corrimiento.
+const CBA_OFFSET_H = 3
+const cbaParts = (now = new Date()) => { const l = new Date(now.getTime() - CBA_OFFSET_H * 3600e3); return { y: l.getUTCFullYear(), m: l.getUTCMonth(), d: l.getUTCDate() } }
+export const startOfToday = (now = new Date()) => { const { y, m, d } = cbaParts(now); return new Date(Date.UTC(y, m, d, CBA_OFFSET_H)) }
+export const startOfMonth = (now = new Date(), back = 0) => { const { y, m } = cbaParts(now); return new Date(Date.UTC(y, m - back, 1, CBA_OFFSET_H)) }
 const count = async (q: PromiseLike<{ n: number }[]>) => (await q)[0]?.n ?? 0
 
-export type AttentionFilters = { q?: string; periodo?: 'mes' | 'mes-pasado' | '90' | 'todas'; orden?: 'reciente' | 'antiguo' }
+export type AttentionFilters = { q?: string; estado?: 'todas' | 'borradores' | 'firmadas'; periodo?: 'todas' | 'hoy' | '7' | 'mes' | 'mes-pasado' | '90'; orden?: 'reciente' | 'antiguo' }
 
-const attentionWhere = (status: 'draft' | 'signed', f: AttentionFilters) => {
+/** Fecha de la atención: cuando se firmó, o cuando se empezó si sigue en borrador. */
+const eventAt = sql<Date>`coalesce(${E.signedAt}, ${E.createdAt})`
+
+const attentionWhere = (f: AttentionFilters) => {
   const term = f.q?.trim()
   const now = new Date()
-  const from = f.periodo === 'mes' ? monthStart() : f.periodo === 'mes-pasado' ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)) : f.periodo === '90' ? new Date(now.getTime() - 90 * 864e5) : undefined
-  const to = f.periodo === 'mes-pasado' ? monthStart() : undefined
+  const range: [Date | undefined, Date | undefined] =
+    f.periodo === 'hoy' ? [startOfToday(now), undefined]
+    : f.periodo === '7' ? [new Date(now.getTime() - 7 * 864e5), undefined]
+    : f.periodo === 'mes' ? [startOfMonth(now), undefined]
+    : f.periodo === 'mes-pasado' ? [startOfMonth(now, 1), startOfMonth(now)]
+    : f.periodo === '90' ? [new Date(now.getTime() - 90 * 864e5), undefined]
+    : [undefined, undefined]
   return and(
-    eq(E.status, status), notDeleted,
-    status === 'signed' && from ? gte(E.signedAt, from) : undefined,
-    status === 'signed' && to ? sql`${E.signedAt} < ${to}` : undefined,
+    notDeleted,
+    f.estado === 'borradores' ? eq(E.status, 'draft') : f.estado === 'firmadas' ? eq(E.status, 'signed') : undefined,
+    range[0] ? sql`${eventAt} >= ${range[0]}` : undefined,
+    range[1] ? sql`${eventAt} < ${range[1]}` : undefined,
     term ? sql`(search_text like ${likeTerm(term)} or lower(immutable_unaccent(coalesce(${C.title}, ''))) like ${likeTerm(term)})` : undefined,
   )
 }
 
-/** Evoluciones de todos los pacientes, sin firmar o firmadas, con búsqueda por paciente o caso y período. Solo metadatos: no descifra nada clínico. */
-export async function listAttentions(status: 'draft' | 'signed', opts: AttentionFilters & { limit?: number; offset?: number } = {}): Promise<Pending[]> {
-  const at = status === 'draft' ? E.createdAt : E.signedAt
-  const rows = await db().select({ id: E.id, patientId: E.patientId, caseId: E.caseId, first: P.firstName, last: P.lastName, caseTitle: C.title, at })
-    .from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId)).where(attentionWhere(status, opts))
-    .orderBy(opts.orden === 'antiguo' ? asc(at) : desc(at), desc(E.id)).limit(opts.limit ?? 50).offset(opts.offset ?? 0)
-  return rows.map((r) => ({ entryId: r.id, patientId: r.patientId, caseId: r.caseId ?? undefined, patient: `${r.first} ${r.last}`, caseTitle: r.caseTitle ?? undefined, at: (r.at ?? new Date()).toISOString() }))
+/** Atenciones (evoluciones) de todos los pacientes, filtrables por estado, período y texto. Solo metadatos: no descifra nada clínico. */
+export async function listAttentions(opts: AttentionFilters & { limit?: number; offset?: number } = {}): Promise<Pending[]> {
+  const rows = await db().select({ id: E.id, patientId: E.patientId, caseId: E.caseId, status: E.status, first: P.firstName, last: P.lastName, caseTitle: C.title, at: eventAt })
+    .from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId)).where(attentionWhere(opts))
+    .orderBy(opts.orden === 'antiguo' ? asc(eventAt) : desc(eventAt), desc(E.id)).limit(opts.limit ?? 50).offset(opts.offset ?? 0)
+  return rows.map((r) => ({ entryId: r.id, patientId: r.patientId, caseId: r.caseId ?? undefined, status: r.status, patient: `${r.first} ${r.last}`, caseTitle: r.caseTitle ?? undefined, at: new Date(r.at).toISOString() }))
 }
 
-export async function countAttentions(status: 'draft' | 'signed', f: AttentionFilters = {}): Promise<number> {
-  return count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId)).where(attentionWhere(status, f)))
+export async function countAttentions(f: AttentionFilters = {}): Promise<number> {
+  return count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId)).where(attentionWhere(f)))
 }
 
 export type CaseFilters = { q?: string; estado?: 'abiertos' | 'cerrados' | 'todos'; borrador?: boolean; orden?: 'reciente' | 'antiguo' }
@@ -343,15 +355,15 @@ export async function countAllCases(f: CaseFilters = {}): Promise<number> {
 
 /** Números y listas cortas para la pantalla de inicio. */
 export async function dashboard(): Promise<Dashboard> {
-  const [patients, openCases, drafts, signedThisMonth, pending, latest] = await Promise.all([
+  const [patients, openCases, drafts, today, pending, latest] = await Promise.all([
     count(db().select({ n: sql<number>`count(*)::int` }).from(P).where(notDeleted)),
     count(db().select({ n: sql<number>`count(*)::int` }).from(C).innerJoin(P, eq(P.id, C.patientId)).where(and(eq(C.status, 'open'), notDeleted))),
     count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'draft'), notDeleted))),
-    count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'signed'), gte(E.signedAt, monthStart()), notDeleted))),
-    listAttentions('draft', { limit: 5 }),
+    countAttentions({ periodo: 'hoy' }),
+    listAttentions({ estado: 'borradores', limit: 5 }),
     db().select({ id: P.id, first: P.firstName, last: P.lastName, createdAt: P.createdAt }).from(P).where(notDeleted).orderBy(desc(P.createdAt)).limit(6),
   ])
-  return { patients, openCases, drafts, signedThisMonth, pending, latestPatients: latest.map((r) => ({ id: r.id, name: `${r.first} ${r.last}`, createdAt: r.createdAt.toISOString() })) }
+  return { patients, openCases, drafts, today, pending, latestPatients: latest.map((r) => ({ id: r.id, name: `${r.first} ${r.last}`, createdAt: r.createdAt.toISOString() })) }
 }
 
 /** Evoluciones sin firmar (para el aviso de la barra lateral). */

@@ -22,8 +22,8 @@ El sistema DEBE paginar en el servidor los listados de pacientes, casos abiertos
 - confianza: confirmado
 
 ### REQ-INT-003 [must] Cada resumen del inicio lleva a su propia pantalla
-El sistema DEBE llevar cada tarjeta del inicio (pacientes, casos abiertos, sin firmar, firmadas del mes) a una pantalla distinta con su propio título.
-- Escenario: Dado el inicio con datos, Cuando se pulsa cada tarjeta, Entonces se abren respectivamente Pacientes, Casos abiertos y Atenciones (en la pestaña sin firmar y en la de firmadas).
+El sistema DEBE llevar cada tarjeta del inicio (pacientes, casos abiertos, borradores sin firmar y atenciones de hoy) a un listado distinto, y el número de cada tarjeta DEBE coincidir con el total que muestra ese listado.
+- Escenario: Dado el inicio con datos, Cuando se pulsa cada tarjeta, Entonces se abre el listado correspondiente (Pacientes, Casos, Atenciones con borradores y Atenciones de hoy) y su total es el mismo número de la tarjeta.
 - verify: e2e e2e/dispositivos.spec.ts
 - confianza: confirmado
 
@@ -58,7 +58,13 @@ El sistema NO DEBE tener problemas graves de accesibilidad (WCAG 2.1 A y AA seg�
 - confianza: confirmado
 
 ### REQ-INT-009 [must] Filtros en los listados
-El sistema DEBE permitir filtrar el listado de pacientes (con alertas, con caso abierto, sin casos, menores, por tipo de alerta y por orden), el de casos (abiertos, cerrados o todos, con borrador sin firmar y por orden) y el de atenciones (por período y por orden), además de buscar por texto, en el servidor, conservando los filtros en la URL y volviendo a la primera página al cambiarlos.
-- Escenario: Dado un sistema con muchos pacientes, Cuando se elige "Menores" y luego "Más recientes", Entonces todos los resultados son menores, el orden cambia y la URL conserva ambos filtros; "Limpiar filtros" vuelve al listado completo.
-- verify: e2e e2e/dispositivos.spec.ts
+El sistema DEBE permitir filtrar con desplegables, además de buscar por texto, el listado de pacientes (con alertas, con caso abierto, sin casos, menores, tipo de alerta y orden), el de casos (abiertos, cerrados o todos, con borradores y orden) y el de atenciones (borradores o firmadas, período y orden); los filtros se resuelven en el servidor, se combinan entre sí, quedan en la URL y vuelven a la primera página al cambiarlos.
+- Escenario: Dado seis pacientes de prueba (sin alertas, con diabetes, menor, anticoagulada con caso cerrado, con borrador y con dos casos), Cuando se elige cada filtro y sus combinaciones, Entonces cada listado muestra exactamente los registros esperados, "Limpiar filtros" restablece los desplegables y los números del inicio coinciden con los totales de los listados.
+- verify: e2e e2e/filtros.spec.ts
+- confianza: confirmado
+
+### REQ-INT-010 [should] Barra de desplazamiento y cursor con la marca
+El sistema DEBE mostrar una barra de desplazamiento personalizada con los colores de la marca y, con mouse o trackpad, un cursor propio (flecha para lo general y punto para lo que se puede tocar), sin pedir recursos a terceros y respetando el cursor de texto en los campos.
+- Escenario: Dado el login abierto en un navegador de escritorio, Cuando se consulta el estilo de la página, Entonces la barra de desplazamiento mide 14 px, el cursor general es una imagen propia y el del botón Entrar es el cursor de lo clickeable, y el de un campo de texto es el de texto.
+- verify: e2e e2e/ux.spec.ts
 - confianza: confirmado

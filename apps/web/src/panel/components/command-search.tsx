@@ -10,7 +10,7 @@ const GO: Item[] = [
   { key: 'g-inicio', label: 'Inicio', href: '/panel/inicio', group: 'Ir a' },
   { key: 'g-pacientes', label: 'Pacientes', href: '/panel/pacientes', group: 'Ir a' },
   { key: 'g-casos', label: 'Casos abiertos', href: '/panel/casos', group: 'Ir a' },
-  { key: 'g-atenciones', label: 'Atenciones sin firmar', href: '/panel/atenciones?tab=sin-firmar', group: 'Ir a' },
+  { key: 'g-atenciones', label: 'Borradores sin firmar', href: '/panel/atenciones?estado=borradores', group: 'Ir a' },
   { key: 'g-nuevo', label: 'Nuevo paciente', href: '/panel/pacientes/nuevo', group: 'Ir a' },
 ]
 const norm = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()

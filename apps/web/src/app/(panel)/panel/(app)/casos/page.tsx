@@ -33,8 +33,8 @@ export default async function Casos({ searchParams }: { searchParams: Promise<{ 
       </header>
       <FilterBar base="/panel/casos" q={q ?? ''} placeholder="Buscar por paciente o título del caso" groups={[
         { key: 'estado', label: 'Estado', value: estado, options: [{ value: 'abiertos', label: 'Abiertos' }, { value: 'cerrados', label: 'Cerrados' }, { value: 'todos', label: 'Todos' }] },
-        { key: 'borrador', label: 'Evoluciones', value: borrador ? 'si' : '', options: [{ value: '', label: 'Todas' }, { value: 'si', label: 'Con borrador sin firmar' }] },
-        { key: 'orden', label: 'Orden', value: orden, options: [{ value: 'reciente', label: 'Actividad reciente' }, { value: 'antiguo', label: 'Más antiguos' }] },
+        { key: 'borrador', label: 'Atenciones', value: borrador ? 'si' : '', options: [{ value: '', label: 'Todos los casos' }, { value: 'si', label: 'Con borradores sin firmar' }] },
+        { key: 'orden', label: 'Orden', value: orden, options: [{ value: 'reciente', label: 'Actividad más reciente primero' }, { value: 'antiguo', label: 'Actividad más antigua primero' }] },
       ]} />
       {shown.length === 0 ? (
         <div className="rounded-card bg-white p-8 text-center shadow-soft">
