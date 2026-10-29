@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <form action={signOut}><button className="min-h-touch rounded-control border border-tinta/25 px-4 hover:bg-lila/30">Salir</button></form>
           </div>
         </div>
-        <div className="px-3 pb-2 max-md:hidden"><CommandTrigger /></div>
+        <div className="px-3 pb-2 max-md:hidden"><CommandTrigger label="Buscar paciente" /></div>
         <Nav items={nav} drafts={drafts} />
         <div className="mt-auto max-md:hidden">
           <div className="mx-3 mb-3 rounded-card border border-tinta/10 bg-marmol p-3">

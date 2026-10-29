@@ -33,6 +33,7 @@ npm run dev -w @genesis/web
 `feature/<origen>-<tarea>` → PR a `dev` → `test` → `main`. Producción en Coolify con `docker-compose.coolify.yml`; variables en `.env.example`.
 
 ## Cambios
+- **2026-10-29** — Rediseño "calma clínica": base de 14 px, alertas clínicas en una tarjeta ordenada por gravedad, búsqueda rápida (`/` o Ctrl+K), métricas del inicio animadas, evoluciones como línea de tiempo, comparador de fotos antes/después, login más suave y revisión de accesibilidad automática (REQ-INT-004..008, ADR-022).
 - **2026-10-28** — Escala de la interfaz: base de 16 px en vez de 18 px (todo se sentía grande); los botones táctiles siguen en 48 px.
 - **2026-10-28** — Flujos separados: Casos abiertos y Atenciones (sin firmar / firmadas) son pantallas propias y cada tarjeta del inicio lleva a la suya; barra de navegación de 5 secciones; `scripts/sembrar-prueba.ts` carga datos ficticios de distintos volúmenes y tipos de paciente, y `e2e/dispositivos.spec.ts` recorre todo en celular, tableta y escritorio (REQ-INT-001..003). Los listados (pacientes, casos, atenciones, casos de un paciente y evoluciones de un caso) paginan en el servidor con páginas numeradas.
 - **2026-10-28** — Pantallas menos cargadas, con la misma información mejor ordenada: ruta de migas que hace de "volver", secciones plegables en el alta y en antecedentes, evolución en tarjetas, caso con evoluciones primero y fotos plegadas, botones Cancelar reales (REQ-PAC-009).

@@ -105,7 +105,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
           <svg aria-hidden viewBox="0 0 24 24" className="size-5 shrink-0 text-tinta-suave" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4-4" /></svg>
           <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={onKey} role="combobox" aria-expanded="true" aria-controls={`${uid}-list`} aria-autocomplete="list"
             aria-activedescendant={items[active] ? `${uid}-${items[active].key}` : undefined} aria-label="Buscar paciente o ir a una pantalla" placeholder="Buscar paciente, DNI o teléfono…" autoComplete="off"
-            className="min-h-[56px] w-full border-0 bg-transparent text-base outline-none placeholder:text-tinta-suave" />
+            className="min-h-[56px] w-full border-0 bg-transparent text-base placeholder:text-tinta-suave focus-visible:!outline-none" />
           <kbd aria-hidden className="hidden shrink-0 rounded border border-tinta/20 px-1.5 text-sm text-tinta-suave sm:block">Esc</kbd>
         </div>
         <div id={`${uid}-list`} role="listbox" aria-label="Resultados" className="max-h-[min(60dvh,26rem)] overflow-y-auto p-2">
@@ -130,7 +130,7 @@ export function CommandProvider({ children }: { children: React.ReactNode }) {
 }
 
 /** Botón que abre la paleta; se ve como un campo de búsqueda (variante `field`) o como botón compacto con ícono. */
-export function CommandTrigger({ variant = 'field', className = '' }: { variant?: 'field' | 'icon'; className?: string }) {
+export function CommandTrigger({ variant = 'field', label = 'Buscar paciente, DNI o teléfono', className = '' }: { variant?: 'field' | 'icon'; label?: string; className?: string }) {
   const { open } = useCommandSearch()
   if (variant === 'icon') {
     return (
@@ -142,7 +142,7 @@ export function CommandTrigger({ variant = 'field', className = '' }: { variant?
   return (
     <button type="button" onClick={open} aria-label="Buscar paciente (atajo: barra inclinada)" className={`flex min-h-touch w-full items-center gap-3 rounded-control border border-tinta/20 bg-white px-4 text-left text-tinta-suave hover:border-tinta/40 ${className}`}>
       <svg aria-hidden viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4-4" /></svg>
-      <span className="flex-1 truncate">Buscar paciente, DNI o teléfono</span>
+      <span className="flex-1 truncate">{label}</span>
       <kbd aria-hidden className="hidden rounded border border-tinta/20 px-1.5 text-sm sm:block">/</kbd>
     </button>
   )

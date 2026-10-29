@@ -50,3 +50,9 @@ El sistema DEBE ofrecer un comparador con deslizador entre la foto inicial y la 
 - Escenario: Dado un caso con foto inicial y final, Cuando se mueve el deslizador, Entonces se ve más o menos de cada foto.
 - verify: e2e e2e/ux.spec.ts
 - confianza: confirmado
+
+### REQ-INT-008 [must] Accesibilidad sin problemas graves
+El sistema NO DEBE tener problemas graves de accesibilidad (WCAG 2.1 A y AA según la revisión automática) en el login, el inicio, los listados, la ficha, el caso, la evolución y la búsqueda rápida, en celular y escritorio.
+- Escenario: Dado el sistema con datos, Cuando se revisan esas pantallas con la herramienta de accesibilidad, Entonces no aparecen problemas serios ni críticos.
+- verify: e2e e2e/accesibilidad.spec.ts
+- confianza: confirmado

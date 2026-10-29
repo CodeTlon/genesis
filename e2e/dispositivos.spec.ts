@@ -133,3 +133,37 @@ test('[REQ-INT-002] los pacientes con poca o mucha información se ven completos
   await page.goto('/panel/casos')
   await expect(page.locator('main ul.divide-y > li').nth(5)).toBeVisible()
 })
+
+// En el celular todo lo que se toca mide al menos 44 px de alto (y de ancho, salvo enlaces dentro de un texto).
+test('[REQ-INT-001] en el celular los botones, enlaces y campos son cómodos de tocar', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  const page = await ctx.newPage()
+  await login(page)
+  await page.goto('/panel/pacientes?q=Vega Rodr')
+  await page.getByRole('link', { name: /Fernández de la Vega/ }).first().click()
+  const ficha = page.url()
+  await page.getByRole('link', { name: /Abierto/ }).first().click()
+  const caso = page.url().split('?')[0]
+  const pantallas = ['/panel/inicio', '/panel/pacientes', '/panel/casos', '/panel/atenciones', '/panel/pacientes/nuevo', ficha, `${ficha}?tab=antecedentes`, `${ficha}?tab=datos`, caso, `${caso}/atencion`]
+  const chicos: string[] = []
+  for (const url of pantallas) {
+    await page.goto(url)
+    await page.waitForLoadState('networkidle')
+    const malos = await page.evaluate(() => {
+      const sel = 'a[href], button, input:not([type=hidden]):not([type=range]), select, textarea, summary, [role=tab], [role=option], [role=button]'
+      const all = [...document.querySelectorAll<HTMLElement>(sel)]
+      const bad = all.filter((el) => {
+        const r = el.getBoundingClientRect(), cs = getComputedStyle(el)
+        if (!r.width || !r.height || cs.visibility === 'hidden' || cs.display === 'none' || el.closest('.sr-only') || el.closest('svg')) return false
+        if (el.matches('a') && el.closest('p, li > span, dd')) return false // enlaces dentro de un texto
+        if (el.matches('input[type=checkbox], input[type=radio]')) return false // el área tocable es la etiqueta
+        return r.height < 43.5
+      }).map((el) => `${el.tagName.toLowerCase()} «${(el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 40)}» ${Math.round(el.getBoundingClientRect().height)}px`)
+      return { total: all.length, bad }
+    })
+    expect(malos.total, `${url}: no se encontró nada para medir`).toBeGreaterThan(3)
+    for (const m of malos.bad) chicos.push(`${url.replace(/[0-9a-f-]{36}/g, ':id')}: ${m}`)
+  }
+  expect(chicos, 'elementos de menos de 44 px de alto en el celular').toEqual([])
+  await ctx.close()
+})

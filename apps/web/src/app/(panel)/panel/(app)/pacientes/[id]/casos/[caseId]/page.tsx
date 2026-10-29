@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { BackBar } from '@/panel/components/back-link'
 import { notFound } from 'next/navigation'
+import { ClampText } from '@/panel/components/clamp-text'
 import { AlertCard } from '@/panel/components/alert-card'
 import { CloseCaseForm } from '@/panel/components/forms'
 import { EntryView } from '@/panel/components/entry-view'
@@ -30,7 +31,7 @@ export default async function Caso({ params, searchParams }: { params: Promise<{
         <h1 className="mt-4 text-3xl">{c.title}</h1>
         <p className={`mt-1 inline-block rounded-full px-3 py-0.5 text-base font-semibold ${open ? 'bg-ok-fondo text-ok-texto' : 'bg-white text-tinta-suave ring-1 ring-tinta/30'}`}>{open ? 'Caso abierto' : 'Caso cerrado'}</p>
         <div className="mt-3 max-w-xl"><AlertCard alerts={p.alerts} /></div>
-        {c.reason && <p className="mt-3 max-w-prose rounded-card bg-white p-4 shadow-soft"><span className="block text-base text-tinta-suave">Motivo de consulta</span>{c.reason}</p>}
+        {c.reason && <div className="mt-3 max-w-prose rounded-card bg-white p-4 shadow-soft"><span className="block text-base text-tinta-suave">Motivo de consulta</span><ClampText>{c.reason}</ClampText></div>}
       </div>
 
       {open && <Link href={`/panel/pacientes/${id}/casos/${caseId}/atencion`} className="inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-6 font-semibold text-white hover:bg-tinta">Nueva evolución</Link>}
