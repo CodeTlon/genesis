@@ -175,13 +175,13 @@ test('[REQ-INT-009] atenciones: estado, período, orden y búsqueda', async ({ p
 
 test('[REQ-INT-003][REQ-INT-009] los números del inicio coinciden con lo que muestran los listados', async ({ page }) => {
   await login(page)
+  // La lista llega por streaming: se espera a que aparezca el total (o el aviso de lista vacía) antes de leerlo.
   const num = async (url: string, re: RegExp) => {
     await page.goto(url)
+    await expect.poll(async () => { const t = await page.locator('main').innerText(); return re.test(t) || /No hay|Todavía no hay/.test(t) }, { timeout: 15_000 }).toBe(true)
     const texto = await page.locator('main').innerText()
     const m = texto.match(re)
-    if (!m && /No hay|Todavía no hay/.test(texto)) return 0 // lista vacía: no hay texto de total
-    expect(m, `no se encontró ${re} en ${url}`).not.toBeNull()
-    return Number(m![1].replace(/\./g, ''))
+    return m ? Number(m[1].replace(/\./g, '')) : 0 // lista vacía: no hay texto de total
   }
   await page.goto('/panel/inicio')
   // el número final está en el texto para lectores de pantalla (el visible cuenta hacia arriba al entrar)
