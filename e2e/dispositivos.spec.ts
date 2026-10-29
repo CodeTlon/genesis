@@ -143,6 +143,7 @@ test('[REQ-INT-001] en el celular los botones, enlaces y campos son cómodos de 
   await page.getByRole('link', { name: /Fernández de la Vega/ }).first().click()
   const ficha = page.url()
   await page.getByRole('link', { name: /Abierto/ }).first().click()
+  await expect(page).toHaveURL(/\/casos\/[0-9a-f-]{36}/) // esperar a que cargue el caso antes de guardar la URL
   const caso = page.url().split('?')[0]
   const pantallas = ['/panel/inicio', '/panel/pacientes', '/panel/casos', '/panel/atenciones', '/panel/pacientes/nuevo', ficha, `${ficha}?tab=antecedentes`, `${ficha}?tab=datos`, caso, `${caso}/atencion`]
   const chicos: string[] = []

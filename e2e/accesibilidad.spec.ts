@@ -24,9 +24,12 @@ for (const d of [{ nombre: 'celular', width: 390, height: 844, touch: true }, { 
     await login(page)
     await revisar(page, 'inicio')
     for (const url of ['/panel/pacientes', '/panel/casos', '/panel/atenciones', '/panel/pacientes/nuevo']) { await page.goto(url); await revisar(page, url) }
-    await page.goto('/panel/pacientes')
-    await page.locator('main ul.divide-y > li a').first().click()
-    await expect(page).toHaveURL(/\/panel\/pacientes\/[0-9a-f-]{36}$/) // esperar a que cargue la ficha antes de guardar la URL
+    // Un paciente propio: la prueba no depende de datos previos (en CI la base arranca vacía)
+    await page.goto('/panel/pacientes/nuevo')
+    await page.getByLabel('Nombre', { exact: true }).fill('Accesible')
+    await page.getByLabel('Apellido', { exact: true }).fill(`Prueba ${d.nombre} ${Date.now().toString(36)}`)
+    await page.getByRole('button', { name: 'Crear paciente' }).click()
+    await expect(page).toHaveURL(/\/panel\/pacientes\/[0-9a-f-]{36}$/)
     const ficha = page.url()
     await revisar(page, 'ficha')
     for (const tab of ['antecedentes', 'datos']) { await page.goto(`${ficha}?tab=${tab}`); await revisar(page, `ficha ${tab}`) }
