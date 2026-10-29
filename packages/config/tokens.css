@@ -88,12 +88,17 @@ details.g-acc[open] > summary .g-chev { transform: rotate(180deg); }
 @keyframes g-pulse { 50% { opacity: .45; } }
 .g-skeleton { background: color-mix(in srgb, var(--color-lila) 45%, transparent); border-radius: var(--radius-control, .5rem); animation: g-pulse 1.4s ease-in-out infinite; }
 
-/* Scrollbar con la marca (Firefox + WebKit) */
-html { scrollbar-width: thin; scrollbar-color: var(--color-violeta-oscuro) transparent; }
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--color-violeta-oscuro) 55%, transparent); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+/* Barra de desplazamiento con la marca, en toda la página y en cada lista con scroll propio. En Chrome, Edge y Safari se dibuja con ::-webkit-scrollbar
+   (pista lila suave, cursor violeta redondeado que se oscurece al tocarlo); Firefox usa scrollbar-color y no admite más. */
+html { scrollbar-gutter: stable; }
+::-webkit-scrollbar { width: 14px; height: 14px; }
+::-webkit-scrollbar-track { background: color-mix(in srgb, var(--color-lila) 22%, transparent); border-radius: 999px; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--color-violeta-oscuro) 65%, transparent); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; transition: background-color .15s ease; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-violeta-oscuro); background-clip: content-box; }
+::-webkit-scrollbar-thumb:active { background: #5b2a93; background-clip: content-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+@supports not selector(::-webkit-scrollbar) { * { scrollbar-width: thin; scrollbar-color: var(--color-violeta-oscuro) color-mix(in srgb, var(--color-lila) 22%, transparent); } }
+@media (max-width: 767px) { ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-thumb { border-width: 2px; } }
 
 /* Modales propios (<dialog>): reemplazan alert/confirm del navegador */
 dialog.g-modal { margin: auto; max-width: min(28rem, calc(100vw - 2rem)); border: 0; border-radius: var(--radius-card); padding: 1.5rem; box-shadow: 0 20px 60px rgb(0 0 0 / .25);
@@ -170,3 +175,14 @@ dialog.g-cmd[open] { opacity: 1; transform: none; }
 dialog.g-cmd::backdrop { background: rgb(40 25 55 / 0); transition: background .18s ease, overlay .18s allow-discrete, display .18s allow-discrete; }
 dialog.g-cmd[open]::backdrop { background: rgb(40 25 55 / .4); }
 @starting-style { dialog.g-cmd[open]::backdrop { background: rgb(40 25 55 / 0); } }
+
+/* Cursor con la marca (solo con mouse o trackpad; en pantallas táctiles no aplica). Imágenes SVG incluidas en la hoja de estilos, sin pedir nada a terceros.
+   Flecha violeta con borde blanco para lo general; punto violeta para lo que se puede tocar; el cursor de texto y el de "no disponible" se respetan. */
+@media (pointer: fine) {
+  html { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M5 3l16 10-7 1.8L10.2 22z' fill='%237b3fb8' stroke='white' stroke-width='1.8' stroke-linejoin='round'/%3E%3C/svg%3E") 5 3, auto; }
+  a[href], button:not(:disabled), summary, select, label[for], [role='button'], [role='option'], [role='tab'], input[type='checkbox'], input[type='radio'], input[type='submit'], .cursor-pointer {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='%23a259e0' fill-opacity='.92' stroke='white' stroke-width='2.5'/%3E%3Ccircle cx='16' cy='16' r='2.6' fill='white'/%3E%3C/svg%3E") 16 16, pointer;
+  }
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='submit']), textarea { cursor: text; }
+  button:disabled, [aria-disabled='true'] { cursor: not-allowed; }
+}

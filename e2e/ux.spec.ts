@@ -193,3 +193,20 @@ test('[REQ-INT-007] el comparador mueve la foto inicial sobre la final con el te
   await page.keyboard.press('End')
   await expect(slider).toHaveValue('100')
 })
+
+test('[REQ-INT-010] la barra de desplazamiento y el cursor son los de la marca', async ({ page }) => {
+  await page.goto('/panel/login')
+  const estilos = await page.evaluate(() => {
+    const css = (el: Element, pseudo?: string) => getComputedStyle(el, pseudo)
+    return {
+      barra: css(document.documentElement, '::-webkit-scrollbar').width,
+      general: css(document.documentElement).cursor,
+      boton: css(document.querySelector('form button:not([type=button])')!).cursor,
+      campo: css(document.querySelector('#email')!).cursor,
+    }
+  })
+  expect(estilos.barra).toBe('14px')
+  expect(estilos.general).toContain('data:image/svg+xml')
+  expect(estilos.boton).toContain('data:image/svg+xml')
+  expect(estilos.campo).toBe('text')
+})

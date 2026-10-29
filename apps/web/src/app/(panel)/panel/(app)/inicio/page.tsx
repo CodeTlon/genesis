@@ -65,17 +65,17 @@ export default async function Inicio() {
       <header className="rounded-card border border-tinta/10 bg-white p-6 shadow-soft md:p-8">
         <p className="text-base text-tinta-suave">{longToday()}</p>
         <h1 className="mt-1 text-3xl md:text-4xl">{greeting()}, {user.name.split(' ')[0]}</h1>
-        <p className="mt-2 max-w-xl text-tinta-suave">{d.drafts > 0 ? `Tenés ${d.drafts} ${d.drafts === 1 ? 'evolución' : 'evoluciones'} sin firmar para retomar.` : 'Todo al día. Buscá un paciente o cargá uno nuevo para empezar.'}</p>
+        <p className="mt-2 max-w-xl text-tinta-suave">{d.drafts > 0 ? `Tenés ${d.drafts} ${d.drafts === 1 ? 'atención en borrador' : 'atenciones en borrador'} para retomar.` : 'Todo al día. Buscá un paciente o cargá uno nuevo para empezar.'}</p>
       </header>
 
       <nav aria-label="Resumen" className="g-stagger grid grid-cols-2 gap-3 xl:grid-cols-4">
         <Stat icon={ICON.people} n={d.patients} label={d.patients === 1 ? 'Paciente' : 'Pacientes'} go="Ver lista" to="/panel/pacientes" tone="bg-lila/50 text-violeta-oscuro" />
         <Stat icon={ICON.folder} n={d.openCases} label={d.openCases === 1 ? 'Caso abierto' : 'Casos abiertos'} go="Ver casos" to="/panel/casos" tone="bg-info-fondo text-info-texto" />
-        <Stat icon={ICON.pencil} n={d.drafts} label="Sin firmar" go="Retomar" to="/panel/atenciones?tab=sin-firmar" tone="bg-aviso-fondo text-aviso-texto" />
-        <Stat icon={ICON.check} n={d.signedThisMonth} label="Firmadas este mes" go="Ver firmadas" to="/panel/atenciones?tab=firmadas" tone="bg-ok-fondo text-ok-texto" />
+        <Stat icon={ICON.pencil} n={d.drafts} label={d.drafts === 1 ? 'Borrador sin firmar' : 'Borradores sin firmar'} go="Retomar" to="/panel/atenciones?estado=borradores" tone="bg-aviso-fondo text-aviso-texto" />
+        <Stat icon={ICON.check} n={d.today} label={d.today === 1 ? 'Atención de hoy' : 'Atenciones de hoy'} go="Ver hoy" to="/panel/atenciones?periodo=hoy" tone="bg-ok-fondo text-ok-texto" />
       </nav>
 
-      <List id="pendientes" title="Para retomar" empty="No hay evoluciones sin firmar. Todo al día." items={d.pending} tone="bg-aviso-fondo text-aviso-texto" more={d.drafts > d.pending.length ? { href: '/panel/atenciones?tab=sin-firmar', label: `Ver las ${d.drafts}` } : undefined} />
+      <List id="pendientes" title="Para retomar" empty="No hay borradores. Todo al día." items={d.pending} tone="bg-aviso-fondo text-aviso-texto" more={d.drafts > d.pending.length ? { href: '/panel/atenciones?estado=borradores', label: `Ver las ${d.drafts}` } : undefined} />
 
       <section aria-labelledby="nuevos-h" className="rounded-card bg-white p-5 shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3">

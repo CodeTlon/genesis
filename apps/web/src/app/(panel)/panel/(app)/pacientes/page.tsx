@@ -36,9 +36,9 @@ export default async function Pacientes({ searchParams }: { searchParams: Promis
         </Link>
       </div>
       <FilterBar base="/panel/pacientes" q={q ?? ''} placeholder="Buscar por nombre, DNI o teléfono" groups={[
-        { key: 'filtro', label: 'Mostrar', value: filtro, options: [{ value: 'todos', label: 'Todos' }, { value: 'alertas', label: 'Con alertas' }, { value: 'caso-abierto', label: 'Con caso abierto' }, { value: 'sin-casos', label: 'Sin casos' }, { value: 'menores', label: 'Menores' }] },
-        { key: 'alerta', label: 'Alerta', value: alerta ?? '', options: [{ value: '', label: 'Cualquiera' }, ...(Object.keys(ALERT_LABEL) as Alert[]).map((a) => ({ value: a, label: ALERT_LABEL[a] }))] },
-        { key: 'orden', label: 'Orden', value: orden, options: [{ value: 'apellido', label: 'Apellido A–Z' }, { value: 'recientes', label: 'Más recientes' }] },
+        { key: 'filtro', label: 'Mostrar', value: filtro, options: [{ value: 'todos', label: 'Todos' }, { value: 'alertas', label: 'Con alertas clínicas' }, { value: 'caso-abierto', label: 'Con caso abierto' }, { value: 'sin-casos', label: 'Sin casos' }, { value: 'menores', label: 'Menores de edad' }] },
+        { key: 'alerta', label: 'Tipo de alerta', value: alerta ?? '', options: [{ value: '', label: 'Cualquiera' }, ...(Object.keys(ALERT_LABEL) as Alert[]).map((a) => ({ value: a, label: ALERT_LABEL[a] }))] },
+        { key: 'orden', label: 'Orden', value: orden, options: [{ value: 'apellido', label: 'Apellido A–Z' }, { value: 'recientes', label: 'Cargados hace poco primero' }] },
       ]} />
       {shown.length === 0 ? (
         <div className="rounded-card bg-white p-8 text-center shadow-soft">
