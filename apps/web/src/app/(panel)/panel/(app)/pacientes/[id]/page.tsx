@@ -80,7 +80,6 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
       <BackBar trail={[{ href: '/panel/pacientes', label: 'Pacientes' }]} />
       <header className="grid gap-5 lg:grid-cols-[1fr_22rem] lg:items-start">
         <div className="flex items-start gap-4">
-          <span aria-hidden className="grid size-14 shrink-0 place-items-center rounded-full bg-violeta-oscuro text-2xl font-semibold text-white">{p.firstName[0]}{p.lastName[0]}</span>
           <div className="min-w-0 space-y-1">
             <h1 className="text-3xl leading-tight">{p.firstName} {p.lastName}</h1>
             {meta && <p className="text-base text-tinta-suave">{meta}</p>}
