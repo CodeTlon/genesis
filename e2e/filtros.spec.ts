@@ -190,8 +190,8 @@ test('[REQ-INT-003][REQ-INT-009] los números del inicio coinciden con lo que mu
   const hoy = await tarjeta(/Atenciones? de hoy/)
   const pacientes = await tarjeta(/Pacientes?\b/)
   const casos = await tarjeta(/Casos? abiertos?/)
-  expect(await num('/panel/atenciones?estado=borradores', /(\d[\d.]*) atenciones?/)).toBe(borradores)
-  expect(await num('/panel/atenciones?periodo=hoy', /(\d[\d.]*) atenciones?/)).toBe(hoy)
+  expect(await num('/panel/atenciones?estado=borradores', /(\d[\d.]*) atenci(?:ón|ones)/)).toBe(borradores)
+  expect(await num('/panel/atenciones?periodo=hoy', /(\d[\d.]*) atenci(?:ón|ones)/)).toBe(hoy)
   expect(await num('/panel/pacientes', /(\d[\d.]*) pacientes?/)).toBe(pacientes)
   expect(await num('/panel/casos', /(\d[\d.]*) casos?/)).toBe(casos)
   // el aviso de la barra lateral también muestra los borradores

@@ -43,6 +43,7 @@ for (const d of [{ nombre: 'celular', width: 390, height: 844, touch: true }, { 
     await revisar(page, 'evolución')
     await page.keyboard.press('/')
     await expect(page.getByRole('dialog', { name: 'Búsqueda rápida' })).toBeVisible()
+    await expect(page.getByRole('dialog', { name: 'Búsqueda rápida' })).toHaveCSS('opacity', '1') // esperar a que termine el fundido: axe mide mal el contraste a mitad de la animación
     await revisar(page, 'búsqueda rápida')
     await ctx.close()
   })
