@@ -24,18 +24,30 @@ const toPatient = (r: typeof P.$inferSelect): Patient => ({
 
 const notDeleted = and(eq(P.tenantId, TENANT_ID), isNull(P.deletedAt))
 
-const patientWhere = (q?: string) => {
+export type PatientFilters = { filter?: 'alertas' | 'caso-abierto' | 'sin-casos' | 'menores'; alert?: Alert; orden?: 'apellido' | 'recientes' }
+const likeTerm = (term: string) => sql`'%' || lower(immutable_unaccent(${term})) || '%'`
+
+const patientWhere = (q?: string, f: PatientFilters = {}) => {
   const term = q?.trim()
-  return term ? and(notDeleted, sql`search_text like '%' || lower(immutable_unaccent(${term})) || '%'`) : notDeleted
+  return and(
+    notDeleted,
+    term ? sql`search_text like ${likeTerm(term)}` : undefined,
+    f.filter === 'alertas' ? sql`cardinality(${P.alerts}) > 0` : undefined,
+    f.filter === 'menores' ? sql`'menor' = any(${P.alerts})` : undefined,
+    f.filter === 'caso-abierto' ? sql`exists (select 1 from cases c where c.patient_id = ${P.id} and c.status = 'open')` : undefined,
+    f.filter === 'sin-casos' ? sql`not exists (select 1 from cases c where c.patient_id = ${P.id})` : undefined,
+    f.alert ? sql`${f.alert} = any(${P.alerts})` : undefined,
+  )
 }
 
-export async function listPatients(q?: string, limit = 200, offset = 0): Promise<Patient[]> {
-  const rows = await db().select().from(P).where(patientWhere(q)).orderBy(asc(P.lastName), asc(P.firstName), asc(P.id)).limit(limit).offset(offset)
+export async function listPatients(q?: string, limit = 200, offset = 0, f: PatientFilters = {}): Promise<Patient[]> {
+  const order = f.orden === 'recientes' ? [desc(P.createdAt), asc(P.id)] : [asc(P.lastName), asc(P.firstName), asc(P.id)]
+  const rows = await db().select().from(P).where(patientWhere(q, f)).orderBy(...order).limit(limit).offset(offset)
   return rows.map(toPatient)
 }
 
-export async function countPatients(q?: string): Promise<number> {
-  const [r] = await db().select({ n: sql<number>`count(*)::int` }).from(P).where(patientWhere(q))
+export async function countPatients(q?: string, f: PatientFilters = {}): Promise<number> {
+  const [r] = await db().select({ n: sql<number>`count(*)::int` }).from(P).where(patientWhere(q, f))
   return r?.n ?? 0
 }
 
@@ -273,30 +285,60 @@ export type Dashboard = { patients: number; openCases: number; drafts: number; s
 const monthStart = () => new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1))
 const count = async (q: PromiseLike<{ n: number }[]>) => (await q)[0]?.n ?? 0
 
-/** Evoluciones de todos los pacientes, sin firmar o firmadas (opcionalmente solo las de este mes). Solo metadatos: no descifra nada clínico. */
-export async function listAttentions(status: 'draft' | 'signed', opts: { limit?: number; offset?: number; thisMonth?: boolean } = {}): Promise<Pending[]> {
+export type AttentionFilters = { q?: string; periodo?: 'mes' | 'mes-pasado' | '90' | 'todas'; orden?: 'reciente' | 'antiguo' }
+
+const attentionWhere = (status: 'draft' | 'signed', f: AttentionFilters) => {
+  const term = f.q?.trim()
+  const now = new Date()
+  const from = f.periodo === 'mes' ? monthStart() : f.periodo === 'mes-pasado' ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)) : f.periodo === '90' ? new Date(now.getTime() - 90 * 864e5) : undefined
+  const to = f.periodo === 'mes-pasado' ? monthStart() : undefined
+  return and(
+    eq(E.status, status), notDeleted,
+    status === 'signed' && from ? gte(E.signedAt, from) : undefined,
+    status === 'signed' && to ? sql`${E.signedAt} < ${to}` : undefined,
+    term ? sql`(search_text like ${likeTerm(term)} or lower(immutable_unaccent(coalesce(${C.title}, ''))) like ${likeTerm(term)})` : undefined,
+  )
+}
+
+/** Evoluciones de todos los pacientes, sin firmar o firmadas, con búsqueda por paciente o caso y período. Solo metadatos: no descifra nada clínico. */
+export async function listAttentions(status: 'draft' | 'signed', opts: AttentionFilters & { limit?: number; offset?: number } = {}): Promise<Pending[]> {
   const at = status === 'draft' ? E.createdAt : E.signedAt
-  const where = and(eq(E.status, status), notDeleted, opts.thisMonth ? gte(E.signedAt, monthStart()) : undefined)
   const rows = await db().select({ id: E.id, patientId: E.patientId, caseId: E.caseId, first: P.firstName, last: P.lastName, caseTitle: C.title, at })
-    .from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId)).where(where).orderBy(desc(at), desc(E.id)).limit(opts.limit ?? 50).offset(opts.offset ?? 0)
+    .from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId)).where(attentionWhere(status, opts))
+    .orderBy(opts.orden === 'antiguo' ? asc(at) : desc(at), desc(E.id)).limit(opts.limit ?? 50).offset(opts.offset ?? 0)
   return rows.map((r) => ({ entryId: r.id, patientId: r.patientId, caseId: r.caseId ?? undefined, patient: `${r.first} ${r.last}`, caseTitle: r.caseTitle ?? undefined, at: (r.at ?? new Date()).toISOString() }))
 }
 
-export async function countAttentions(status: 'draft' | 'signed', thisMonth = false): Promise<number> {
-  return count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, status), notDeleted, thisMonth ? gte(E.signedAt, monthStart()) : undefined)))
+export async function countAttentions(status: 'draft' | 'signed', f: AttentionFilters = {}): Promise<number> {
+  return count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).leftJoin(C, eq(C.id, E.caseId)).where(attentionWhere(status, f)))
 }
 
-export type OpenCaseRow = { caseId: string; patientId: string; patient: string; title: string; openedAt: string; lastAt: string; drafts: number }
+export type CaseFilters = { q?: string; estado?: 'abiertos' | 'cerrados' | 'todos'; borrador?: boolean; orden?: 'reciente' | 'antiguo' }
+export type CaseRow = { caseId: string; patientId: string; patient: string; title: string; status: 'open' | 'closed'; openedAt: string; lastAt: string; drafts: number }
 
-/** Casos abiertos de todos los pacientes, el de actividad más reciente primero. */
-export async function listOpenCases(limit = 50, offset = 0): Promise<OpenCaseRow[]> {
+const caseWhere = (f: CaseFilters) => {
+  const term = f.q?.trim()
+  return and(
+    notDeleted,
+    f.estado === 'cerrados' ? eq(C.status, 'closed') : f.estado === 'todos' ? undefined : eq(C.status, 'open'),
+    term ? sql`(search_text like ${likeTerm(term)} or lower(immutable_unaccent(${C.title})) like ${likeTerm(term)})` : undefined,
+    f.borrador ? sql`exists (select 1 from clinical_entries e where e.case_id = ${C.id} and e.status = 'draft')` : undefined,
+  )
+}
+
+/** Casos de todos los pacientes (por defecto los abiertos), filtrables por texto, estado y borradores; el de actividad más reciente primero. */
+export async function listAllCases(f: CaseFilters = {}, limit = 50, offset = 0): Promise<CaseRow[]> {
   const last = sql<Date>`coalesce(max(${E.createdAt}), ${C.openedAt})`
   const rows = await db().select({
-    id: C.id, patientId: C.patientId, first: P.firstName, lastName: P.lastName, title: C.title, openedAt: C.openedAt, lastAt: last,
+    id: C.id, patientId: C.patientId, first: P.firstName, lastName: P.lastName, title: C.title, status: C.status, openedAt: C.openedAt, lastAt: last,
     drafts: sql<number>`count(${E.id}) filter (where ${E.status} = 'draft')::int`,
   }).from(C).innerJoin(P, eq(P.id, C.patientId)).leftJoin(E, eq(E.caseId, C.id))
-    .where(and(eq(C.status, 'open'), notDeleted)).groupBy(C.id, P.id).orderBy(desc(last), desc(C.id)).limit(limit).offset(offset)
-  return rows.map((r) => ({ caseId: r.id, patientId: r.patientId, patient: `${r.first} ${r.lastName}`, title: r.title, openedAt: r.openedAt.toISOString(), lastAt: new Date(r.lastAt).toISOString(), drafts: r.drafts }))
+    .where(caseWhere(f)).groupBy(C.id, P.id).orderBy(f.orden === 'antiguo' ? asc(last) : desc(last), desc(C.id)).limit(limit).offset(offset)
+  return rows.map((r) => ({ caseId: r.id, patientId: r.patientId, patient: `${r.first} ${r.lastName}`, title: r.title, status: r.status, openedAt: r.openedAt.toISOString(), lastAt: new Date(r.lastAt).toISOString(), drafts: r.drafts }))
+}
+
+export async function countAllCases(f: CaseFilters = {}): Promise<number> {
+  return count(db().select({ n: sql<number>`count(*)::int` }).from(C).innerJoin(P, eq(P.id, C.patientId)).where(caseWhere(f)))
 }
 
 /** Números y listas cortas para la pantalla de inicio. */
@@ -317,6 +359,3 @@ export async function draftCount(): Promise<number> {
   return count(db().select({ n: sql<number>`count(*)::int` }).from(E).innerJoin(P, eq(P.id, E.patientId)).where(and(eq(E.status, 'draft'), notDeleted)))
 }
 
-export async function countOpenCases(): Promise<number> {
-  return count(db().select({ n: sql<number>`count(*)::int` }).from(C).innerJoin(P, eq(P.id, C.patientId)).where(and(eq(C.status, 'open'), notDeleted)))
-}

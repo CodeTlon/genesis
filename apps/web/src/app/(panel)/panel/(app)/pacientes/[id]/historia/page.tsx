@@ -39,7 +39,7 @@ export default async function Historia({ params }: { params: Promise<{ id: strin
         <section key={c.id} className="space-y-3 break-inside-avoid-page">
           <h2 className="text-xl">{c.title} <span className="text-base font-normal">({c.status === 'open' ? 'abierto' : 'cerrado'}, desde {day(c.openedAt)})</span></h2>
           {c.reason && <p>Motivo: {c.reason}</p>}
-          {entries.filter((e) => e.caseId === c.id).map((e) => <EntryView key={e.id} entry={e} />)}
+          <ol className="relative ml-1.5 space-y-3 border-l-2 border-tinta/10">{entries.filter((e) => e.caseId === c.id).map((e) => <EntryView key={e.id} entry={e} defaultOpen />)}</ol>
           {c.status === 'closed' && <p><strong>Conclusión:</strong> {c.conclusion}{c.suggestions && <><br /><strong>Sugerencias:</strong> {c.suggestions}</>}</p>}
         </section>
       ))}

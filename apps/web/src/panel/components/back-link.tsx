@@ -15,7 +15,7 @@ export function BackBar({ trail }: { trail: { href: string; label: string }[] })
             <li key={t.href} className={`items-center gap-1 ${last ? 'flex' : 'hidden md:flex'}`}>
               {i > 0 && <IconChevronRight className="size-4 text-tinta-suave" />}
               <Link href={t.href} aria-label={last ? `Volver a ${t.label}` : undefined}
-                className={`inline-flex min-h-11 items-center gap-1.5 rounded-control px-3 transition-colors hover:bg-lila/40 ${last ? 'font-semibold text-violeta-oscuro' : 'text-tinta-suave'}`}>
+                className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-control px-3 transition-colors hover:bg-lila/40 ${last ? 'font-semibold text-violeta-oscuro' : 'text-tinta-suave'}`}>
                 {last && <IconArrowLeft className="size-5" />}{t.label}
               </Link>
             </li>

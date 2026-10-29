@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CountUp } from '@/panel/components/count-up'
 import { requireUser } from '@/panel/lib/auth-server'
 import { hourInCordoba, longToday, when } from '@/panel/lib/format'
 import { dashboard, type Pending } from '@/panel/lib/repo'
@@ -24,7 +25,7 @@ function Stat({ icon, n, label, go, to, tone }: { icon: string; n: number; label
     <Link href={to} className="group flex flex-col gap-3 rounded-card bg-white p-4 shadow-soft transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_-14px_rgb(123_63_184/.4)]">
       <span className="flex items-center gap-3">
         <span className={`grid size-11 shrink-0 place-items-center rounded-control ${tone}`}>{I(icon)}</span>
-        <span className="text-4xl font-semibold leading-none tracking-tight">{n}</span>
+        <CountUp value={n} className="text-4xl font-semibold leading-none tracking-tight" />
       </span>
       <span className="text-base text-tinta-suave">{label}</span>
       <span className="mt-auto inline-flex items-center gap-1 text-base font-semibold text-violeta-oscuro">{go}<svg aria-hidden viewBox="0 0 24 24" className="size-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg></span>
@@ -37,7 +38,7 @@ function List({ id, title, empty, items, tone, more }: { id?: string; title: str
     <section id={id} aria-labelledby={`${id ?? title}-h`} className="rounded-card bg-white p-5 shadow-soft">
       <h2 id={`${id ?? title}-h`} className="text-xl">{title}</h2>
       {items.length === 0 ? <p className="mt-3 text-tinta-suave">{empty}</p> : (
-        <ul className="g-stagger mt-2 divide-y divide-lila/50">
+        <ul className="g-stagger mt-2 divide-y divide-tinta/10">
           {items.map((p) => (
             <li key={p.entryId}>
               <Link href={href(p)} className="-mx-2 flex min-h-touch items-center justify-between gap-3 rounded-control px-2 py-2 transition-colors hover:bg-lila/30">
@@ -61,19 +62,10 @@ export default async function Inicio() {
   const d = await dashboard()
   return (
     <div className="space-y-6">
-      <header className="relative overflow-hidden rounded-card bg-gradient-to-br from-violeta-oscuro to-[#4f2480] p-6 text-white shadow-soft md:p-8">
-        <span aria-hidden className="g-blob g-blob-1 !size-72 !opacity-25" />
-        <span aria-hidden className="g-blob g-blob-3 !right-[-4rem] !left-auto !size-64 !opacity-20" />
-        <div className="relative">
-          <p className="text-base text-white/85">{longToday()}</p>
-          <h1 className="mt-1 text-3xl md:text-4xl">{greeting()}, {user.name.split(' ')[0]}</h1>
-          <p className="mt-2 max-w-xl text-white/90">{d.drafts > 0 ? `Tenés ${d.drafts} ${d.drafts === 1 ? 'evolución' : 'evoluciones'} sin firmar para retomar.` : 'Todo al día. Buscá un paciente o cargá uno nuevo para empezar.'}</p>
-          <form action="/panel/pacientes" className="mt-5 flex max-w-xl gap-2">
-            <label className="sr-only" htmlFor="inicio-q">Buscar por nombre, DNI o teléfono</label>
-            <input id="inicio-q" name="q" type="search" autoComplete="off" placeholder="Nombre, DNI o teléfono" className="min-h-touch min-w-0 flex-1 rounded-control border-0 bg-white px-4 text-tinta placeholder:text-tinta-suave" />
-            <button className="inline-flex min-h-touch items-center gap-2 rounded-control bg-white px-5 font-semibold text-violeta-oscuro hover:bg-lila/50">{I(ICON.search)}<span className="max-sm:sr-only">Buscar</span></button>
-          </form>
-        </div>
+      <header className="rounded-card border border-tinta/10 bg-white p-6 shadow-soft md:p-8">
+        <p className="text-base text-tinta-suave">{longToday()}</p>
+        <h1 className="mt-1 text-3xl md:text-4xl">{greeting()}, {user.name.split(' ')[0]}</h1>
+        <p className="mt-2 max-w-xl text-tinta-suave">{d.drafts > 0 ? `Tenés ${d.drafts} ${d.drafts === 1 ? 'evolución' : 'evoluciones'} sin firmar para retomar.` : 'Todo al día. Buscá un paciente o cargá uno nuevo para empezar.'}</p>
       </header>
 
       <nav aria-label="Resumen" className="g-stagger grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -88,13 +80,12 @@ export default async function Inicio() {
       <section aria-labelledby="nuevos-h" className="rounded-card bg-white p-5 shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 id="nuevos-h" className="text-xl">Pacientes recientes</h2>
-          <Link href="/panel/pacientes/nuevo" className="inline-flex min-h-touch items-center gap-2 rounded-control bg-violeta-oscuro px-5 font-semibold text-white hover:bg-tinta">{I(ICON.plus)}Nuevo paciente</Link>
         </div>
         {d.latestPatients.length === 0 ? <p className="mt-3 text-tinta-suave">Todavía no hay pacientes cargados.</p> : (
           <ul className="g-stagger mt-3 flex flex-wrap gap-2">
             {d.latestPatients.map((p) => (
               <li key={p.id}><Link href={`/panel/pacientes/${p.id}`} className="inline-flex min-h-touch items-center gap-2 rounded-full border border-lila bg-marmol px-4 transition-colors hover:bg-lila/40">
-                <span aria-hidden className="grid size-8 place-items-center rounded-full bg-violeta-oscuro text-base font-semibold text-white">{p.name[0]}</span>{p.name}</Link></li>
+                {p.name}</Link></li>
             ))}
           </ul>
         )}

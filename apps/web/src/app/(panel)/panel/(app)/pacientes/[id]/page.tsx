@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { AlertBadges } from '@/panel/components/alert-badges'
+import { AlertCard } from '@/panel/components/alert-card'
 import { BackBar } from '@/panel/components/back-link'
 import { Editable } from '@/panel/components/editable'
 import { AntecedentesForm, OpenCaseForm, PatientForm } from '@/panel/components/forms'
@@ -78,16 +78,20 @@ export default async function Ficha({ params, searchParams }: { params: Promise<
   return (
     <div className="space-y-6">
       <BackBar trail={[{ href: '/panel/pacientes', label: 'Pacientes' }]} />
-      <header className="space-y-3">
-        <h1 className="text-3xl">{p.firstName} {p.lastName}</h1>
-        {meta && <p className="text-lg text-tinta-suave">{meta}</p>}
-        <AlertBadges alerts={p.alerts} />
-        <div className="flex flex-wrap gap-3 pt-1">
-          {openCase
-            ? <Link href={`${base}/casos/${openCase.id}/atencion`} className="inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-6 font-semibold text-white hover:bg-tinta">Nueva atención</Link>
-            : <Link href={`${base}?tab=casos`} className="inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-6 font-semibold text-white hover:bg-tinta">Abrir un caso</Link>}
-          <Link href={`${base}/historia`} className="inline-flex min-h-touch items-center rounded-control border border-violeta-oscuro px-5 font-semibold text-violeta-oscuro hover:bg-lila/40">Historia clínica (imprimir / PDF)</Link>
+      <header className="grid gap-5 lg:grid-cols-[1fr_22rem] lg:items-start">
+        <div className="flex items-start gap-4">
+          <div className="min-w-0 space-y-1">
+            <h1 className="text-3xl leading-tight">{p.firstName} {p.lastName}</h1>
+            {meta && <p className="text-base text-tinta-suave">{meta}</p>}
+            <div className="flex flex-wrap gap-3 pt-3">
+              {openCase
+                ? <Link href={`${base}/casos/${openCase.id}/atencion`} className="inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-6 font-semibold text-white hover:bg-tinta">Nueva atención</Link>
+                : <Link href={`${base}?tab=casos`} className="inline-flex min-h-touch items-center rounded-control bg-violeta-oscuro px-6 font-semibold text-white hover:bg-tinta">Abrir un caso</Link>}
+              <Link href={`${base}/historia`} className="inline-flex min-h-touch items-center rounded-control border border-tinta/25 bg-white px-5 font-semibold hover:bg-lila/30">Historia clínica (imprimir / PDF)</Link>
+            </div>
+          </div>
         </div>
+        <AlertCard alerts={p.alerts} />
       </header>
 
       <Tabs base={base} current={tab} items={[{ id: 'casos', label: 'Casos', badge: cases.length }, { id: 'antecedentes', label: 'Antecedentes' }, { id: 'datos', label: 'Datos' }]} />

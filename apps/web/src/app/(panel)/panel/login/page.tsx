@@ -16,25 +16,25 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
     : error ? 'El correo o la contraseña no son correctos.' : null
   return (
     <main className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-      <section className="g-aurora relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#5b2a93] via-violeta-oscuro to-[#8d52cc] px-6 py-8 text-white lg:px-14 lg:py-12">
-        <span aria-hidden className="g-blob g-blob-1 !opacity-30" />
-        <span aria-hidden className="g-blob g-blob-3 !opacity-20" />
+      <section className="g-aurora relative flex flex-col justify-between overflow-hidden bg-[#efe8f7] px-6 py-8 text-tinta lg:px-14 lg:py-12">
+        <span aria-hidden className="g-blob g-blob-1 !opacity-60" />
+        <span aria-hidden className="g-blob g-blob-3 !opacity-50" />
         <FootShape className="g-float pointer-events-none absolute -right-28 bottom-[-9rem] hidden h-[32rem] -rotate-12 opacity-35 lg:block" />
         <div className="relative g-enter">
-          <h1 className="text-center lg:text-left"><Wordmark size="lg" tone="light" /><span className="sr-only"> Panel de gestión</span></h1>
-          <p className="mt-3 text-center text-lg text-white/90 lg:text-left lg:text-xl">Historias clínicas de podología</p>
+          <h1 className="text-center lg:text-left"><Wordmark size="lg" /><span className="sr-only"> Panel de gestión</span></h1>
+          <p className="mt-3 text-center text-lg text-tinta-suave lg:text-left lg:text-xl">Historias clínicas de podología</p>
         </div>
         <ul className="g-stagger relative mt-10 hidden max-w-md space-y-5 lg:block">
           {POINTS.map((x) => (
             <li key={x.t} className="flex gap-4">
-              <span className="grid size-11 shrink-0 place-items-center rounded-control bg-white/15 ring-1 ring-white/25">
+              <span className="grid size-11 shrink-0 place-items-center rounded-control bg-white text-violeta-oscuro shadow-soft">
                 <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d={x.p} /></svg>
               </span>
-              <span><span className="block text-lg font-semibold">{x.t}</span><span className="block text-white/85">{x.d}</span></span>
+              <span><span className="block text-lg font-semibold">{x.t}</span><span className="block text-tinta-suave">{x.d}</span></span>
             </li>
           ))}
         </ul>
-        <p className="relative mt-10 hidden text-base text-white/80 lg:block">Genesis Estética Integral · Córdoba</p>
+        <p className="relative mt-10 hidden text-base text-tinta-suave lg:block">Genesis Estética Integral · Córdoba</p>
       </section>
 
       <section className="flex items-center justify-center px-6 py-10">

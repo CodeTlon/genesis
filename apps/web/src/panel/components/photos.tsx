@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { deletePhoto } from '@/panel/lib/actions'
+import { CompareSlider } from './compare-slider'
 import { PHOTO_KIND_LABEL, type Photo, type PhotoKind } from '@/panel/lib/types'
 
 const PHOTOS_PAGE = 12
@@ -82,27 +83,26 @@ export function PhotoGrid({ photos, deletable }: { photos: Photo[]; deletable: s
   return (
     <div className="space-y-4">
       {initial && final && initial.id !== final.id && (
-        <section aria-label="Comparación inicial y final" className="grid gap-3 sm:grid-cols-2">
-          {[initial, final].map((p, i) => (
-            <figure key={p.id} className="rounded-card bg-white p-2 shadow-soft">
-              <button type="button" onClick={() => open(p.id)} aria-label={`Ampliar foto ${i === 0 ? 'inicial' : 'final'}, ${day(p.takenAt)}`} className="group relative block w-full overflow-hidden rounded-control">
-                {/* eslint-disable-next-line @next/next/no-img-element -- imagen privada servida con sesión; no pasa por el optimizador */}
-                <img src={`/panel-media/${p.id}`} alt="" className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105" />
-              </button>
-              <figcaption className="mt-1 text-center font-semibold">{i === 0 ? 'Inicial' : 'Final'} · {day(p.takenAt)}</figcaption>
-            </figure>
-          ))}
+        <section aria-label="Comparación inicial y final" className="space-y-2">
+          <CompareSlider before={{ src: `/panel-media/${initial.id}`, label: `Foto inicial, ${day(initial.takenAt)}` }} after={{ src: `/panel-media/${final.id}`, label: `Foto final, ${day(final.takenAt)}` }} />
+          <div className="flex flex-wrap items-center justify-between gap-2 text-tinta-suave">
+            <span>Inicial {day(initial.takenAt)} · Final {day(final.takenAt)}</span>
+            <span className="flex gap-2">
+              <button type="button" onClick={() => open(initial.id)} className="min-h-touch rounded-control border border-tinta/25 bg-white px-4 font-semibold text-tinta hover:bg-lila/30">Ampliar inicial</button>
+              <button type="button" onClick={() => open(final.id)} className="min-h-touch rounded-control border border-tinta/25 bg-white px-4 font-semibold text-tinta hover:bg-lila/30">Ampliar final</button>
+            </span>
+          </div>
         </section>
       )}
       {err && <p role="alert" className="text-red-800">{err}</p>}
       <ul className="g-stagger grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {photos.slice(0, visible).map((p) => (
-          <li key={p.id} className="g-lift rounded-card bg-white p-2 shadow-soft">
-            <button type="button" onClick={() => open(p.id)} aria-label={`Ampliar foto: ${PHOTO_KIND_LABEL[p.kind]}, ${day(p.takenAt)}`} className="group block w-full overflow-hidden rounded-control">
+          <li key={p.id} className="g-lift overflow-hidden rounded-card border border-tinta/10 bg-white shadow-soft">
+            <button type="button" onClick={() => open(p.id)} aria-label={`Ampliar foto: ${PHOTO_KIND_LABEL[p.kind]}, ${day(p.takenAt)}`} className="group relative block w-full overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element -- ver arriba */}
               <img src={`/panel-media/${p.id}?t=thumb`} alt="" loading="lazy" className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+              <span aria-hidden className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-3 pb-2 pt-8 text-left text-sm font-semibold text-white">{PHOTO_KIND_LABEL[p.kind]} · {day(p.takenAt)}</span>
             </button>
-            <p className="mt-1 text-base">{PHOTO_KIND_LABEL[p.kind]} · {day(p.takenAt)}</p>
           </li>
         ))}
       </ul>
@@ -120,21 +120,21 @@ export function PhotoGrid({ photos, deletable }: { photos: Photo[]; deletable: s
             <p className="min-w-0 truncate font-semibold">{PHOTO_KIND_LABEL[cur.kind]} · {day(cur.takenAt)} <span className="font-normal text-white/80">({Math.min(idx, photos.length - 1) + 1} de {photos.length})</span></p>
             <div className="flex shrink-0 gap-2">
               {deletable.includes(cur.id) && <button type="button" onClick={() => { setAsking(cur.id); confirmDlg.current?.showModal() }} className="min-h-touch rounded-control bg-white/15 px-4 font-semibold hover:bg-white/25">Borrar</button>}
-              <button type="button" autoFocus onClick={() => viewer.current?.close()} aria-label="Cerrar vista previa" className="grid size-12 place-items-center rounded-control bg-white/15 hover:bg-white/25">
+              <button type="button" autoFocus onClick={() => viewer.current?.close()} aria-label="Cerrar vista previa" className="grid size-touch place-items-center rounded-control bg-white/15 hover:bg-white/25">
                 <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </button>
             </div>
           </div>
           <div className="relative flex min-h-0 flex-1 items-center justify-center px-2 pb-4 md:px-16">
             {photos.length > 1 && (
-              <button type="button" onClick={() => go(-1)} aria-label="Foto anterior" className="absolute left-2 z-10 grid size-12 place-items-center rounded-full bg-white/15 hover:bg-white/30 md:left-4">
+              <button type="button" onClick={() => go(-1)} aria-label="Foto anterior" className="absolute left-2 z-10 grid size-touch place-items-center rounded-full bg-white/15 hover:bg-white/30 md:left-4">
                 <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
               </button>
             )}
             {/* eslint-disable-next-line @next/next/no-img-element -- ver arriba */}
             <img key={cur.id} src={`/panel-media/${cur.id}`} alt={`${PHOTO_KIND_LABEL[cur.kind]}, ${day(cur.takenAt)}`} className="g-viewer-img max-h-full max-w-full rounded-control object-contain shadow-2xl" />
             {photos.length > 1 && (
-              <button type="button" onClick={() => go(1)} aria-label="Foto siguiente" className="absolute right-2 z-10 grid size-12 place-items-center rounded-full bg-white/15 hover:bg-white/30 md:right-4">
+              <button type="button" onClick={() => go(1)} aria-label="Foto siguiente" className="absolute right-2 z-10 grid size-touch place-items-center rounded-full bg-white/15 hover:bg-white/30 md:right-4">
                 <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
             )}

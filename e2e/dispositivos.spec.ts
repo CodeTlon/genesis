@@ -32,7 +32,7 @@ async function revisar(page: Page, errores: string[], donde: string) {
 }
 
 for (const d of DISPOSITIVOS) {
-  test(`[REQ-INT-001][REQ-INT-002][REQ-INT-003] todas las pantallas sin desbordes en ${d.nombre} (${d.width}px)`, async ({ browser }) => {
+  test(`[REQ-INT-001][REQ-INT-002][REQ-INT-003][REQ-INT-006] todas las pantallas sin desbordes en ${d.nombre} (${d.width}px)`, async ({ browser }) => {
     const ctx = await browser.newContext({ viewport: { width: d.width, height: d.height }, hasTouch: d.touch, isMobile: d.touch })
     const page = await ctx.newPage()
     const errores: string[] = []
@@ -46,7 +46,7 @@ for (const d of DISPOSITIVOS) {
     const resumen = page.getByRole('navigation', { name: 'Resumen' })
     const destinos: [RegExp, RegExp, string][] = [
       [/Ver lista/, /\/panel\/pacientes$/, "Pacientes"],
-      [/Ver casos/, /\/panel\/casos$/, 'Casos abiertos'],
+      [/Ver casos/, /\/panel\/casos$/, 'Casos'],
       [/Retomar/, /\/panel\/atenciones\?tab=sin-firmar/, 'Atenciones'],
       [/Ver firmadas/, /\/panel\/atenciones\?tab=firmadas/, 'Atenciones'],
     ]
@@ -87,6 +87,10 @@ for (const d of DISPOSITIVOS) {
     await page.getByRole('link', { name: /Abierto/ }).first().click()
     await expect(page).toHaveURL(/\/casos\/[0-9a-f-]{36}$/)
     await expect(page.getByRole('navigation', { name: 'Paginación' })).toContainText('Mostrando 1–10 de 40 evoluciones')
+    // línea de tiempo: la más reciente abierta y las anteriores plegadas
+    const lineas = page.locator('main ol > li details')
+    await expect(lineas.first()).toHaveAttribute('open', '')
+    await expect(lineas.nth(1)).not.toHaveAttribute('open', '')
     await page.getByRole('link', { name: 'Ir a la página 4' }).click()
     await expect(page.getByRole('navigation', { name: 'Paginación' })).toContainText('Mostrando 31–40 de 40 evoluciones')
     await revisar(page, errores, 'caso con muchas evoluciones (última página)')
@@ -128,4 +132,100 @@ test('[REQ-INT-002] los pacientes con poca o mucha información se ven completos
   await expect(page.getByRole('tab', { name: /Sin firmar/ })).toHaveAttribute('aria-selected', 'true')
   await page.goto('/panel/casos')
   await expect(page.locator('main ul.divide-y > li').nth(5)).toBeVisible()
+})
+
+// En el celular todo lo que se toca mide al menos 44 px de alto (y de ancho, salvo enlaces dentro de un texto).
+test('[REQ-INT-001] en el celular los botones, enlaces y campos son cómodos de tocar', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  const page = await ctx.newPage()
+  await login(page)
+  await page.goto('/panel/pacientes?q=Vega Rodr')
+  await page.getByRole('link', { name: /Fernández de la Vega/ }).first().click()
+  const ficha = page.url()
+  await page.getByRole('link', { name: /Abierto/ }).first().click()
+  await expect(page).toHaveURL(/\/casos\/[0-9a-f-]{36}/) // esperar a que cargue el caso antes de guardar la URL
+  const caso = page.url().split('?')[0]
+  const pantallas = ['/panel/inicio', '/panel/pacientes', '/panel/casos', '/panel/atenciones', '/panel/pacientes/nuevo', ficha, `${ficha}?tab=antecedentes`, `${ficha}?tab=datos`, caso, `${caso}/atencion`]
+  const chicos: string[] = []
+  for (const url of pantallas) {
+    await page.goto(url)
+    await page.waitForLoadState('networkidle')
+    const malos = await page.evaluate(() => {
+      const sel = 'a[href], button, input:not([type=hidden]):not([type=range]), select, textarea, summary, [role=tab], [role=option], [role=button]'
+      const all = [...document.querySelectorAll<HTMLElement>(sel)]
+      const bad = all.filter((el) => {
+        const r = el.getBoundingClientRect(), cs = getComputedStyle(el)
+        if (!r.width || !r.height || cs.visibility === 'hidden' || cs.display === 'none' || el.closest('.sr-only') || el.closest('svg')) return false
+        if (el.matches('a') && el.closest('p, li > span, dd')) return false // enlaces dentro de un texto
+        if (el.matches('input[type=checkbox], input[type=radio]')) return false // el área tocable es la etiqueta
+        return r.height < 43.5
+      }).map((el) => `${el.tagName.toLowerCase()} «${(el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 40)}» ${Math.round(el.getBoundingClientRect().height)}px`)
+      return { total: all.length, bad }
+    })
+    expect(malos.total, `${url}: no se encontró nada para medir`).toBeGreaterThan(3)
+    for (const m of malos.bad) chicos.push(`${url.replace(/[0-9a-f-]{36}/g, ':id')}: ${m}`)
+  }
+  expect(chicos, 'elementos de menos de 44 px de alto en el celular').toEqual([])
+  await ctx.close()
+})
+
+test('[REQ-INT-009] los listados se filtran por texto, estado y orden, y los filtros quedan en la URL', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await login(page)
+  const filas = page.locator('main ul.divide-y > li')
+
+  // Pacientes: con alertas, menores, orden y limpiar
+  await page.goto('/panel/pacientes')
+  await page.getByRole('link', { name: 'Con alertas' }).click()
+  await expect(page).toHaveURL(/filtro=alertas/)
+  await expect(filas.first()).toContainText(/alerta/)
+  for (const t of await filas.allTextContents()) expect(t).toMatch(/alerta/)
+  await page.getByRole('link', { name: 'Menores' }).click()
+  await expect(page).toHaveURL(/filtro=menores/)
+  await expect(filas.first()).toContainText('Menor de edad')
+  for (const t of await filas.allTextContents()) expect(t).toContain('Menor de edad')
+  await page.getByRole('link', { name: 'Más recientes' }).click()
+  await expect(page).toHaveURL(/orden=recientes/)
+  await expect(page).toHaveURL(/filtro=menores/) // el otro filtro se conserva
+  await page.getByRole('link', { name: 'Limpiar filtros' }).click()
+  await expect(page).toHaveURL(/\/panel\/pacientes$/)
+  await page.getByRole('link', { name: 'Sin casos' }).click()
+  await expect(page).toHaveURL(/filtro=sin-casos/)
+  await expect(page.getByRole('navigation', { name: 'Paginación' })).toContainText('Mostrando 1–25 de')
+
+  // Casos: cerrados y con borrador
+  await page.goto('/panel/casos')
+  await page.getByRole('link', { name: 'Cerrados' }).click()
+  await expect(page).toHaveURL(/estado=cerrados/)
+  await expect(filas.first()).toContainText('Cerrado')
+  for (const t of await filas.allTextContents()) expect(t).toContain('Cerrado')
+  await page.getByRole('link', { name: 'Abiertos' }).click()
+  await page.getByRole('link', { name: 'Con borrador sin firmar' }).click()
+  await expect(page).toHaveURL(/borrador=si/)
+  await expect(filas.first()).toContainText('sin firmar')
+  for (const t of await filas.allTextContents()) expect(t).toContain('sin firmar')
+
+  // Búsqueda en vivo dentro de un listado: conserva los filtros y vuelve a la primera página
+  await page.goto('/panel/atenciones?tab=firmadas&periodo=todas')
+  await page.getByRole('searchbox').fill('Vega')
+  await expect(page).toHaveURL(/q=Vega/)
+  await expect(page).toHaveURL(/periodo=todas/)
+  await expect(page).toHaveURL(/tab=firmadas/)
+  await expect(filas.first()).toContainText('Vega')
+  await page.getByRole('link', { name: 'Mes pasado' }).click()
+  await expect(page).toHaveURL(/periodo=mes-pasado/)
+  await expect(page).toHaveURL(/q=Vega/)
+})
+
+test('[REQ-INT-009] en el celular los filtros se pliegan detrás de un botón con la cantidad activa', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  const page = await ctx.newPage()
+  await login(page)
+  await page.goto('/panel/pacientes?filtro=alertas&orden=recientes')
+  const boton = page.getByRole('button', { name: /^Filtros/ })
+  await expect(boton).toContainText('2')
+  await expect(page.getByRole('link', { name: 'Con caso abierto' })).toBeHidden()
+  await boton.click()
+  await expect(page.getByRole('link', { name: 'Con caso abierto' })).toBeVisible()
+  await ctx.close()
 })

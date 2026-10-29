@@ -23,6 +23,8 @@ Next 16.4.2 + React 19.3.1 + Tailwind v4 + Better Auth + Drizzle (consultas) + P
 
 - `scripts/sembrar-prueba.ts`: datos ficticios con volumen (`SEMBRAR_DATOS_FICTICIOS=si CANTIDAD=250 npx tsx scripts/sembrar-prueba.ts`). `e2e/dispositivos.spec.ts` lo usa.
 
+- Diseño: `docs/decisiones.md` ADR-022. De `codetlon-cloud/references/diseños` se tomó solo la idea (sin copiar código ni agregar dependencias) de kokonutui `action-search-bar`, `metric-card` y `lightbox-grid`. `ALERT_HINT` (frases de las alertas) es propuesta a validar con Inés. Búsqueda rápida: `/` o Ctrl+K.
+
 ## Specs (SDD)
 Perfil **S2** (`sdd: v1`): `specs/<capacidad>/spec.md` con REQ-CAP-NNN, validador `npm run spec:lint` (corre en CI). Cada test E2E lleva `[REQ-XXX-NNN]` en el título. Un cambio de comportamiento abre un delta en `specs/changes/` antes de implementarse. Brecha abierta: REQ-SEG-005 (simulacro de restauración real).
 
