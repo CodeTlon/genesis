@@ -30,13 +30,6 @@ export default async function Atenciones({ searchParams }: { searchParams: Promi
       <header>
         <h1 className="text-3xl">Atenciones</h1>
         <p className="mt-1 text-tinta-suave">Cada evolución que se escribe en un caso, de todos los pacientes.</p>
-        <details className="g-acc mt-3 max-w-2xl rounded-card border border-tinta/10 bg-white">
-          <summary className="flex min-h-touch items-center justify-between gap-3 px-4 py-2 font-semibold text-violeta-oscuro">¿Qué es un borrador y qué es una firma?<svg aria-hidden viewBox="0 0 24 24" className="g-chev size-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg></summary>
-          <div className="space-y-2 px-4 pb-4 text-tinta-suave">
-            <p><strong className="text-tinta">Borrador:</strong> la atención se está escribiendo. Se guarda sola y se puede seguir editando.</p>
-            <p><strong className="text-tinta">Firmada:</strong> la atención está terminada y queda cerrada. Ya no se modifica; si hay que corregir algo, se agrega una adenda. Es lo que respalda la historia clínica.</p>
-          </div>
-        </details>
       </header>
       <FilterBar base="/panel/atenciones" q={q ?? ''} placeholder="Buscar por paciente o caso" groups={[
         { key: 'estado', label: 'Estado', value: estado, options: [{ value: 'todas', label: 'Todas' }, { value: 'borradores', label: 'Borradores (sin firmar)' }, { value: 'firmadas', label: 'Firmadas' }] },
