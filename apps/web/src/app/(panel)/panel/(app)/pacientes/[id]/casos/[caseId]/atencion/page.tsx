@@ -1,6 +1,6 @@
 import { BackBar } from '@/panel/components/back-link'
 import { notFound, redirect } from 'next/navigation'
-import { AlertBadges } from '@/panel/components/alert-badges'
+import { AlertCard } from '@/panel/components/alert-card'
 import { AttentionForm } from '@/panel/components/attention-form'
 import { requireUser } from '@/panel/lib/auth-server'
 import * as repo from '@/panel/lib/repo'
@@ -18,7 +18,7 @@ export default async function Atencion({ params }: { params: Promise<{ id: strin
     <div className="space-y-6">
       <BackBar trail={[{ href: '/panel/pacientes', label: 'Pacientes' }, { href: `/panel/pacientes/${id}`, label: `${p.firstName} ${p.lastName}` }, { href: `/panel/pacientes/${id}/casos/${caseId}`, label: c.title }]} />
       <h1 className="text-3xl">Nueva evolución · {p.firstName} {p.lastName}</h1>
-      <AlertBadges alerts={p.alerts} />
+      <div className="max-w-xl"><AlertCard alerts={p.alerts} /></div>
       <AttentionForm patientId={id} patientName={`${p.firstName} ${p.lastName}`} caseId={caseId} caseTitle={c.title} template={TEMPLATE} initial={{}} />
     </div>
   )

@@ -26,3 +26,27 @@ El sistema DEBE llevar cada tarjeta del inicio (pacientes, casos abiertos, sin f
 - Escenario: Dado el inicio con datos, Cuando se pulsa cada tarjeta, Entonces se abren respectivamente Pacientes, Casos abiertos y Atenciones (en la pestaña sin firmar y en la de firmadas).
 - verify: e2e e2e/dispositivos.spec.ts
 - confianza: confirmado
+
+### REQ-INT-004 [must] Alertas clínicas en una tarjeta ordenada
+El sistema DEBE mostrar las alertas clínicas del paciente en una sola tarjeta, ordenadas de la más grave a la menos grave, cada una con ícono, nombre y qué implica, y DEBE mostrar las tres más graves con un botón para ver todas si hay más.
+- Escenario: Dado un paciente con cinco alertas, Cuando se abre su ficha, Entonces la tarjeta indica (5), muestra tres y "Ver todas (5)" muestra las cinco.
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado
+
+### REQ-INT-005 [should] Búsqueda rápida desde cualquier pantalla
+El sistema DEBE ofrecer una búsqueda rápida que se abra con la tecla barra inclinada o Ctrl+K, encuentre pacientes mientras se escribe, permita elegir con flechas y Enter, se cierre con Escape y exija sesión.
+- Escenario: Dado un paciente cargado, Cuando se pulsa la barra inclinada y se escribe su apellido, Entonces aparece como resultado y Enter abre su ficha; sin sesión la búsqueda responde 401.
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado
+
+### REQ-INT-006 [should] Evoluciones como línea de tiempo
+El sistema DEBE mostrar las evoluciones de un caso como una línea de tiempo con fecha, autora, estado y motivo, con la más reciente abierta y las demás plegadas.
+- Escenario: Dado un caso con varias evoluciones, Cuando se abre el caso, Entonces la más reciente muestra su detalle y las anteriores muestran solo el resumen hasta que se abren.
+- verify: e2e e2e/dispositivos.spec.ts
+- confianza: confirmado
+
+### REQ-INT-007 [should] Comparador de fotos antes y después
+El sistema DEBE ofrecer un comparador con deslizador entre la foto inicial y la final de un caso, operable con teclado.
+- Escenario: Dado un caso con foto inicial y final, Cuando se mueve el deslizador, Entonces se ve más o menos de cada foto.
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado

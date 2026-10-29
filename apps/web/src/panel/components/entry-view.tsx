@@ -8,7 +8,7 @@ import { MarkersSummary } from './foot-map'
 const fmt = (iso: string) => new Date(iso).toLocaleString('es-AR', { timeZone: 'America/Argentina/Cordoba', dateStyle: 'short', timeStyle: 'short' })
 const show = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v) ? formatDigits(v) : Array.isArray(v) ? v.join(', ') : v === true ? 'Sí' : v === false ? 'No' : v === undefined || v === '' ? '—' : String(v))
 
-export function EntryView({ entry }: { entry: Entry }) {
+export function EntryView({ entry, defaultOpen = false }: { entry: Entry; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
   const [text, setText] = useState('')
@@ -24,19 +24,31 @@ export function EntryView({ entry }: { entry: Entry }) {
     if (r.ok) { setOpen(false); setReason(''); setText(''); setMsg('') } else setMsg(r.message)
   }
 
+  const motivo = typeof entry.payload.motivo === 'string' ? entry.payload.motivo : ''
+  const nMarks = ((entry.payload.markers ?? []) as FootMarker[]).length
   return (
-    <article className="rounded-card bg-white p-5 shadow-soft">
-      <header className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-lg">{fmt(entry.createdAt)} · {entry.author}</h3>
-        <span className={`rounded-full px-3 py-0.5 text-base ring-1 ${signed ? 'bg-emerald-100 text-emerald-950 ring-emerald-700/40' : 'bg-amber-100 text-amber-950 ring-amber-700/40'}`}>{signed ? `Firmada ${fmt(entry.signedAt!)}` : 'Borrador'}</span>
-      </header>
-      <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+    <li className="relative pl-7">
+      <span aria-hidden className={`absolute -left-[7px] top-6 size-3 rounded-full ring-4 ring-marmol ${signed ? 'bg-ok-texto' : 'bg-aviso-texto'}`} />
+      <details open={defaultOpen} className="g-acc rounded-card border border-tinta/10 bg-white shadow-soft">
+        <summary className="flex min-h-touch items-center justify-between gap-3 px-4 py-3">
+          <span className="min-w-0">
+            <span className="block text-base font-semibold">{fmt(entry.createdAt)} · {entry.author}</span>
+            <span className="block truncate text-tinta-suave">{motivo || 'Sin motivo'}{nMarks > 0 ? ` · ${nMarks} ${nMarks === 1 ? 'marca' : 'marcas'} en el mapa` : ''}</span>
+          </span>
+          <span className="flex shrink-0 items-center gap-2">
+            <span className={`rounded-full px-2.5 py-0.5 font-semibold ${signed ? 'bg-ok-fondo text-ok-texto' : 'bg-aviso-fondo text-aviso-texto'}`}>{signed ? 'Firmada' : 'Borrador'}</span>
+            <svg aria-hidden viewBox="0 0 24 24" className="g-chev size-5 text-tinta-suave" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </span>
+        </summary>
+        <div className="border-t border-tinta/10 px-4 pb-4 pt-3">
+          {signed && <p className="text-tinta-suave">Firmada el {fmt(entry.signedAt!)}</p>}
+      <dl className="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2">
         {fields.map((f) => <div key={f.id}><dt className="text-base text-tinta-suave">{f.label}</dt><dd>{show(entry.payload[f.id])}{f.unit ? ` ${f.unit}` : ''}</dd></div>)}
       </dl>
       <div className="mt-3"><MarkersSummary footType={entry.payload.footType} markers={(entry.payload.markers ?? []) as FootMarker[]} /></div>
 
       {entry.addenda.length > 0 && (
-        <section className="mt-4 space-y-2 border-t border-lila/50 pt-3" aria-label="Adendas">
+        <section className="mt-4 space-y-2 border-t border-tinta/10 pt-3" aria-label="Adendas">
           <h4 className="font-semibold">Adendas</h4>
           {entry.addenda.map((a) => <p key={a.id} className="rounded-control bg-lila/30 p-3"><span className="block text-base text-tinta-suave">{fmt(a.at)} · {a.author} · {a.reason}</span>{a.text}</p>)}
         </section>
@@ -59,6 +71,8 @@ export function EntryView({ entry }: { entry: Entry }) {
           )}
         </div>
       )}
-    </article>
+    </div>
+      </details>
+    </li>
   )
 }

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AlertBadges } from '@/panel/components/alert-badges'
+import { AlertSummary } from '@/panel/components/alert-card'
 import { PatientSearch } from '@/panel/components/patient-search'
 import { requireUser } from '@/panel/lib/auth-server'
 import { Pagination, parsePage } from '@/panel/components/pagination'
@@ -43,7 +43,7 @@ export default async function Pacientes({ searchParams }: { searchParams: Promis
                     <span className="block text-base text-tinta-suave">{[p.dni && `DNI ${p.dni}`, p.phone].filter(Boolean).join(' · ')}</span>
                   </span>
                   <span className="flex shrink-0 items-center gap-2">
-                    <AlertBadges alerts={p.alerts} compact max={3} />
+                    <AlertSummary alerts={p.alerts} />
                     <svg aria-hidden viewBox="0 0 24 24" className="size-6 text-tinta-suave" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
                   </span>
                 </Link>

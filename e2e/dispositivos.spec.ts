@@ -32,7 +32,7 @@ async function revisar(page: Page, errores: string[], donde: string) {
 }
 
 for (const d of DISPOSITIVOS) {
-  test(`[REQ-INT-001][REQ-INT-002][REQ-INT-003] todas las pantallas sin desbordes en ${d.nombre} (${d.width}px)`, async ({ browser }) => {
+  test(`[REQ-INT-001][REQ-INT-002][REQ-INT-003][REQ-INT-006] todas las pantallas sin desbordes en ${d.nombre} (${d.width}px)`, async ({ browser }) => {
     const ctx = await browser.newContext({ viewport: { width: d.width, height: d.height }, hasTouch: d.touch, isMobile: d.touch })
     const page = await ctx.newPage()
     const errores: string[] = []
@@ -87,6 +87,10 @@ for (const d of DISPOSITIVOS) {
     await page.getByRole('link', { name: /Abierto/ }).first().click()
     await expect(page).toHaveURL(/\/casos\/[0-9a-f-]{36}$/)
     await expect(page.getByRole('navigation', { name: 'Paginación' })).toContainText('Mostrando 1–10 de 40 evoluciones')
+    // línea de tiempo: la más reciente abierta y las anteriores plegadas
+    const lineas = page.locator('main ol > li details')
+    await expect(lineas.first()).toHaveAttribute('open', '')
+    await expect(lineas.nth(1)).not.toHaveAttribute('open', '')
     await page.getByRole('link', { name: 'Ir a la página 4' }).click()
     await expect(page.getByRole('navigation', { name: 'Paginación' })).toContainText('Mostrando 31–40 de 40 evoluciones')
     await revisar(page, errores, 'caso con muchas evoluciones (última página)')

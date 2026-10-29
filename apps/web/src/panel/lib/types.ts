@@ -11,6 +11,29 @@ export const ALERT_LABEL: Record<Alert, string> = {
   menor: 'Menor de edad',
 }
 
+/** Gravedad de la alerta: alto (riesgo de sangrado o implantes), medio (precauciones) o informativo. Se usa para el color y el orden. */
+export type AlertLevel = 'alto' | 'medio' | 'info'
+export const ALERT_LEVEL: Record<Alert, AlertLevel> = {
+  anticoagulantes: 'alto', antiagregados: 'alto', marcapasos: 'alto',
+  diabetes: 'medio', circulacion: 'medio', alergia: 'medio',
+  embarazo: 'info', menor: 'info',
+}
+/** PROPUESTA a validar con Inés: frase corta de qué implica cada alerta. Si no se valida, se puede vaciar y la tarjeta muestra solo el nombre. */
+export const ALERT_HINT: Record<Alert, string> = {
+  diabetes: 'Revisar sensibilidad y heridas',
+  anticoagulantes: 'Riesgo de sangrado',
+  antiagregados: 'Riesgo de sangrado',
+  embarazo: 'Consultar antes de indicar productos',
+  marcapasos: 'Precaución con equipos eléctricos',
+  alergia: 'Ver el detalle en antecedentes',
+  circulacion: 'Cuidado con la presión y las heridas',
+  menor: 'Atender con su responsable',
+}
+const LEVEL_RANK: Record<AlertLevel, number> = { alto: 0, medio: 1, info: 2 }
+/** Alertas ordenadas de la más grave a la menos grave. */
+export const sortAlerts = (a: Alert[]): Alert[] => [...a].sort((x, y) => LEVEL_RANK[ALERT_LEVEL[x]] - LEVEL_RANK[ALERT_LEVEL[y]])
+export const topLevel = (a: Alert[]): AlertLevel => (a.length ? ALERT_LEVEL[sortAlerts(a)[0]] : 'info')
+
 export type Patient = {
   id: string
   firstName: string

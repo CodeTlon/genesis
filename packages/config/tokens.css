@@ -5,7 +5,7 @@
   --color-lila: #c9a7eb;
   --color-malva: #ac9bb0;            /* usar texto tinta encima (6.69:1) */
   --color-tinta: #1a1a1a;
-  --color-marmol: #f4f3f5;
+  --color-marmol: #f8f7fa;
   --color-tinta-suave: #4a4650;      /* texto secundario: 8.4:1 sobre blanco, 7.6:1 sobre marmol */
 
   /* Estados semánticos (fondo claro + texto oscuro, AA) */
@@ -18,21 +18,22 @@
   --font-display: var(--font-cormorant), Georgia, 'Times New Roman', serif;
   --font-label: var(--font-roboto-condensed), ui-sans-serif, system-ui, sans-serif;
 
-  --radius-card: 1.25rem;
-  --radius-control: 0.875rem;
-  --shadow-soft: 0 8px 30px -12px rgb(123 63 184 / 0.25);
-  --spacing-touch: 3rem;             /* botones >= 48px */
+  --radius-card: 1rem;
+  --radius-control: 0.75rem;
+  --shadow-soft: 0 1px 2px rgb(26 26 26 / 0.04), 0 10px 24px -14px rgb(60 30 100 / 0.16);
+  --spacing-touch: 48px;             /* botones >= 48px, fijo en px: no cambia con la escala de texto */
   --ease-out: cubic-bezier(.22, .8, .24, 1);
 }
 
 /* Alto del tab bar móvil: lo usan el layout y las barras fijas (firma) para apilarse sin valores mágicos. */
-:root { --tabbar-h: calc(3.75rem + env(safe-area-inset-bottom, 0px)); color-scheme: light; }
+/* Escala: base de 14 px (a pedido); los datos clave suben de talla en cada pantalla y los controles táctiles son de 48 px. */
+:root { --tabbar-h: calc(60px + env(safe-area-inset-bottom, 0px)); color-scheme: light; }
 
 :root { --background: var(--color-marmol); --foreground: var(--color-tinta); }
 
-html { font-size: 100%; }            /* base 16px; los botones táctiles siguen en 48px (--spacing-touch) */
+html { font-size: 87.5%; }           /* base 14px */
 body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); }
-input, select, textarea { font-size: 1rem; } /* evita el zoom automático en iPhone y mantiene el texto legible */
+input, select, textarea { font-size: 16px; } /* 16px fijos: evita el zoom automático en iPhone y mantiene el texto legible */
 label { line-height: 1.35; }
 :focus-visible { outline: 3px solid var(--color-violeta-oscuro); outline-offset: 2px; }
 /* Reduced motion: se quita el desplazamiento y el escalado, pero se conserva un fundido corto como feedback de estado. */
@@ -157,3 +158,15 @@ dialog.g-viewer::backdrop { background: rgb(20 10 32 / .88); backdrop-filter: bl
 
 /* Campo con error (lo marca FormValidity o el formulario con aria-invalid). */
 input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--color-error-texto); box-shadow: 0 0 0 1px var(--color-error-texto); }
+
+/* Calma clínica: las tarjetas blancas llevan un borde fino además de la sombra suave. */
+.shadow-soft { border: 1px solid color-mix(in srgb, var(--color-tinta) 7%, transparent); }
+
+/* Paleta de búsqueda rápida (<dialog>): aparece arriba, con fundido de entrada y salida. */
+dialog.g-cmd { margin: 12vh auto auto; width: min(36rem, calc(100vw - 1.5rem)); max-width: none; padding: 0; border: 1px solid color-mix(in srgb, var(--color-tinta) 10%, transparent); border-radius: var(--radius-card); background: #fff; box-shadow: 0 24px 60px rgb(40 25 55 / .28);
+  opacity: 0; transform: translateY(-8px) scale(.985); transition: opacity .18s ease, transform .18s var(--ease-out), overlay .18s allow-discrete, display .18s allow-discrete; }
+dialog.g-cmd[open] { opacity: 1; transform: none; }
+@starting-style { dialog.g-cmd[open] { opacity: 0; transform: translateY(-8px) scale(.985); } }
+dialog.g-cmd::backdrop { background: rgb(40 25 55 / 0); transition: background .18s ease, overlay .18s allow-discrete, display .18s allow-discrete; }
+dialog.g-cmd[open]::backdrop { background: rgb(40 25 55 / .4); }
+@starting-style { dialog.g-cmd[open]::backdrop { background: rgb(40 25 55 / 0); } }

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { BackBar } from '@/panel/components/back-link'
 import { notFound } from 'next/navigation'
-import { AlertBadges } from '@/panel/components/alert-badges'
+import { AlertCard } from '@/panel/components/alert-card'
 import { CloseCaseForm } from '@/panel/components/forms'
 import { EntryView } from '@/panel/components/entry-view'
 import { Pagination, parsePage } from '@/panel/components/pagination'
@@ -29,7 +29,7 @@ export default async function Caso({ params, searchParams }: { params: Promise<{
         <BackBar trail={[{ href: '/panel/pacientes', label: 'Pacientes' }, { href: `/panel/pacientes/${id}`, label: `${p.firstName} ${p.lastName}` }]} />
         <h1 className="mt-4 text-3xl">{c.title}</h1>
         <p className={`mt-1 inline-block rounded-full px-3 py-0.5 text-base font-semibold ${open ? 'bg-ok-fondo text-ok-texto' : 'bg-white text-tinta-suave ring-1 ring-tinta/30'}`}>{open ? 'Caso abierto' : 'Caso cerrado'}</p>
-        <div className="mt-2"><AlertBadges alerts={p.alerts} /></div>
+        <div className="mt-3 max-w-xl"><AlertCard alerts={p.alerts} /></div>
         {c.reason && <p className="mt-3 max-w-prose rounded-card bg-white p-4 shadow-soft"><span className="block text-base text-tinta-suave">Motivo de consulta</span>{c.reason}</p>}
       </div>
 
@@ -37,7 +37,7 @@ export default async function Caso({ params, searchParams }: { params: Promise<{
 
       <section aria-labelledby="evo" className="space-y-3">
         <h2 id="evo" className="text-xl uppercase tracking-[0.06em]">Evoluciones</h2>
-        {entries.length === 0 ? <p>Todavía no hay evoluciones en este caso.</p> : entries.map((e) => <EntryView key={e.id} entry={e} />)}
+        {entries.length === 0 ? <p>Todavía no hay evoluciones en este caso.</p> : <ol className="relative ml-1.5 space-y-3 border-l-2 border-tinta/10">{entries.map((e, i) => <EntryView key={e.id} entry={e} defaultOpen={i === 0 && page === 1} />)}</ol>}
         <Pagination base={`/panel/pacientes/${id}/casos/${caseId}`} page={page} total={totalEntries} pageSize={PAGE} noun={totalEntries === 1 ? 'evolución' : 'evoluciones'} />
       </section>
 

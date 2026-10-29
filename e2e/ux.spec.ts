@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { ensureUser, login } from './helpers'
+import { ensureUser, login, openSection } from './helpers'
 
 test.describe.configure({ mode: 'serial' })
 test.beforeAll(() => ensureUser())
@@ -83,7 +83,7 @@ test('[REQ-PAC-008] tras el login se ve el inicio con el resumen y lo pendiente'
   await expect(page).toHaveURL(/\/panel\/inicio/)
   await expect(page.getByRole('heading', { level: 1 })).toContainText(/Buen/)
   await expect(page.getByRole('heading', { name: 'Para retomar' })).toBeVisible()
-  await expect(page.getByRole('searchbox')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Buscar paciente/ }).first()).toBeVisible()
   await expect(page.getByRole('link', { name: /Pacientes$/ }).first()).toBeVisible()
 })
 
@@ -122,4 +122,74 @@ test('[REQ-PAC-009] el alta muestra lo esencial, el resto se abre aparte y Cance
   await expect(page.getByLabel('Domicilio')).toBeVisible()
   await page.getByRole('link', { name: 'Cancelar' }).click()
   await expect(page).toHaveURL(/\/panel\/pacientes$/)
+})
+
+test('[REQ-INT-005] la búsqueda rápida se abre con la barra inclinada, encuentra pacientes y salta a la ficha', async ({ page }) => {
+  await login(page)
+  await newPatient(page, 'Rapida', `Paleta${RUN}`)
+  await page.goto('/panel/inicio')
+  await page.keyboard.press('/')
+  const caja = page.getByRole('combobox', { name: /Buscar paciente o ir a una pantalla/ })
+  await expect(caja).toBeFocused()
+  await caja.fill(`Paleta${RUN}`)
+  const opcion = page.getByRole('option', { name: new RegExp(`Paleta${RUN}`) }).first()
+  await expect(opcion).toBeVisible()
+  await caja.press('ArrowDown')
+  await caja.press('ArrowUp')
+  await caja.press('Enter')
+  await expect(page).toHaveURL(/\/panel\/pacientes\/[0-9a-f-]{36}$/)
+  // Escape cierra y devuelve el foco; sin sesión la ruta no responde
+  await page.goto('/panel/inicio')
+  await page.keyboard.press('Control+k')
+  await expect(page.getByRole('dialog', { name: 'Búsqueda rápida' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+  const sinSesion = await page.context().browser()!.newContext({ baseURL: 'http://localhost:3000' })
+  expect((await sinSesion.request.get('/api/clinico/buscar?q=ab')).status()).toBe(401)
+  await sinSesion.close()
+})
+
+test('[REQ-INT-004] las alertas se muestran en una tarjeta ordenada por gravedad y se pliegan si son muchas', async ({ page }) => {
+  await login(page)
+  const url = await newPatient(page, 'Alertas', `Tarjeta${RUN}`)
+  await page.goto(`${url}?tab=antecedentes`)
+  await page.getByRole('button', { name: 'Editar antecedentes' }).click()
+  for (const a of ['Diabetes', 'Anticoagulantes', 'Antiagregados', 'Marcapasos', 'Embarazo']) await page.getByLabel(new RegExp(`^${a}`)).check()
+  await page.getByRole('button', { name: 'Guardar antecedentes' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Guardado' })).toBeVisible()
+  await page.reload()
+  const tarjeta = page.getByRole('region', { name: /Alertas clínicas/ })
+  await expect(tarjeta).toContainText('(5)')
+  const lista = tarjeta.getByRole('list', { name: /Alertas clínicas/ })
+  await expect(lista.getByRole('listitem')).toHaveCount(3) // las 3 más graves
+  await expect(lista.getByRole('listitem').first()).toContainText(/Anticoagulantes|Antiagregados|Marcapasos/)
+  await tarjeta.getByRole('button', { name: /Ver todas \(5\)/ }).click()
+  await expect(lista.getByRole('listitem')).toHaveCount(5)
+  await tarjeta.getByRole('button', { name: 'Ver menos' }).click()
+  await expect(lista.getByRole('listitem')).toHaveCount(3)
+})
+
+test('[REQ-INT-007] el comparador mueve la foto inicial sobre la final con el teclado', async ({ page }) => {
+  const foto = { name: 'foto.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEUlEQVQImWM4URGFFTEMLQkAKKBmgU0/yJsAAAAASUVORK5CYII=', 'base64') }
+  await login(page)
+  const url = await newPatient(page, 'Compara', `Fotos${RUN}`)
+  await page.goto(url)
+  await page.getByText('Abrir un caso nuevo').click()
+  await page.getByLabel(/Título del caso/).fill('Comparador')
+  await page.getByRole('button', { name: 'Abrir caso' }).click()
+  await expect(page).toHaveURL(/\/casos\/[0-9a-f-]{36}$/)
+  for (const tipo of ['inicial', 'final']) {
+    await openSection(page, 'Agregar una foto')
+    await page.getByLabel(/^Foto \(JPG/).setInputFiles(foto)
+    await page.getByLabel('Tipo').selectOption(tipo)
+    await page.getByRole('button', { name: 'Subir foto' }).click()
+    await expect(page.getByText('Foto guardada.')).toBeVisible()
+  }
+  const slider = page.getByRole('slider', { name: /Comparar la foto inicial con la final/ })
+  await expect(slider).toHaveValue('50')
+  await slider.focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(slider).toHaveValue('51')
+  await page.keyboard.press('End')
+  await expect(slider).toHaveValue('100')
 })
