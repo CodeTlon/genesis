@@ -56,3 +56,9 @@ El sistema NO DEBE tener problemas graves de accesibilidad (WCAG 2.1 A y AA seg�
 - Escenario: Dado el sistema con datos, Cuando se revisan esas pantallas con la herramienta de accesibilidad, Entonces no aparecen problemas serios ni críticos.
 - verify: e2e e2e/accesibilidad.spec.ts
 - confianza: confirmado
+
+### REQ-INT-009 [must] Filtros en los listados
+El sistema DEBE permitir filtrar el listado de pacientes (con alertas, con caso abierto, sin casos, menores, por tipo de alerta y por orden), el de casos (abiertos, cerrados o todos, con borrador sin firmar y por orden) y el de atenciones (por período y por orden), además de buscar por texto, en el servidor, conservando los filtros en la URL y volviendo a la primera página al cambiarlos.
+- Escenario: Dado un sistema con muchos pacientes, Cuando se elige "Menores" y luego "Más recientes", Entonces todos los resultados son menores, el orden cambia y la URL conserva ambos filtros; "Limpiar filtros" vuelve al listado completo.
+- verify: e2e e2e/dispositivos.spec.ts
+- confianza: confirmado

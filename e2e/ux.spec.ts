@@ -83,7 +83,7 @@ test('[REQ-PAC-008] tras el login se ve el inicio con el resumen y lo pendiente'
   await expect(page).toHaveURL(/\/panel\/inicio/)
   await expect(page.getByRole('heading', { level: 1 })).toContainText(/Buen/)
   await expect(page.getByRole('heading', { name: 'Para retomar' })).toBeVisible()
-  await expect(page.getByRole('button', { name: /Buscar paciente/ }).first()).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Resumen' })).toBeVisible()
   await expect(page.getByRole('link', { name: /Pacientes$/ }).first()).toBeVisible()
 })
 

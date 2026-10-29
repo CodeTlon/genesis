@@ -46,7 +46,7 @@ for (const d of DISPOSITIVOS) {
     const resumen = page.getByRole('navigation', { name: 'Resumen' })
     const destinos: [RegExp, RegExp, string][] = [
       [/Ver lista/, /\/panel\/pacientes$/, "Pacientes"],
-      [/Ver casos/, /\/panel\/casos$/, 'Casos abiertos'],
+      [/Ver casos/, /\/panel\/casos$/, 'Casos'],
       [/Retomar/, /\/panel\/atenciones\?tab=sin-firmar/, 'Atenciones'],
       [/Ver firmadas/, /\/panel\/atenciones\?tab=firmadas/, 'Atenciones'],
     ]
@@ -165,5 +165,66 @@ test('[REQ-INT-001] en el celular los botones, enlaces y campos son cómodos de 
     for (const m of malos.bad) chicos.push(`${url.replace(/[0-9a-f-]{36}/g, ':id')}: ${m}`)
   }
   expect(chicos, 'elementos de menos de 44 px de alto en el celular').toEqual([])
+  await ctx.close()
+})
+
+test('[REQ-INT-009] los listados se filtran por texto, estado y orden, y los filtros quedan en la URL', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await login(page)
+  const filas = page.locator('main ul.divide-y > li')
+
+  // Pacientes: con alertas, menores, orden y limpiar
+  await page.goto('/panel/pacientes')
+  await page.getByRole('link', { name: 'Con alertas' }).click()
+  await expect(page).toHaveURL(/filtro=alertas/)
+  await expect(filas.first()).toContainText(/alerta/)
+  for (const t of await filas.allTextContents()) expect(t).toMatch(/alerta/)
+  await page.getByRole('link', { name: 'Menores' }).click()
+  await expect(page).toHaveURL(/filtro=menores/)
+  await expect(filas.first()).toContainText('Menor de edad')
+  for (const t of await filas.allTextContents()) expect(t).toContain('Menor de edad')
+  await page.getByRole('link', { name: 'Más recientes' }).click()
+  await expect(page).toHaveURL(/orden=recientes/)
+  await expect(page).toHaveURL(/filtro=menores/) // el otro filtro se conserva
+  await page.getByRole('link', { name: 'Limpiar filtros' }).click()
+  await expect(page).toHaveURL(/\/panel\/pacientes$/)
+  await page.getByRole('link', { name: 'Sin casos' }).click()
+  await expect(page).toHaveURL(/filtro=sin-casos/)
+  await expect(page.getByRole('navigation', { name: 'Paginación' })).toContainText('Mostrando 1–25 de')
+
+  // Casos: cerrados y con borrador
+  await page.goto('/panel/casos')
+  await page.getByRole('link', { name: 'Cerrados' }).click()
+  await expect(page).toHaveURL(/estado=cerrados/)
+  await expect(filas.first()).toContainText('Cerrado')
+  for (const t of await filas.allTextContents()) expect(t).toContain('Cerrado')
+  await page.getByRole('link', { name: 'Abiertos' }).click()
+  await page.getByRole('link', { name: 'Con borrador sin firmar' }).click()
+  await expect(page).toHaveURL(/borrador=si/)
+  await expect(filas.first()).toContainText('sin firmar')
+  for (const t of await filas.allTextContents()) expect(t).toContain('sin firmar')
+
+  // Búsqueda en vivo dentro de un listado: conserva los filtros y vuelve a la primera página
+  await page.goto('/panel/atenciones?tab=firmadas&periodo=todas')
+  await page.getByRole('searchbox').fill('Vega')
+  await expect(page).toHaveURL(/q=Vega/)
+  await expect(page).toHaveURL(/periodo=todas/)
+  await expect(page).toHaveURL(/tab=firmadas/)
+  await expect(filas.first()).toContainText('Vega')
+  await page.getByRole('link', { name: 'Mes pasado' }).click()
+  await expect(page).toHaveURL(/periodo=mes-pasado/)
+  await expect(page).toHaveURL(/q=Vega/)
+})
+
+test('[REQ-INT-009] en el celular los filtros se pliegan detrás de un botón con la cantidad activa', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+  const page = await ctx.newPage()
+  await login(page)
+  await page.goto('/panel/pacientes?filtro=alertas&orden=recientes')
+  const boton = page.getByRole('button', { name: /^Filtros/ })
+  await expect(boton).toContainText('2')
+  await expect(page.getByRole('link', { name: 'Con caso abierto' })).toBeHidden()
+  await boton.click()
+  await expect(page.getByRole('link', { name: 'Con caso abierto' })).toBeVisible()
   await ctx.close()
 })

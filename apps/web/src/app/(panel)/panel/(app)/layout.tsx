@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser()
   const drafts = await draftCount()
-  const nav = [{ href: '/panel/inicio', label: 'Inicio' }, { href: '/panel/pacientes', label: 'Pacientes' }, { href: '/panel/casos', label: 'Casos' }, { href: '/panel/atenciones', label: 'Atenciones' }, { href: '/panel/pacientes/nuevo', label: 'Nuevo paciente', short: 'Nuevo' }]
+  const nav = [{ href: '/panel/inicio', label: 'Inicio' }, { href: '/panel/pacientes', label: 'Pacientes' }, { href: '/panel/casos', label: 'Casos' }, { href: '/panel/atenciones', label: 'Atenciones' }]
   return (
     <ToastProvider>
     <CommandProvider>
@@ -25,16 +25,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <form action={signOut}><button className="min-h-touch rounded-control border border-tinta/25 px-4 hover:bg-lila/30">Salir</button></form>
           </div>
         </div>
-        <div className="px-3 pb-2 max-md:hidden"><CommandTrigger label="Buscar paciente" /></div>
         <Nav items={nav} drafts={drafts} />
         <div className="mt-auto max-md:hidden">
-          <div className="mx-3 mb-3 rounded-card border border-tinta/10 bg-marmol p-3">
-            <p className="text-base font-semibold">Historias clínicas</p>
-            <p className="text-base text-tinta-suave">{drafts > 0 ? `${drafts} ${drafts === 1 ? 'evolución sin firmar' : 'evoluciones sin firmar'}.` : 'No hay nada pendiente de firma.'}</p>
-          </div>
           <form action={signOut} className="border-t border-tinta/10 px-3 py-3">
             <div className="mb-2 flex items-center gap-3">
-              <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-violeta-oscuro font-semibold text-white">{user.name[0]}</span>
               <p className="min-w-0 leading-tight"><span className="block truncate font-semibold" title={user.email}>{user.name}</span><span className="block truncate text-base text-tinta-suave">{user.role === 'admin' ? 'Administradora' : 'Profesional'}</span></p>
             </div>
             <button className="min-h-touch w-full rounded-control border border-tinta/25 px-3 transition-colors hover:bg-lila/30">Salir</button>

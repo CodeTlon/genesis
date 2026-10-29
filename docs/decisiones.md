@@ -156,3 +156,7 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **Ruta nueva:** `GET /api/clinico/buscar?q=` (sesión obligatoria, `q` de 2 a 80 caracteres, máximo 8 resultados, solo identificación; nunca textos clínicos).
 - **Accesibilidad:** `e2e/accesibilidad.spec.ts` corre axe (WCAG 2.1 A/AA) en las pantallas principales en celular y escritorio y falla con problemas serios o críticos; ya encontró y se corrigió un contraste del avatar. Todo lo táctil mide al menos 44 px (`e2e/dispositivos.spec.ts`).
 - **Pendiente:** validar con Inés las frases de las alertas; probar en celular físico.
+
+## ADR-023 Filtros de los listados y shell más limpio
+- **Filtros en el servidor** (`repo.ts`: `PatientFilters`, `CaseFilters`, `AttentionFilters`): el texto busca por nombre, DNI, teléfono o título del caso sin tildes (`immutable_unaccent`); los estados se resuelven con `exists` y no descifran nada. `FilterBar` los muestra como chips (enlaces reales: funcionan sin JavaScript, quedan en la URL y vuelven a la primera página al cambiar). Solo se navega al escribir cuando el texto cambió, para no pisar los clics en chips.
+- **Shell:** a pedido de Mateo se sacaron la búsqueda y «Nuevo paciente» de la barra lateral y del inicio, la tarjeta «Historias clínicas» y las iniciales (usuaria y paciente). «Nuevo paciente» sigue en la lista de pacientes. La búsqueda rápida sigue con `/` o Ctrl+K y con el ícono en el celular.
