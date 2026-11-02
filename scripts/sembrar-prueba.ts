@@ -50,6 +50,8 @@ const payload = (heavy: boolean) => ({
 
 async function main() {
   const total = Number(process.env.CANTIDAD) || 250
+  // SOLO_SI_VACIO=si: no agrega nada si ya hay pacientes (así reiniciar el contenedor no duplica los datos de prueba).
+  if (process.env.SOLO_SI_VACIO === 'si' && (await repo.countPatients()) > 0) { console.log('Ya hay pacientes: no se cargan datos de prueba.'); process.exit(0) }
   const [user] = await db().select({ id: schema.user.id }).from(schema.user).limit(1)
   if (!user) throw new Error('Primero creá un usuario (scripts/crear-usuario.mjs).')
   const uid = user.id

@@ -13,6 +13,12 @@ services:
       CLINICAL_DATA_ENCRYPTION_KEY: ${CLINICAL_DATA_ENCRYPTION_KEY}
       PHOTOS_DIR: /data/storage/clinico
       APP_ENV: ${APP_ENV:-}
+      # Solo prueba: con PRUEBA_SEMBRAR=si el arranque crea el usuario de la clienta y carga datos ficticios si la base está vacía.
+      PRUEBA_SEMBRAR: ${PRUEBA_SEMBRAR:-}
+      PRUEBA_CLAVE: ${PRUEBA_CLAVE:-}
+      PRUEBA_CORREO: ${PRUEBA_CORREO:-}
+      PRUEBA_NOMBRE: ${PRUEBA_NOMBRE:-}
+      PRUEBA_CANTIDAD: ${PRUEBA_CANTIDAD:-}
     volumes:
       - storage:/data/storage
     expose: ["3000"]

@@ -171,3 +171,7 @@ Nombre del repo: `codetlon/genesis` (privado); ramas `main` + `dev`; commits con
 - **Qué:** un deploy en Coolify desde la rama `test`, con su propio dominio, base y claves, y **datos ficticios**, para que Inés vea el sistema y diga si le gusta. No tiene backup ni simulacro de restauración (REQ-SEG-005), por eso no se cargan pacientes reales: la franja «Entorno de prueba» (`APP_ENV=prueba`) lo deja a la vista en cada pantalla.
 - **Datos:** `scripts/sembrar-prueba.ts` se empaqueta con esbuild en la imagen (`scripts/sembrar-prueba.cjs`) para correrlo en la terminal del contenedor; solo funciona con `APP_ENV=prueba` (en producción se niega). `EXTREMOS=no` omite los casos de estrés.
 - **Producción:** sigue bloqueada hasta tener backup, simulacro de restauración y los campos validados con Inés (ver `docs/despliegue-prueba.md`, «Límites»).
+
+## ADR-026 Carga automática de datos en el entorno de prueba
+- **Qué:** con `APP_ENV=prueba` y `PRUEBA_SEMBRAR=si`, `docker-entrypoint.sh` crea el usuario de la clienta (`PRUEBA_CLAVE`, `PRUEBA_CORREO`, `PRUEBA_NOMBRE`) y carga datos ficticios (`PRUEBA_CANTIDAD`, 40 por defecto) **solo si la base está vacía** (`SOLO_SI_VACIO`), así reiniciar o redeployar no duplica nada. Un error en este paso no frena el arranque.
+- **Por qué es seguro:** exige dos variables explícitas que producción no define; el sembrador además se niega con `NODE_ENV=production` sin `APP_ENV=prueba`. Con eso el deploy de prueba queda listo en un solo paso, sin terminal.
