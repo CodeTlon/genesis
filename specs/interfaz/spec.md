@@ -74,3 +74,9 @@ El sistema DEBE mostrar, en todas las pantallas, una franja que indique que los 
 - Escenario: Dado el sistema levantado con APP_ENV=prueba, Cuando se abre el login, Entonces se ve la franja "Entorno de prueba: los datos son ficticios".
 - verify: e2e e2e/ux.spec.ts
 - confianza: confirmado
+
+### REQ-INT-012 [must] Login en una sola pantalla
+El sistema DEBE mostrar la pantalla de login completa, sin scroll vertical ni horizontal, en el celular (360 a 430 px de ancho y alto desde 667 px), la tableta y el escritorio (desde 1024x600 hasta 1920x1080), con el zoom del navegador al 100 % y también con la franja del entorno de prueba.
+- Escenario: Dado el login abierto en celulares de 360x740, 375x667 y 390x844 y en pantallas de 1024x600, 1280x720, 1366x768, 1440x900 y 1920x1080, Cuando se mide la página, Entonces el alto y el ancho del contenido no superan los de la ventana.
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado
