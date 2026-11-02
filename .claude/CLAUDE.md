@@ -30,5 +30,16 @@ Next 16.4.2 + React 19.3.1 + Tailwind v4 + Better Auth + Drizzle (consultas) + P
 ## Specs (SDD)
 Perfil **S2** (`sdd: v1`): `specs/<capacidad>/spec.md` con REQ-CAP-NNN, validador `npm run spec:lint` (corre en CI). Cada test E2E lleva `[REQ-XXX-NNN]` en el título. Un cambio de comportamiento abre un delta en `specs/changes/` antes de implementarse. Brecha abierta: REQ-SEG-005 (simulacro de restauración real).
 
+## Estado al cierre de la sesión (2026-11-02)
+- `main`, `test` y `dev` tienen: rediseño «calma clínica» (base 14 px), alertas en tarjeta, búsqueda rápida (`/`), filtros como desplegables y paginación en todos los listados, inicio con Borradores y Atenciones de hoy, login en una sola pantalla, scroll y cursor de marca, entorno de prueba (`APP_ENV=prueba`, datos automáticos con `PRUEBA_SEMBRAR=si`). 42 pruebas E2E, axe y tamaños táctiles en el CI.
+- **Entorno de prueba del cliente:** Coolify, rama `test`, `https://genesis-test.51.91.253.54.sslip.io` (servidor 51.91.253.54; ojo: el nombre toma la PRIMERA IP que aparece, `43.51...` apuntaba a otra máquina). Guía: `docs/despliegue-prueba.md`. Dominio propio `genesisestetica.com.ar` registrado el 2026-11-02 pero **sin delegar** en NIC.ar: hace falta delegarlo (por ejemplo a Cloudflare) y crear `prueba` → 51.91.253.54.
+- Demo local en la VPS (Tailscale, puerto 8443): contenedores `genesis-demo-app` / `genesis-ux-db`, no es el entorno del cliente.
+
+## Gotchas
+- El build baja fuentes de Google (`next/font/google`): a veces falla por red en el CI; reintentar. Si el build local falla seguido, borrar `apps/web/.next`. Pendiente evaluar servirlas desde el proyecto.
+- Las evoluciones firmadas son inmutables por trigger de la base; `scripts/fixtures-filtros.ts` lo apaga un instante solo para fechar datos de prueba.
+- Al editar archivos con Python no usar `open(p,'w')` antes de `open(p).read()` (vacía el archivo; así se perdió el README una vez).
+- Los tests del CI arrancan con la base vacía: no deben depender de datos previos.
+
 ## Pendiente
-Validar con Inés antecedentes, lesiones y zonas del mapa; 2FA y rotación de clave de cifrado; simulacro de restauración contra B2 real; deploy en Coolify (`docker-compose.coolify.yml`); inscripción AAIP y consentimiento de fotos gestionado por fuera del sistema (ADR-019, texto revisado por una persona con matrícula).
+Validar con Inés antecedentes, lesiones, zonas del mapa y las frases de las alertas (`ALERT_HINT`); delegar el dominio y apuntar `prueba.`; probar en celular físico; backup en B2 + simulacro de restauración real (REQ-SEG-005) antes de datos reales; 2FA y rotación de clave de cifrado; deploy de producción en Coolify; inscripción AAIP y consentimiento de fotos en papel revisado por una persona con matrícula; borrar los datos ficticios del demo local antes de entregar.
