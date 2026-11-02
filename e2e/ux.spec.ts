@@ -210,3 +210,10 @@ test('[REQ-INT-010] la barra de desplazamiento y el cursor son los de la marca',
   expect(estilos.boton).toContain('data:image/svg+xml')
   expect(estilos.campo).toBe('text')
 })
+
+test('[REQ-INT-011] el entorno de prueba avisa que los datos son ficticios', async ({ page }) => {
+  await page.goto('/panel/login')
+  await expect(page.getByRole('note').filter({ hasText: 'Entorno de prueba' })).toContainText('datos son ficticios')
+  await login(page)
+  await expect(page.getByRole('note').filter({ hasText: 'Entorno de prueba' })).toBeVisible()
+})

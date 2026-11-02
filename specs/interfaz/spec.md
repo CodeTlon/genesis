@@ -68,3 +68,9 @@ El sistema DEBE mostrar una barra de desplazamiento personalizada con los colore
 - Escenario: Dado el login abierto en un navegador de escritorio, Cuando se consulta el estilo de la página, Entonces la barra de desplazamiento mide 14 px, el cursor general es una imagen propia y el del botón Entrar es el cursor de lo clickeable, y el de un campo de texto es el de texto.
 - verify: e2e e2e/ux.spec.ts
 - confianza: confirmado
+
+### REQ-INT-011 [must] Aviso de entorno de prueba
+El sistema DEBE mostrar, en todas las pantallas, una franja que indique que los datos son ficticios cuando se ejecuta como entorno de prueba (variable APP_ENV=prueba), y NO DEBE mostrarla en producción.
+- Escenario: Dado el sistema levantado con APP_ENV=prueba, Cuando se abre el login, Entonces se ve la franja "Entorno de prueba: los datos son ficticios".
+- verify: e2e e2e/ux.spec.ts
+- confianza: confirmado

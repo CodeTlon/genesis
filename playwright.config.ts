@@ -17,6 +17,7 @@ export default defineConfig({
       command: 'npm run start -w @genesis/web', port: 3000, reuseExistingServer: false, timeout: 60_000,
       env: {
         DATABASE_URL,
+        APP_ENV: 'prueba',
         BETTER_AUTH_SECRET: 'secreto-solo-para-tests-e2e-0123456789abcdef',
         BETTER_AUTH_URL: 'http://localhost:3000',
         CLINICAL_DATA_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),

@@ -12,6 +12,7 @@ services:
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
       CLINICAL_DATA_ENCRYPTION_KEY: ${CLINICAL_DATA_ENCRYPTION_KEY}
       PHOTOS_DIR: /data/storage/clinico
+      APP_ENV: ${APP_ENV:-}
     volumes:
       - storage:/data/storage
     expose: ["3000"]
