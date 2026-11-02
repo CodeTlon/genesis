@@ -13,3 +13,4 @@ playwright-report
 backups/
 
 .data/
+scripts/sembrar-prueba.cjs

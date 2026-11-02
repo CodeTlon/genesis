@@ -1,12 +1,14 @@
 // Carga datos FICTICIOS para probar las pantallas con distintos volúmenes y tipos de paciente.
 // Uso:  SEMBRAR_DATOS_FICTICIOS=si DATABASE_URL=... CLINICAL_DATA_ENCRYPTION_KEY=... CANTIDAD=250 npx tsx scripts/sembrar-prueba.ts
+// En el contenedor del entorno de prueba (APP_ENV=prueba): SEMBRAR_DATOS_FICTICIOS=si CANTIDAD=25 EXTREMOS=no node scripts/sembrar-prueba.cjs
+// EXTREMOS=no omite los casos de estrés (nombre larguísimo, 40 evoluciones) para una demo prolija. Si ya hay pacientes cargados, agrega más.
 // Pasa por las mismas funciones de repo.ts que usa la app (mismo cifrado y mismos controles). Nunca usar con pacientes reales.
 import { db, schema } from '@genesis/db/client'
 import * as repo from '../apps/web/src/panel/lib/repo'
 import { ANTECEDENTE_ITEMS, EMPTY_DIABETES, type FootMarker, type FootType } from '../apps/web/src/panel/lib/types'
 
 if (process.env.SEMBRAR_DATOS_FICTICIOS !== 'si') throw new Error('Esto carga datos ficticios. Si es lo que querés, definí SEMBRAR_DATOS_FICTICIOS=si.')
-if (process.env.NODE_ENV === 'production') throw new Error('No se siembra en producción.')
+if (process.env.NODE_ENV === 'production' && process.env.APP_ENV !== 'prueba') throw new Error('No se siembra en producción: solo en el entorno de prueba (APP_ENV=prueba).')
 
 // Generador determinista: la misma semilla produce siempre los mismos pacientes.
 let seed = 20261028
@@ -104,15 +106,17 @@ async function main() {
     stats.pacientes++
   }
 
-  // Casos extremos: nombres larguísimos, los 18 antecedentes, un caso con 40 evoluciones largas y muchas marcas.
-  const largo = await repo.createPatient({
-    ...base('María de los Ángeles del Valle', 'Fernández de la Vega Rodríguez-Pereyra'), dni: '10123456', birthDate: '1948-02-29', phone: '351 555 0000', address: 'Av. Hipólito Yrigoyen 1234, Piso 7 Depto. B, Barrio Nueva Córdoba, Córdoba Capital',
-    occupation: 'Jubilada, ex directora de escuela primaria y presidenta de la cooperadora', insurance: 'PAMI - Programa de Atención Médica Integral', emergencyContact: 'Hija: Ana Paula Fernández 351 555 1111 / Hijo: Martín 351 555 2222', otherActivities: 'Caminatas, natación, baile folklórico, yoga', nationality: 'Argentina', sex: 'Femenino', heightCm: '158', weightKg: '72', bloodGroup: 'AB+',
-  }, uid)
-  await antecedentes(largo, 'todos')
-  await caso(largo, 40, { heavy: true, borrador: true })
-  for (let c = 0; c < 8; c++) await caso(largo, 2, { cerrar: true })
-  stats.pacientes++
+  if (process.env.EXTREMOS !== 'no') {
+    // Casos extremos: nombres larguísimos, los 18 antecedentes, un caso con 40 evoluciones largas y muchas marcas.
+    const largo = await repo.createPatient({
+      ...base('María de los Ángeles del Valle', 'Fernández de la Vega Rodríguez-Pereyra'), dni: '10123456', birthDate: '1948-02-29', phone: '351 555 0000', address: 'Av. Hipólito Yrigoyen 1234, Piso 7 Depto. B, Barrio Nueva Córdoba, Córdoba Capital',
+      occupation: 'Jubilada, ex directora de escuela primaria y presidenta de la cooperadora', insurance: 'PAMI - Programa de Atención Médica Integral', emergencyContact: 'Hija: Ana Paula Fernández 351 555 1111 / Hijo: Martín 351 555 2222', otherActivities: 'Caminatas, natación, baile folklórico, yoga', nationality: 'Argentina', sex: 'Femenino', heightCm: '158', weightKg: '72', bloodGroup: 'AB+',
+    }, uid)
+    await antecedentes(largo, 'todos')
+    await caso(largo, 40, { heavy: true, borrador: true })
+    for (let c = 0; c < 8; c++) await caso(largo, 2, { cerrar: true })
+    stats.pacientes++
+  }
 
   console.log('Datos ficticios cargados:', stats)
   process.exit(0)

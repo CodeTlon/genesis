@@ -14,6 +14,8 @@ COPY --from=deps /app/ ./
 COPY . .
 # El build NO necesita la base ni los secretos (las páginas con datos son dinámicas).
 RUN npm run build
+# Sembrador de datos ficticios, empaquetado en un solo archivo (solo corre con APP_ENV=prueba): scripts/sembrar-prueba.cjs
+RUN npx esbuild scripts/sembrar-prueba.ts --bundle --platform=node --format=cjs --target=node24 --outfile=scripts/sembrar-prueba.cjs --log-level=warning
 
 FROM node:24-alpine AS run
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0 PHOTOS_DIR=/data/storage/clinico NEXT_TELEMETRY_DISABLED=1
