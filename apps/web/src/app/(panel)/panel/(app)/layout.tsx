@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <ToastProvider>
     <CommandProvider>
     <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:rounded-control focus:bg-white focus:px-4 focus:py-3 focus:font-semibold focus:shadow-soft">Saltar al contenido</a>
-    <div className="min-h-screen md:flex">
+    <div className="flex-1 md:flex">
       <aside className="print:hidden border-b border-tinta/10 bg-white md:sticky md:top-0 md:flex md:h-screen md:w-64 md:flex-col md:shrink-0 md:self-start md:overflow-y-auto md:border-b-0 md:border-r">
         <div className="flex items-center justify-between gap-3 px-4 py-3 md:py-4">
           <Wordmark size="md" />

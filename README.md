@@ -33,6 +33,7 @@ npm run dev -w @genesis/web
 `feature/<origen>-<tarea>` → PR a `dev` → `test` → `main`. Producción en Coolify con `docker-compose.coolify.yml`; variables en `.env.example`.
 
 ## Cambios
+- **2026-11-02** — Login en celular rehecho: una sola pantalla, sin scroll vertical ni horizontal desde 360x667 hasta escritorio, también con la franja del entorno de prueba (REQ-INT-012).
 - **2026-11-02** — Entorno de prueba para mostrarle el sistema a Inés (`docs/despliegue-prueba.md`): franja «Entorno de prueba» con `APP_ENV=prueba` (REQ-INT-011) y sembrador de datos ficticios empaquetado en la imagen (`scripts/sembrar-prueba.cjs`, solo con `APP_ENV=prueba`).
 - **2026-10-30** — Filtros como desplegables (estado, período, orden, tipo de alerta). Atenciones deja las pestañas: se filtra por estado (borradores o firmadas) y período. El inicio muestra «Borradores sin firmar» y «Atenciones de hoy» en vez de las firmadas del mes. `scripts/fixtures-filtros.ts` y `e2e/filtros.spec.ts` prueban la lógica de cada filtro con datos de forma conocida.
 - **2026-10-30** — Barra de desplazamiento y cursor con la marca (REQ-INT-010): pista lila, cursor violeta redondeado; flecha violeta y punto para lo clickeable con mouse.

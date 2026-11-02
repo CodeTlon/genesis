@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic'
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-AR" className={fontVars}>
-      <body><EnvBanner />{children}<FormValidity /></body>
+      <body className="flex min-h-dvh flex-col"><EnvBanner />{children}<FormValidity /></body>
     </html>
   )
 }

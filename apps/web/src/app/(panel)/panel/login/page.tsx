@@ -15,14 +15,14 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
     ? 'Demasiados intentos. Esperá unos minutos y probá de nuevo.'
     : error ? 'El correo o la contraseña no son correctos.' : null
   return (
-    <main className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-      <section className="g-aurora relative flex flex-col justify-between overflow-hidden bg-[#efe8f7] px-6 py-8 text-tinta lg:px-14 lg:py-12">
+    <main className="flex flex-1 flex-col lg:grid lg:grid-cols-[1.05fr_1fr]">
+      <section className="g-aurora relative flex flex-col justify-between overflow-hidden rounded-b-[2rem] bg-[#efe8f7] px-6 pb-6 pt-7 text-tinta lg:rounded-none lg:px-14 lg:py-12">
         <span aria-hidden className="g-blob g-blob-1 !opacity-60" />
         <span aria-hidden className="g-blob g-blob-3 !opacity-50" />
         <FootShape className="g-float pointer-events-none absolute -right-28 bottom-[-9rem] hidden h-[32rem] -rotate-12 opacity-35 lg:block" />
         <div className="relative g-enter">
           <h1 className="text-center lg:text-left"><Wordmark size="lg" /><span className="sr-only"> Panel de gestión</span></h1>
-          <p className="mt-3 text-center text-lg text-tinta-suave lg:text-left lg:text-xl">Historias clínicas de podología</p>
+          <p className="mt-2 text-center text-base text-tinta-suave lg:mt-3 lg:text-left lg:text-xl">Historias clínicas de podología</p>
         </div>
         <ul className="g-stagger relative mt-10 hidden max-w-md space-y-5 lg:block">
           {POINTS.map((x) => (
@@ -37,11 +37,11 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <p className="relative mt-10 hidden text-base text-tinta-suave lg:block">Genesis Estética Integral · Córdoba</p>
       </section>
 
-      <section className="flex items-center justify-center px-6 py-10">
+      <section className="flex flex-1 items-center justify-center px-6 py-6 lg:py-10">
         <div className="g-enter w-full max-w-sm">
-          <h2 className="text-3xl">Bienvenida</h2>
+          <h2 className="text-2xl lg:text-3xl">Bienvenida</h2>
           <p className="mt-1 text-tinta-suave">Ingresá con tu usuario para ver las historias clínicas.</p>
-          <form action={signIn} className="mt-8 space-y-5">
+          <form action={signIn} className="mt-5 space-y-4 lg:mt-8 lg:space-y-5">
             <div>
               <label htmlFor="email" className="font-semibold">Correo</label>
               <input id="email" name="email" type="email" autoComplete="username" placeholder="Ej: nombre@correo.com" required aria-invalid={!!msg} className="mt-1 block min-h-touch w-full rounded-control border border-tinta/60 bg-white px-4 placeholder:text-tinta-suave" />
@@ -53,7 +53,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
             </div>
             <button className="min-h-touch w-full rounded-control bg-violeta-oscuro px-4 py-3 text-lg font-semibold text-white shadow-soft transition hover:bg-tinta hover:shadow-none">Entrar</button>
           </form>
-          <p className="mt-8 text-center text-base text-tinta-suave">¿Problemas para entrar? Pedile ayuda a quien administra el sistema.</p>
+          <p className="mt-5 text-center text-base text-tinta-suave lg:mt-8">¿Problemas para entrar? Pedile ayuda a quien administra el sistema.</p>
         </div>
       </section>
     </main>
