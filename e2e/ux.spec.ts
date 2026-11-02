@@ -217,3 +217,17 @@ test('[REQ-INT-011] el entorno de prueba avisa que los datos son ficticios', asy
   await login(page)
   await expect(page.getByRole('note').filter({ hasText: 'Entorno de prueba' })).toBeVisible()
 })
+
+for (const v of [{ w: 360, h: 740 }, { w: 375, h: 667 }, { w: 390, h: 844 }, { w: 768, h: 1024 }, { w: 1024, h: 600 }, { w: 1280, h: 720 }, { w: 1366, h: 768 }, { w: 1440, h: 900 }, { w: 1920, h: 1080 }]) {
+  test(`[REQ-INT-012] el login entra en una sola pantalla en ${v.w}x${v.h}`, async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport: { width: v.w, height: v.h }, hasTouch: v.w < 800, isMobile: v.w < 800 })
+    const page = await ctx.newPage()
+    await page.goto('/panel/login')
+    await page.waitForLoadState('networkidle')
+    await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible()
+    const m = await page.evaluate(() => ({ sh: document.documentElement.scrollHeight, ih: window.innerHeight, sw: document.documentElement.scrollWidth, iw: window.innerWidth }))
+    expect(m.sh, `alto del contenido ${m.sh} > ventana ${m.ih}`).toBeLessThanOrEqual(m.ih)
+    expect(m.sw, `ancho del contenido ${m.sw} > ventana ${m.iw}`).toBeLessThanOrEqual(m.iw)
+    await ctx.close()
+  })
+}
